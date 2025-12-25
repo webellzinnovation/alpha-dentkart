@@ -81,7 +81,48 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
       >
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex items-center justify-between gap-4 lg:gap-8 xl:gap-12">
+          {/* Mobile Header Layout */}
+          <div className="lg:hidden flex items-center justify-between py-3">
+            {/* Left: Menu Icon */}
+            <button
+              className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-all active:scale-90"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <i className="fas fa-bars text-base"></i>
+            </button>
+
+            {/* Center: Logo */}
+            <a onClick={() => onNavigate('home')} className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+              {settings.general.logo ? (
+                <img src={settings.general.logo} alt={settings.general.storeName} className="h-9 w-auto object-contain" />
+              ) : (
+                <>
+                  <div className="w-9 h-9 bg-gradient-to-br from-primary to-pink-600 text-white flex items-center justify-center rounded-xl shadow-md shadow-primary/20">
+                    <i className="fas fa-tooth text-base"></i>
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <span className="text-lg font-black tracking-tight leading-none text-gray-900 dark:text-white">
+                      {settings.general.storeName.split(' ')[0] || 'Alpha'}
+                    </span>
+                    <span className="text-[9px] font-bold text-primary tracking-[0.2em] leading-none uppercase">
+                      {settings.general.storeName.split(' ').slice(1).join(' ') || 'Dentkart'}
+                    </span>
+                  </div>
+                </>
+              )}
+            </a>
+
+            {/* Right: Search Icon */}
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${isSearchOpen ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+            >
+              <i className={`fas ${isSearchOpen ? 'fa-times' : 'fa-search'} text-base`}></i>
+            </button>
+          </div>
+
+          {/* Desktop Header Layout */}
+          <div className="hidden lg:flex items-center justify-between gap-4 lg:gap-8 xl:gap-12">
 
             {/* Logo */}
             <div className="flex items-center gap-4 flex-shrink-0">
@@ -195,22 +236,6 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 </div>
               </a>
-            </div>
-
-            {/* Mobile Controls */}
-            <div className="lg:hidden flex items-center gap-3">
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${isSearchOpen ? 'bg-primary text-white shadow-lg shadow-primary/30 rotate-90' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-              >
-                <i className={`fas ${isSearchOpen ? 'fa-times' : 'fa-search'} text-base`}></i>
-              </button>
-              <button
-                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-all active:scale-90"
-                onClick={() => setIsMobileMenuOpen(true)}
-              >
-                <i className="fas fa-bars text-base"></i>
-              </button>
             </div>
           </div>
         </div>
