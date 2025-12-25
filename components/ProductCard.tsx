@@ -56,7 +56,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <div onClick={handleClick} className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 rounded-xl p-3 sm:p-4 group hover:shadow-lg transition-all relative cursor-pointer flex flex-col h-full">
+    <div onClick={handleClick} className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 rounded-2xl p-3 sm:p-4 group hover:shadow-xl transition-all relative cursor-pointer flex flex-col h-full shadow-sm">
       {/* Badge */}
       {product.badge && (
         <span className={`absolute top-3 left-3 text-white text-[10px] px-2 py-0.5 rounded-full z-10 ${badgeColors[product.badgeColor || 'blue']}`}>
@@ -67,13 +67,13 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
       {/* Wishlist Button - Always visible top right */}
       <button
         onClick={handleWishlistClick}
-        className={`absolute top-3 right-3 w-8 h-8 rounded-full shadow-sm flex items-center justify-center z-10 transition-colors ${isInWishlist ? 'bg-white text-red-500 border border-gray-100' : 'bg-white/80 dark:bg-gray-800/80 text-gray-400 hover:text-red-500 backdrop-blur-sm'}`}
+        className={`absolute top-3 right-3 w-9 h-9 rounded-full shadow-md flex items-center justify-center z-10 transition-all ${isInWishlist ? 'bg-white text-red-500 border border-red-100 scale-110' : 'bg-white/90 dark:bg-gray-800/90 text-gray-400 hover:text-red-500 backdrop-blur-sm hover:scale-110'}`}
         title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
       >
-        <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart text-xs`}></i>
+        <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart text-sm`}></i>
       </button>
 
-      <div className={`relative mb-3 ${compact ? 'h-40 sm:h-48 p-4' : 'h-32 sm:h-40'} flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden shrink-0`}>
+      <div className={`relative mb-3 ${compact ? 'h-48 sm:h-56 p-4' : 'h-40 sm:h-48'} flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden shrink-0`}>
         <img
           alt={product.name}
           className={`h-full object-contain mix-blend-multiply dark:mix-blend-normal ${compact ? 'group-hover:scale-110 transition-transform duration-300' : ''}`}
@@ -92,6 +92,16 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Stock Indicator - Mobile Friendly */}
+      {product.stock !== undefined && product.stock < 20 && (
+        <div className="mb-2 px-2 py-1 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+          <p className="text-[10px] text-orange-600 dark:text-orange-400 font-semibold flex items-center gap-1">
+            <i className="fas fa-box text-[8px]"></i>
+            {product.stock} Stocks Left
+          </p>
+        </div>
+      )}
 
       {product.timer && (
         <div className="w-full bg-primary text-white text-[10px] sm:text-xs text-center py-1.5 rounded-md font-medium mb-3 shrink-0 shadow-sm shadow-primary/20">

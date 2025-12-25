@@ -19,6 +19,7 @@ import { Dashboard } from './components/Dashboard';
 import { AIChat } from './components/AIChat';
 import { AdminDashboard } from './components/AdminDashboard';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { StickyCartButton } from './components/StickyCartButton';
 import { PROMOS, HERO_SLIDES } from './constants';
 import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide } from './types';
 import { adaptDemoData } from './utils/demoDataAdapter';
@@ -878,6 +879,14 @@ function App() {
         cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)}
         wishlistCount={wishlist.length}
         isLoggedIn={isLoggedIn}
+      />
+
+      {/* Sticky Cart Button - Mobile Only */}
+      <StickyCartButton
+        cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)}
+        cartTotal={cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0)}
+        onOpenCart={() => setIsCartOpen(true)}
+        currency={settings.general.currency}
       />
 
       {(currentView as string) !== 'admin-dashboard' && <Footer />}
