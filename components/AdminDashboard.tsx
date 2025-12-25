@@ -2938,6 +2938,186 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
             )}
 
+            {/* Hero Slide Modal */}
+            {isHeroSlideModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsHeroSlideModalOpen(false)}></div>
+                    <div className="bg-white dark:bg-surface-dark rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl">
+                        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-20">
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                                {editingHeroSlide ? 'Edit Hero Slide' : 'Add New Hero Slide'}
+                            </h3>
+                            <button onClick={() => setIsHeroSlideModalOpen(false)} className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center hover:text-red-500 shadow-sm">
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            if (editingHeroSlide) {
+                                onUpdateHeroSlide({ ...heroSlideFormData, id: editingHeroSlide.id } as HeroSlide);
+                            } else {
+                                onAddHeroSlide({ ...heroSlideFormData, id: Date.now() } as HeroSlide);
+                            }
+                            setIsHeroSlideModalOpen(false);
+                        }} className="p-6 space-y-6">
+                            {/* Badge */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Badge Text</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={heroSlideFormData.badge || ''}
+                                    onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, badge: e.target.value })}
+                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                    placeholder="e.g., NEW ARRIVAL, SALE, etc."
+                                />
+                            </div>
+
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={heroSlideFormData.title || ''}
+                                    onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, title: e.target.value })}
+                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                    placeholder="Main heading"
+                                />
+                            </div>
+
+                            {/* Subtitle */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subtitle</label>
+                                <textarea
+                                    rows={2}
+                                    value={heroSlideFormData.subtitle || ''}
+                                    onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, subtitle: e.target.value })}
+                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                    placeholder="Supporting text"
+                                ></textarea>
+                            </div>
+
+                            {/* Image Upload */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slide Image</label>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-32 h-32 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                                        {heroSlideFormData.image ? (
+                                            <img src={heroSlideFormData.image} className="w-full h-full object-cover" alt="Preview" />
+                                        ) : (
+                                            <span className="text-xs text-gray-400">No Image</span>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    setHeroSlideFormData({ ...heroSlideFormData, image: reader.result as string });
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                        className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Background Class */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Background Class</label>
+                                <select
+                                    value={heroSlideFormData.bgClass || 'bg-pink-50 dark:bg-gray-800'}
+                                    onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, bgClass: e.target.value })}
+                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                >
+                                    <option value="bg-pink-50 dark:bg-gray-800">Pink</option>
+                                    <option value="bg-blue-50 dark:bg-gray-800">Blue</option>
+                                    <option value="bg-green-50 dark:bg-gray-800">Green</option>
+                                    <option value="bg-purple-50 dark:bg-gray-800">Purple</option>
+                                    <option value="bg-orange-50 dark:bg-gray-800">Orange</option>
+                                </select>
+                            </div>
+
+                            {/* Link Type */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link To</label>
+                                <select
+                                    value={heroSlideFormData.link?.type || 'none'}
+                                    onChange={(e) => {
+                                        const type = e.target.value;
+                                        if (type === 'none') {
+                                            const { link, ...rest } = heroSlideFormData;
+                                            setHeroSlideFormData(rest);
+                                        } else {
+                                            setHeroSlideFormData({
+                                                ...heroSlideFormData,
+                                                link: { type: type as any, value: '' }
+                                            });
+                                        }
+                                    }}
+                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                >
+                                    <option value="none">No Link</option>
+                                    <option value="product">Product</option>
+                                    <option value="category">Category</option>
+                                    <option value="brand">Brand</option>
+                                    <option value="url">Custom URL</option>
+                                </select>
+                            </div>
+
+                            {/* Link Value */}
+                            {heroSlideFormData.link && heroSlideFormData.link.type !== 'none' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {heroSlideFormData.link.type === 'product' ? 'Product ID' :
+                                            heroSlideFormData.link.type === 'category' ? 'Category Name' :
+                                                heroSlideFormData.link.type === 'brand' ? 'Brand Name' : 'URL'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={heroSlideFormData.link.value || ''}
+                                        onChange={(e) => setHeroSlideFormData({
+                                            ...heroSlideFormData,
+                                            link: { ...heroSlideFormData.link!, value: e.target.value }
+                                        })}
+                                        className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                        placeholder={
+                                            heroSlideFormData.link.type === 'product' ? 'Enter product ID' :
+                                                heroSlideFormData.link.type === 'category' ? 'Enter category name' :
+                                                    heroSlideFormData.link.type === 'brand' ? 'Enter brand name' : 'https://...'
+                                        }
+                                    />
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsHeroSlideModalOpen(false)}
+                                    className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-8 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-pink-700 shadow-lg shadow-primary/30"
+                                >
+                                    {editingHeroSlide ? 'Update Slide' : 'Add Slide'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
         </div >
+
     );
 };
