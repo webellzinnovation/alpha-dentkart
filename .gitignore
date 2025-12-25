@@ -1,0 +1,31 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.production
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cache/
+coverage/
+
+# Large data files (will be migrated to database)
+public/alphadentkart_data.json
+
+# Temporary files
+*.tmp
+hero_slides_tab_content.txt
+inventory_tab_content.txt
+
+# OS files
+desktop.ini
+.DS_Store
