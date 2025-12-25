@@ -119,7 +119,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
         <button
           onClick={handleAddToCart}
-          className="w-full py-2.5 text-xs font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 active:scale-95 bg-white dark:bg-transparent"
+          className="w-full py-3 min-h-[44px] text-sm font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 active:scale-95 bg-white dark:bg-transparent"
         >
           Add to cart
         </button>

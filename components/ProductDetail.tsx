@@ -226,7 +226,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
         <div className="flex flex-col h-full">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2 leading-tight">{product.name}</h1>
 
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6">
             <div className="flex items-center gap-1">
               <div className="flex text-yellow-400 text-sm">
                 {[...Array(5)].map((_, i) => (
@@ -235,9 +235,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               </div>
               <span className="text-sm text-gray-500 ml-1">{product.rating} ({product.reviews || 0} reviews)</span>
             </div>
-            <span className="text-gray-300">|</span>
-            <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-0.5 rounded-full">{product.brand}</span>
-            <span className="text-gray-300">|</span>
+            <span className="hidden sm:inline text-gray-300">|</span>
+            <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">{product.brand}</span>
+            <span className="hidden sm:inline text-gray-300">|</span>
             <span className="text-sm text-green-600 font-medium flex items-center gap-1"><i className="fas fa-check-circle"></i> In Stock</span>
           </div>
 
