@@ -264,7 +264,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     onDeleteHeroSlide,
     onReorderHeroSlides
 }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides' | 'appearance'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
     // Dashboard Chart State
