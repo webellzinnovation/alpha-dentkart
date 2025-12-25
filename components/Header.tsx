@@ -355,7 +355,7 @@ export const Header: React.FC<HeaderProps> = ({
       />
 
       <div
-        className={`fixed inset-y-0 right-0 w-[320px] bg-gradient-to-b from-white via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 shadow-2xl z-[70] transform transition-all duration-300 lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed inset-y-0 right-0 w-[280px] bg-gradient-to-b from-white via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 shadow-2xl z-[70] transform transition-all duration-300 lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
         {/* Sidebar Header - Gradient */}
@@ -423,13 +423,13 @@ export const Header: React.FC<HeaderProps> = ({
                     setIsMobileMenuOpen(false);
                   }}
                   className={`group flex items-center gap-4 px-4 py-3.5 text-left rounded-2xl transition-all font-semibold hover:scale-[1.02] active:scale-[0.98] ${item.gradient
-                      ? 'bg-gradient-to-r from-primary to-pink-600 text-white shadow-lg shadow-primary/30'
-                      : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:shadow-lg'
+                    ? 'bg-gradient-to-r from-primary to-pink-600 text-white shadow-lg shadow-primary/30'
+                    : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:shadow-lg'
                     }`}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform ${item.gradient
-                      ? 'bg-white/20 backdrop-blur-sm text-white'
-                      : 'bg-gradient-to-br from-red-500 to-pink-600 text-white'
+                    ? 'bg-white/20 backdrop-blur-sm text-white'
+                    : 'bg-gradient-to-br from-red-500 to-pink-600 text-white'
                     }`}>
                     <i className={`${item.icon} text-lg ${item.gradient ? 'animate-pulse' : ''}`}></i>
                   </div>
@@ -450,23 +450,23 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Sidebar User Section */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 pb-safe">
+        <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 pb-safe">
           {isLoggedIn && user ? (
             <div
-              className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all active:scale-[0.98]"
+              className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.01] transition-all active:scale-[0.99]"
               onClick={() => {
                 onNavigate('dashboard');
                 setIsMobileMenuOpen(false);
               }}
             >
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary shadow-md">
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-sm">
                 <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">View Profile & Orders</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">View Profile & Orders</p>
               </div>
-              <i className="fas fa-chevron-right text-sm text-gray-400"></i>
+              <i className="fas fa-chevron-right text-xs text-gray-400"></i>
             </div>
           ) : (
             <button
@@ -474,9 +474,9 @@ export const Header: React.FC<HeaderProps> = ({
                 onNavigate('login');
                 setIsMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-primary to-pink-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-primary to-pink-600 text-white py-3 rounded-xl font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:scale-[1.01] transition-all active:scale-[0.99]"
             >
-              <i className="fas fa-sign-in-alt text-lg"></i>
+              <i className="fas fa-sign-in-alt"></i>
               Login / Register
             </button>
           )}
