@@ -355,72 +355,118 @@ export const Header: React.FC<HeaderProps> = ({
       />
 
       <div
-        className={`fixed inset-y-0 right-0 w-[280px] bg-white dark:bg-surface-dark shadow-2xl z-[70] transform transition-transform duration-300 lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed inset-y-0 right-0 w-[320px] bg-gradient-to-b from-white via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 shadow-2xl z-[70] transform transition-all duration-300 lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
-        {/* Sidebar Header */}
-        <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
-          <div>
-            <span className="font-bold text-lg text-gray-800 dark:text-white block">Menu</span>
-            <span className="text-xs text-gray-500">{settings.general.storeName}</span>
+        {/* Sidebar Header - Gradient */}
+        <div className="relative p-6 bg-gradient-to-r from-primary to-pink-600 overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+
+          <div className="relative z-10 flex justify-between items-start">
+            <div>
+              <span className="font-black text-2xl text-white block drop-shadow-lg">Menu</span>
+              <span className="text-xs text-white/90 font-medium mt-1 block">{settings.general.storeName}</span>
+            </div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all active:scale-90 shadow-lg"
+            >
+              <i className="fas fa-times text-lg"></i>
+            </button>
           </div>
-          <button
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="w-9 h-9 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center text-gray-500 hover:text-red-500 shadow-sm transition-colors active:scale-90"
-          >
-            <i className="fas fa-times"></i>
-          </button>
         </div>
 
         {/* Sidebar Links */}
-        <div className="flex-1 overflow-y-auto py-4">
-          <nav className="flex flex-col px-3 gap-1">
-            {[
-              { label: 'Home', action: () => onNavigate('home'), icon: 'fas fa-home' },
-              { label: 'Shop Products', action: () => onNavigate('shop'), icon: 'fas fa-store' },
-              { label: 'Categories', action: () => onNavigate('categories'), icon: 'fas fa-th-large' },
-              { label: 'Brands', action: () => onNavigate('brands'), icon: 'fas fa-tags' },
-              { label: 'New Arrivals', action: () => onNavigate('shop'), icon: 'fas fa-fire', highlight: true },
-              { label: 'My Wishlist', action: () => onNavigate('wishlist'), icon: 'far fa-heart' },
-            ].map((item, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  item.action();
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`flex items-center gap-4 px-4 py-3.5 text-left rounded-xl transition-all font-medium active:scale-98 ${item.highlight
-                  ? 'bg-primary/5 text-primary'
-                  : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
-                  }`}
-              >
-                <div className={`w-8 flex justify-center ${item.highlight ? 'text-primary' : 'text-gray-400'}`}>
-                  <i className={`${item.icon} text-lg`}></i>
-                </div>
-                {item.label}
-              </button>
-            ))}
-          </nav>
+        <div className="flex-1 overflow-y-auto py-6 px-4">
+          {/* Main Navigation */}
+          <div className="mb-6">
+            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 px-3">Navigate</h3>
+            <nav className="flex flex-col gap-2">
+              {[
+                { label: 'Home', action: () => onNavigate('home'), icon: 'fas fa-home', color: 'from-blue-500 to-blue-600' },
+                { label: 'Shop Products', action: () => onNavigate('shop'), icon: 'fas fa-store', color: 'from-purple-500 to-purple-600' },
+                { label: 'Categories', action: () => onNavigate('categories'), icon: 'fas fa-th-large', color: 'from-green-500 to-green-600' },
+                { label: 'Brands', action: () => onNavigate('brands'), icon: 'fas fa-tags', color: 'from-orange-500 to-orange-600' },
+              ].map((item, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    item.action();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="group flex items-center gap-4 px-4 py-3.5 text-left rounded-2xl transition-all font-semibold bg-white dark:bg-gray-800 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] border border-gray-100 dark:border-gray-700"
+                >
+                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform`}>
+                    <i className={`${item.icon} text-lg`}></i>
+                  </div>
+                  <span className="text-gray-800 dark:text-white">{item.label}</span>
+                  <i className="fas fa-chevron-right text-xs text-gray-300 ml-auto group-hover:text-primary group-hover:translate-x-1 transition-all"></i>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Special Section */}
+          <div className="mb-6">
+            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 px-3">Special</h3>
+            <nav className="flex flex-col gap-2">
+              {[
+                { label: 'New Arrivals', action: () => onNavigate('shop'), icon: 'fas fa-fire', gradient: true },
+                { label: 'My Wishlist', action: () => onNavigate('wishlist'), icon: 'fas fa-heart', count: wishlistCount },
+              ].map((item, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    item.action();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`group flex items-center gap-4 px-4 py-3.5 text-left rounded-2xl transition-all font-semibold hover:scale-[1.02] active:scale-[0.98] ${item.gradient
+                      ? 'bg-gradient-to-r from-primary to-pink-600 text-white shadow-lg shadow-primary/30'
+                      : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:shadow-lg'
+                    }`}
+                >
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform ${item.gradient
+                      ? 'bg-white/20 backdrop-blur-sm text-white'
+                      : 'bg-gradient-to-br from-red-500 to-pink-600 text-white'
+                    }`}>
+                    <i className={`${item.icon} text-lg ${item.gradient ? 'animate-pulse' : ''}`}></i>
+                  </div>
+                  <span className={item.gradient ? 'text-white' : 'text-gray-800 dark:text-white'}>{item.label}</span>
+                  {item.count !== undefined && item.count > 0 && (
+                    <span className="ml-auto bg-primary text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                      {item.count}
+                    </span>
+                  )}
+                  {!item.count && (
+                    <i className={`fas fa-chevron-right text-xs ml-auto group-hover:translate-x-1 transition-all ${item.gradient ? 'text-white/70' : 'text-gray-300 group-hover:text-primary'
+                      }`}></i>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
         </div>
 
         {/* Sidebar User Section */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 pb-safe">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 pb-safe">
           {isLoggedIn && user ? (
             <div
-              className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:border-primary transition-colors active:scale-98"
+              className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all active:scale-[0.98]"
               onClick={() => {
                 onNavigate('dashboard');
                 setIsMobileMenuOpen(false);
               }}
             >
-              <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-100 dark:border-gray-600">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary shadow-md">
                 <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name}</p>
-                <p className="text-xs text-gray-500 truncate">View Profile & Orders</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">View Profile & Orders</p>
               </div>
-              <i className="fas fa-chevron-right text-xs text-gray-400"></i>
+              <i className="fas fa-chevron-right text-sm text-gray-400"></i>
             </div>
           ) : (
             <button
@@ -428,9 +474,9 @@ export const Header: React.FC<HeaderProps> = ({
                 onNavigate('login');
                 setIsMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-3.5 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-primary to-pink-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/30 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-[0.98]"
             >
-              <i className="fas fa-sign-in-alt"></i>
+              <i className="fas fa-sign-in-alt text-lg"></i>
               Login / Register
             </button>
           )}
