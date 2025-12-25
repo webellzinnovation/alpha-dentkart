@@ -379,11 +379,11 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Sidebar Links */}
-        <div className="flex-1 overflow-y-auto py-6 px-4">
+        <div className="flex-1 overflow-y-auto py-3 px-3">
           {/* Main Navigation */}
-          <div className="mb-6">
-            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 px-3">Navigate</h3>
-            <nav className="flex flex-col gap-2">
+          <div className="mb-3">
+            <h3 className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5 px-1">Navigate</h3>
+            <nav className="flex flex-col gap-1">
               {[
                 { label: 'Home', action: () => onNavigate('home'), icon: 'fas fa-home', color: 'from-blue-500 to-blue-600' },
                 { label: 'Shop Products', action: () => onNavigate('shop'), icon: 'fas fa-store', color: 'from-purple-500 to-purple-600' },
@@ -396,13 +396,13 @@ export const Header: React.FC<HeaderProps> = ({
                     item.action();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="group flex items-center gap-4 px-4 py-3.5 text-left rounded-2xl transition-all font-semibold bg-white dark:bg-gray-800 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] border border-gray-100 dark:border-gray-700"
+                  className="group flex items-center gap-2.5 px-2.5 py-2 text-left rounded-lg transition-all font-medium bg-white dark:bg-gray-800 hover:shadow-md hover:scale-[1.01] active:scale-[0.99] border border-gray-100 dark:border-gray-700 text-sm"
                 >
-                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform`}>
-                    <i className={`${item.icon} text-lg`}></i>
+                  <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform`}>
+                    <i className={`${item.icon} text-xs`}></i>
                   </div>
                   <span className="text-gray-800 dark:text-white">{item.label}</span>
-                  <i className="fas fa-chevron-right text-xs text-gray-300 ml-auto group-hover:text-primary group-hover:translate-x-1 transition-all"></i>
+                  <i className="fas fa-chevron-right text-[9px] text-gray-300 ml-auto group-hover:text-primary group-hover:translate-x-0.5 transition-all"></i>
                 </button>
               ))}
             </nav>
