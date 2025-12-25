@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Product, Order, Category, BrandProfile, ProductVariation, User, HeroSlide } from '../types';
+import { ThemesTab } from './ThemesTab';
 
 interface AdminDashboardProps {
     products: Product[];
@@ -264,7 +265,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     onDeleteHeroSlide,
     onReorderHeroSlides
 }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides' | 'appearance'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides' | 'appearance' | 'themes'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
     // Dashboard Chart State
@@ -2286,6 +2287,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 )}
                             </div>
                         )}
+
+                        {/* THEMES TAB */}
+                        {activeTab === 'themes' && <ThemesTab />}
                     </div>
                 </main>
             </div >
