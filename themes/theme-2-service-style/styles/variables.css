@@ -1,0 +1,67 @@
+/* Theme 2: Service Style - CSS Variables */
+
+:root {
+  /* Primary Colors */
+  --t2-orange-primary: #FF9F43;
+  --t2-orange-secondary: #FFA726;
+  --t2-orange-accent: #FFB74D;
+  --t2-orange-light: #FFE0B2;
+  
+  /* Background Colors */
+  --t2-cream-bg: #FFF4E6;
+  --t2-cream-light: #FFF9F0;
+  --t2-white: #FFFFFF;
+  --t2-gray-bg: #F5F5F5;
+  
+  /* Text Colors */
+  --t2-text-dark: #2C2C2C;
+  --t2-text-gray: #6B6B6B;
+  --t2-text-light: #9E9E9E;
+  
+  /* Accent Colors */
+  --t2-green-success: #4CAF50;
+  --t2-red-error: #F44336;
+  --t2-blue-info: #2196F3;
+  
+  /* Border Radius */
+  --t2-radius-xs: 8px;
+  --t2-radius-sm: 12px;
+  --t2-radius-md: 20px;
+  --t2-radius-lg: 30px;
+  --t2-radius-xl: 40px;
+  --t2-radius-full: 9999px;
+  
+  /* Shadows */
+  --t2-shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --t2-shadow-card: 0 8px 24px rgba(255, 159, 67, 0.15);
+  --t2-shadow-hover: 0 12px 32px rgba(255, 159, 67, 0.25);
+  
+  /* Spacing */
+  --t2-space-xs: 8px;
+  --t2-space-sm: 12px;
+  --t2-space-md: 16px;
+  --t2-space-lg: 24px;
+  --t2-space-xl: 32px;
+  --t2-space-2xl: 48px;
+  
+  /* Typography */
+  --t2-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --t2-font-size-xs: 12px;
+  --t2-font-size-sm: 14px;
+  --t2-font-size-base: 16px;
+  --t2-font-size-lg: 18px;
+  --t2-font-size-xl: 24px;
+  --t2-font-size-2xl: 32px;
+}
+
+/* Dark Mode Variables */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --t2-cream-bg: #1A1A1A;
+    --t2-cream-light: #242424;
+    --t2-white: #2C2C2C;
+    --t2-text-dark: #FFFFFF;
+    --t2-text-gray: #B0B0B0;
+    --t2-text-light: #808080;
+  }
+}

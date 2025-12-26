@@ -1,0 +1,169 @@
+/* Theme 2: Service Style - Global Styles */
+
+@import './variables.css';
+
+.theme-2-service-style {
+    font-family: var(--t2-font-family);
+    background-color: var(--t2-cream-bg);
+    color: var(--t2-text-dark);
+    min-height: 100vh;
+}
+
+/* Button Styles */
+.theme-2-service-style .btn-primary {
+    background: linear-gradient(135deg, var(--t2-orange-primary) 0%, var(--t2-orange-secondary) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--t2-radius-full);
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: var(--t2-font-size-base);
+    cursor: pointer;
+    box-shadow: var(--t2-shadow-soft);
+    transition: all 0.3s ease;
+}
+
+.theme-2-service-style .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--t2-shadow-hover);
+}
+
+.theme-2-service-style .btn-secondary {
+    background: var(--t2-white);
+    color: var(--t2-orange-primary);
+    border: 2px solid var(--t2-orange-primary);
+    border-radius: var(--t2-radius-full);
+    padding: 12px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.theme-2-service-style .btn-secondary:hover {
+    background: var(--t2-orange-primary);
+    color: white;
+}
+
+/* Card Styles */
+.theme-2-service-style .card {
+    background: var(--t2-white);
+    border-radius: var(--t2-radius-md);
+    padding: var(--t2-space-lg);
+    box-shadow: var(--t2-shadow-soft);
+    transition: all 0.3s ease;
+}
+
+.theme-2-service-style .card:hover {
+    box-shadow: var(--t2-shadow-card);
+    transform: translateY(-4px);
+}
+
+.theme-2-service-style .card-hero {
+    background: linear-gradient(135deg, var(--t2-orange-primary) 0%, var(--t2-orange-secondary) 100%);
+    border-radius: var(--t2-radius-lg);
+    padding: var(--t2-space-xl);
+    box-shadow: var(--t2-shadow-card);
+    color: white;
+}
+
+/* Chip Styles */
+.theme-2-service-style .chip {
+    background: var(--t2-white);
+    color: var(--t2-text-gray);
+    border-radius: var(--t2-radius-full);
+    padding: 8px 16px;
+    font-size: var(--t2-font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.theme-2-service-style .chip:hover {
+    border-color: var(--t2-orange-light);
+}
+
+.theme-2-service-style .chip.active {
+    background: var(--t2-orange-primary);
+    color: white;
+    box-shadow: var(--t2-shadow-soft);
+}
+
+/* Input Styles */
+.theme-2-service-style .input-search {
+    background: var(--t2-white);
+    border: none;
+    border-radius: var(--t2-radius-full);
+    padding: 12px 20px 12px 48px;
+    font-size: var(--t2-font-size-base);
+    width: 100%;
+    box-shadow: var(--t2-shadow-soft);
+    transition: all 0.3s ease;
+}
+
+.theme-2-service-style .input-search:focus {
+    outline: none;
+    box-shadow: 0 4px 24px rgba(255, 159, 67, 0.2);
+}
+
+/* Product Grid */
+.theme-2-service-style .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--t2-space-md);
+}
+
+@media (min-width: 768px) {
+    .theme-2-service-style .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--t2-space-lg);
+    }
+}
+
+@media (min-width: 1024px) {
+    .theme-2-service-style .product-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--t2-space-xl);
+    }
+}
+
+/* Rating Stars */
+.theme-2-service-style .rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--t2-orange-primary);
+    font-size: var(--t2-font-size-sm);
+}
+
+/* Badge */
+.theme-2-service-style .badge {
+    background: var(--t2-orange-primary);
+    color: white;
+    border-radius: var(--t2-radius-sm);
+    padding: 4px 12px;
+    font-size: var(--t2-font-size-xs);
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* Scrollbar Styling */
+.theme-2-service-style ::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+.theme-2-service-style ::-webkit-scrollbar-track {
+    background: var(--t2-cream-light);
+    border-radius: var(--t2-radius-sm);
+}
+
+.theme-2-service-style ::-webkit-scrollbar-thumb {
+    background: var(--t2-orange-light);
+    border-radius: var(--t2-radius-sm);
+}
+
+.theme-2-service-style ::-webkit-scrollbar-thumb:hover {
+    background: var(--t2-orange-primary);
+}
