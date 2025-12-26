@@ -133,16 +133,59 @@ export const ThemesTab = () => {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Theme 2 - Coming Soon */}
-                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center">
-                        <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mx-auto mb-4">
-                            <i className="fas fa-palette text-orange-500 text-2xl"></i>
+                    {/* Theme 2 - Service Style (Available) */}
+                    <div className="border-2 border-orange-300 dark:border-orange-600 rounded-xl overflow-hidden hover:shadow-lg transition-all">
+                        {/* Preview */}
+                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-6 text-center">
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center mx-auto mb-3 shadow-lg">
+                                <i className="fas fa-palette text-white text-2xl"></i>
+                            </div>
+                            <h4 className="text-xl font-bold text-gray-800 dark:text-white mb-1">Service Style</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Warm & Friendly</p>
                         </div>
-                        <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Service Style</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Orange & cream theme with rounded cards</p>
-                        <span className="inline-block px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full text-xs font-semibold">
-                            Coming Soon
-                        </span>
+
+                        {/* Details */}
+                        <div className="bg-white dark:bg-gray-800 p-4">
+                            {/* Color Palette */}
+                            <div className="mb-4">
+                                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Color Palette</p>
+                                <div className="flex gap-2">
+                                    <div className="flex-1 h-8 rounded-lg bg-[#FF9F43]"></div>
+                                    <div className="flex-1 h-8 rounded-lg bg-[#FFA726]"></div>
+                                    <div className="flex-1 h-8 rounded-lg bg-[#FFB74D]"></div>
+                                </div>
+                            </div>
+
+                            {/* Features */}
+                            <ul className="space-y-1 text-xs text-gray-600 dark:text-gray-400 mb-4">
+                                <li className="flex items-center gap-2">
+                                    <i className="fas fa-check text-orange-500"></i> Rounded Cards
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <i className="fas fa-check text-orange-500"></i> Orange/Cream Theme
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <i className="fas fa-check text-orange-500"></i> Mobile Bottom Nav
+                                </li>
+                            </ul>
+
+                            {/* Status Badge */}
+                            <div className="mb-4">
+                                <span className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-semibold">
+                                    ✓ Available
+                                </span>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-2">
+                                <button className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors text-sm">
+                                    Activate
+                                </button>
+                                <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                    <i className="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Theme 3 - Placeholder */}
