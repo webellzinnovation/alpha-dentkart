@@ -1126,6 +1126,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             { id: 'categories', icon: 'fas fa-layer-group', label: 'Categories' },
                             { id: 'brands', icon: 'fas fa-tags', label: 'Brands' },
                             { id: 'hero-slides', icon: 'fas fa-images', label: 'Hero Slides' },
+                            { id: 'themes', icon: 'fas fa-palette', label: 'Themes' },
                             { id: 'analytics', icon: 'fas fa-chart-bar', label: 'Analytics' },
                             { id: 'settings', icon: 'fas fa-cog', label: 'Settings' },
                         ].map((item) => (

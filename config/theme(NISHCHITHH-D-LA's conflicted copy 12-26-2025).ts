@@ -68,6 +68,17 @@ export const AVAILABLE_THEMES: Theme[] = [
             accent: '#10B981',
         },
     },
+    {
+        id: 'service-style',
+        name: 'Service Style',
+        description: 'Warm orange/cream theme with rounded cards and friendly aesthetic',
+        preview: '/themes/service-style-preview.jpg',
+        colors: {
+            primary: '#FF9F43',
+            secondary: '#FFA726',
+            accent: '#FFB74D',
+        },
+    },
 ];
 
 export const getThemeById = (id: string): Theme | undefined => {
