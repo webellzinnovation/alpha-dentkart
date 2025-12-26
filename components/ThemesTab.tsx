@@ -178,10 +178,17 @@ export const ThemesTab = () => {
 
                             {/* Actions */}
                             <div className="flex gap-2">
-                                <button className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors text-sm">
+                                <button
+                                    onClick={() => window.open('/theme2-demo', '_blank')}
+                                    className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors text-sm"
+                                >
                                     Activate
                                 </button>
-                                <button className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                <button
+                                    onClick={() => window.open('/theme2-demo', '_blank')}
+                                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                    title="Preview Theme 2"
+                                >
                                     <i className="fas fa-eye"></i>
                                 </button>
                             </div>
