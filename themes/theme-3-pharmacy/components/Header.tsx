@@ -20,10 +20,10 @@ export const Header: React.FC<HeaderProps> = ({
                     {/* Logo */}
                     <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                            <i className="fas fa-plus text-white text-xl"></i>
+                            <i className="fas fa-tooth text-white text-xl"></i>
                         </div>
                         <h1 className="text-2xl font-bold" style={{ color: 'var(--t3-text-primary)' }}>
-                            Pharmacy
+                            Alpha <span className="text-green-600">DentKart</span>
                         </h1>
                     </div>
 
