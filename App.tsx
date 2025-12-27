@@ -19,6 +19,7 @@ import { Dashboard } from './components/Dashboard';
 import { AIChat } from './components/AIChat';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Theme2Demo } from './components/Theme2Demo';
+import { Theme3Demo } from './components/Theme3Demo';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { StickyCartButton } from './components/StickyCartButton';
 import { PROMOS, HERO_SLIDES } from './constants';
@@ -26,7 +27,7 @@ import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide } fro
 import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
 
-type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo';
+type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewState>('home');
@@ -158,6 +159,8 @@ function App() {
       setCurrentView('admin-dashboard');
     } else if (path === '/theme2-demo') {
       setCurrentView('theme2-demo');
+    } else if (path === '/theme3-demo') {
+      setCurrentView('theme3-demo');
     } else if (path === '/') {
       setCurrentView('home');
     }
@@ -609,6 +612,11 @@ function App() {
   // Theme 2 Demo Page
   if (currentView === 'theme2-demo') {
     return <Theme2Demo />;
+  }
+
+  // Theme 3 Demo Page
+  if (currentView === 'theme3-demo') {
+    return <Theme3Demo />;
   }
 
   // Show loading state while data is being fetched (prevents flash of wrong content on direct URL access)

@@ -1,0 +1,7 @@
+// Quick fix script to add Theme2Demo rendering
+// Insert this code after line 607 in App.tsx (after the admin dashboard closing brace)
+
+  // Theme 2 Demo Page
+  if (currentView === 'theme2-demo') {
+    return <Theme2Demo />;
+  }
