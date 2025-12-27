@@ -12,18 +12,13 @@ export const Loading: React.FC<LoadingProps> = ({ message = 'Loading...', fullSc
 
     return (
         <div className={containerClass}>
-            {/* Animated Logo */}
-            <div className="relative w-24 h-24 mb-6">
-                {/* Pulsing background circle */}
-                <div className="absolute inset-0 bg-primary/10 rounded-full animate-ping"></div>
-
-                {/* Logo container with rotation */}
-                <div className="relative w-full h-full bg-gradient-to-br from-primary to-pink-700 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                    <span className="text-white font-bold text-3xl">AD</span>
-                </div>
-
-                {/* Spinning border */}
-                <div className="absolute inset-0 border-4 border-transparent border-t-primary rounded-full animate-spin"></div>
+            {/* Logo */}
+            <div className="mb-6 animate-bounce">
+                <img
+                    src="/Alpha-dentkart-logo-600p.png"
+                    alt="Alpha DentKart"
+                    className="h-20 object-contain"
+                />
             </div>
 
             {/* Loading text */}
