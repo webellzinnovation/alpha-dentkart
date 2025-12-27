@@ -19,14 +19,15 @@ export const HeroCard: React.FC<HeroCardProps> = ({
     onButtonClick
 }) => {
     return (
-        <div className="card-hero relative overflow-hidden">
+        <div className="relative overflow-hidden bg-gradient-to-br from-[var(--t2-primary)] to-[var(--t2-primary-dark)] rounded-2xl p-8 shadow-lg">
             <div className="flex items-center justify-between gap-6">
                 {/* Left Content */}
                 <div className="flex-1 space-y-4 z-10">
                     {/* Subtitle Badge */}
-                    <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                        <i className="fas fa-bolt text-white"></i>
                         <span className="text-white text-sm font-semibold">
-                            ✨ {subtitle}
+                            {subtitle}
                         </span>
                     </div>
 
@@ -43,7 +44,7 @@ export const HeroCard: React.FC<HeroCardProps> = ({
                     {/* CTA Button */}
                     <button
                         onClick={onButtonClick}
-                        className="bg-white text-[var(--t2-orange-primary)] px-8 py-3 rounded-full font-bold text-lg hover:bg-[var(--t2-cream-light)] transition-all shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center gap-2"
+                        className="bg-white text-[var(--t2-primary)] px-8 py-3 rounded-xl font-semibold text-base hover:bg-gray-50 transition-all shadow-md hover:shadow-lg hover:scale-105 inline-flex items-center gap-2"
                     >
                         {buttonText}
                         <i className="fas fa-arrow-right"></i>
@@ -60,7 +61,9 @@ export const HeroCard: React.FC<HeroCardProps> = ({
                             <div className="text-sm text-white/80">Brands</div>
                         </div>
                         <div className="text-white">
-                            <div className="text-2xl font-bold">4.8★</div>
+                            <div className="flex items-center gap-1 text-2xl font-bold">
+                                4.8 <i className="fas fa-star text-yellow-300 text-lg"></i>
+                            </div>
                             <div className="text-sm text-white/80">Rating</div>
                         </div>
                     </div>
@@ -80,9 +83,10 @@ export const HeroCard: React.FC<HeroCardProps> = ({
                         />
 
                         {/* Floating Badge */}
-                        <div className="absolute -top-4 -right-4 bg-white px-4 py-2 rounded-2xl shadow-xl z-20">
-                            <div className="text-[var(--t2-orange-primary)] font-bold text-lg">
-                                🔥 Hot Deal
+                        <div className="absolute -top-4 -right-4 bg-white px-4 py-2 rounded-xl shadow-xl z-20 flex items-center gap-2">
+                            <i className="fas fa-fire text-[var(--t2-error)]"></i>
+                            <div className="text-[var(--t2-text-dark)] font-bold text-sm">
+                                Hot Deal
                             </div>
                         </div>
                     </div>
