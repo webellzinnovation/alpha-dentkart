@@ -1,70 +1,47 @@
-/* Theme 2: Professional Service Style - CSS Variables */
-/* Color Palette: Navy Blue, Teal, and Clean Whites */
+/* Theme 2: Balanced Professional Style - CSS Variables */
+/* Color Palette: Deep Blue, Vibrant Teal, with Energy */
 
 :root {
-  /* Primary Colors - Professional Navy & Teal */
-  --t2-navy-primary: #1E3A8A;      /* Deep navy blue - primary actions */
-  --t2-navy-dark: #1E293B;         /* Darker navy - headers */
-  --t2-teal-accent: #0D9488;       /* Teal accent - highlights */
-  --t2-teal-light: #14B8A6;        /* Light teal - hover states */
-  
-  /* Background Colors - Clean & Professional */
-  --t2-bg-primary: #FFFFFF;        /* Pure white */
-  --t2-bg-secondary: #F8FAFC;      /* Very light gray */
-  --t2-bg-tertiary: #F1F5F9;       /* Light gray for cards */
-  
-  /* Text Colors - Professional Hierarchy */
-  --t2-text-primary: #0F172A;      /* Almost black - main text */
-  --t2-text-secondary: #475569;    /* Medium gray - secondary text */
-  --t2-text-tertiary: #94A3B8;     /* Light gray - labels */
-  
-  /* Accent Colors */
-  --t2-success: #059669;           /* Professional green */
-  --t2-warning: #D97706;           /* Amber warning */
-  --t2-error: #DC2626;             /* Red error */
-  --t2-info: #2563EB;              /* Blue info */
-  
-  /* Border & Shadows - Subtle & Professional */
-  --t2-border-color: #E2E8F0;
-  --t2-border-radius-sm: 6px;      /* Subtle rounding */
-  --t2-border-radius-md: 8px;      /* Medium rounding */
-  --t2-border-radius-lg: 12px;     /* Larger elements */
-  
-  --t2-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --t2-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --t2-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  
-  /* Spacing */
-  --t2-spacing-xs: 0.5rem;   /* 8px */
-  --t2-spacing-sm: 0.75rem;  /* 12px */
-  --t2-spacing-md: 1rem;     /* 16px */
-  --t2-spacing-lg: 1.5rem;   /* 24px */
-  --t2-spacing-xl: 2rem;     /* 32px */
-  
-  /* Typography */
-  --t2-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --t2-font-size-xs: 0.75rem;    /* 12px */
-  --t2-font-size-sm: 0.875rem;   /* 14px */
-  --t2-font-size-base: 1rem;     /* 16px */
-  --t2-font-size-lg: 1.125rem;   /* 18px */
-  --t2-font-size-xl: 1.25rem;    /* 20px */
-  --t2-font-size-2xl: 1.5rem;    /* 24px */
-  
-  /* Transitions */
-  --t2-transition-fast: 150ms ease-in-out;
-  --t2-transition-base: 200ms ease-in-out;
-  --t2-transition-slow: 300ms ease-in-out;
-}
+  /* Primary Colors - Professional with Energy */
+  --t2-primary: #0891B2;
+  /* Vibrant cyan/teal - modern & trustworthy */
+  --t2-primary-dark: #0E7490;
+  /* Darker teal for depth */
+  --t2-primary-light: #06B6D4;
+  /* Lighter for hover states */
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --t2-bg-primary: #0F172A;
-    --t2-bg-secondary: #1E293B;
-    --t2-bg-tertiary: #334155;
-    --t2-text-primary: #F1F5F9;
-    --t2-text-secondary: #CBD5E1;
-    --t2-text-tertiary: #64748B;
-    --t2-border-color: #334155;
-  }
+  --t2-secondary: #6366F1;
+  /* Indigo accent - professional pop */
+  --t2-secondary-light: #818CF8;
+  /* Light indigo */
+
+  /* Background Colors - Clean but Warm */
+  --t2-bg-main: #FFFFFF;
+  --t2-bg-soft: #F0F9FF;
+  /* Very light cyan tint */
+  --t2-bg-card: #FFFFFF;
+
+  /* Text Colors */
+  --t2-text-dark: #0F172A;
+  --t2-text-gray: #64748B;
+  --t2-text-light: #94A3B8;
+
+  /* Accent Colors */
+  --t2-success: #10B981;
+  --t2-warning: #F59E0B;
+  --t2-error: #EF4444;
+
+  /* Borders & Shadows - Balanced */
+  --t2-border: #E2E8F0;
+  --t2-radius-sm: 8px;
+  --t2-radius-md: 12px;
+  --t2-radius-lg: 16px;
+
+  --t2-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --t2-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --t2-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Gradients - Modern Touch */
+  --t2-gradient-primary: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
+  --t2-gradient-accent: linear-gradient(135deg, #6366F1 0%, #818CF8 100%);
 }

@@ -1,241 +1,143 @@
-/* Theme 2: Professional Service Style - Global Styles */
+/* Theme 2: Balanced Professional Style - Global Styles */
 @import './variables.css';
 
 .theme-2-service-style {
-    font-family: var(--t2-font-family);
-    background-color: var(--t2-bg-secondary);
-    color: var(--t2-text-primary);
+    background-color: var(--t2-bg-soft);
+    color: var(--t2-text-dark);
 }
 
-/* Buttons - Professional & Clean */
+/* Buttons - Modern & Professional */
 .theme-2-service-style .btn-primary {
-    background: linear-gradient(135deg, var(--t2-navy-primary) 0%, var(--t2-teal-accent) 100%);
+    background: var(--t2-gradient-primary);
     color: white;
-    padding: var(--t2-spacing-sm) var(--t2-spacing-lg);
-    border-radius: var(--t2-border-radius-md);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--t2-radius-md);
     font-weight: 600;
-    font-size: var(--t2-font-size-sm);
     border: none;
     cursor: pointer;
-    transition: all var(--t2-transition-base);
+    transition: all 0.2s;
     box-shadow: var(--t2-shadow-sm);
-    letter-spacing: 0.025em;
 }
 
 .theme-2-service-style .btn-primary:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow: var(--t2-shadow-md);
 }
 
-.theme-2-service-style .btn-secondary {
-    background: var(--t2-bg-primary);
-    color: var(--t2-navy-primary);
-    padding: var(--t2-spacing-sm) var(--t2-spacing-lg);
-    border-radius: var(--t2-border-radius-md);
-    font-weight: 600;
-    font-size: var(--t2-font-size-sm);
-    border: 1px solid var(--t2-border-color);
-    cursor: pointer;
-    transition: all var(--t2-transition-base);
-}
-
-.theme-2-service-style .btn-secondary:hover {
-    border-color: var(--t2-navy-primary);
-    background: var(--t2-bg-secondary);
-}
-
-/* Cards - Clean & Professional */
+/* Cards - Clean with Personality */
 .theme-2-service-style .card {
-    background: var(--t2-bg-primary);
-    border-radius: var(--t2-border-radius-lg);
-    padding: var(--t2-spacing-lg);
+    background: var(--t2-bg-card);
+    border-radius: var(--t2-radius-lg);
+    padding: 1.5rem;
     box-shadow: var(--t2-shadow-sm);
-    border: 1px solid var(--t2-border-color);
-    transition: all var(--t2-transition-base);
+    border: 1px solid var(--t2-border);
+    transition: all 0.3s;
 }
 
 .theme-2-service-style .card:hover {
     box-shadow: var(--t2-shadow-md);
-    border-color: var(--t2-teal-accent);
+    transform: translateY(-4px);
 }
 
-/* Product Cards */
+/* Product Cards - Appealing & Professional */
 .theme-2-service-style .product-card {
-    background: var(--t2-bg-primary);
-    border-radius: var(--t2-border-radius-lg);
+    background: white;
+    border-radius: var(--t2-radius-lg);
     overflow: hidden;
-    border: 1px solid var(--t2-border-color);
-    transition: all var(--t2-transition-base);
+    border: 1px solid var(--t2-border);
+    transition: all 0.3s;
     cursor: pointer;
 }
 
 .theme-2-service-style .product-card:hover {
     box-shadow: var(--t2-shadow-lg);
-    transform: translateY(-2px);
-    border-color: var(--t2-teal-accent);
+    transform: translateY(-6px);
+    border-color: var(--t2-primary);
 }
 
 .theme-2-service-style .product-card-image {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
-    background: var(--t2-bg-secondary);
+    background: var(--t2-bg-soft);
 }
 
 .theme-2-service-style .product-card-content {
-    padding: var(--t2-spacing-md);
+    padding: 1rem;
 }
 
 .theme-2-service-style .product-card-title {
-    font-size: var(--t2-font-size-sm);
+    font-size: 0.9rem;
     font-weight: 600;
-    color: var(--t2-text-primary);
-    margin-bottom: var(--t2-spacing-xs);
+    color: var(--t2-text-dark);
+    margin-bottom: 0.5rem;
     line-height: 1.4;
 }
 
-.theme-2-service-style .product-card-brand {
-    font-size: var(--t2-font-size-xs);
-    color: var(--t2-text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: var(--t2-spacing-sm);
-}
-
 .theme-2-service-style .product-card-price {
-    font-size: var(--t2-font-size-lg);
+    font-size: 1.25rem;
     font-weight: 700;
-    color: var(--t2-navy-primary);
+    background: var(--t2-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-/* Badges - Professional */
+/* Badges - Vibrant but Professional */
 .theme-2-service-style .badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    border-radius: var(--t2-border-radius-sm);
-    font-size: var(--t2-font-size-xs);
+    border-radius: var(--t2-radius-sm);
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .theme-2-service-style .badge-success {
-    background: #ECFDF5;
-    color: var(--t2-success);
+    background: linear-gradient(135deg, #10B981, #34D399);
+    color: white;
 }
 
-.theme-2-service-style .badge-warning {
-    background: #FEF3C7;
-    color: var(--t2-warning);
-}
-
-.theme-2-service-style .badge-info {
-    background: #DBEAFE;
-    color: var(--t2-info);
-}
-
-/* Filter Chips - Clean Design */
+/* Chips - Modern Design */
 .theme-2-service-style .chip {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: var(--t2-bg-primary);
-    border: 1px solid var(--t2-border-color);
-    border-radius: var(--t2-border-radius-md);
-    font-size: var(--t2-font-size-sm);
+    background: white;
+    border: 1px solid var(--t2-border);
+    border-radius: var(--t2-radius-md);
+    font-size: 0.875rem;
     font-weight: 500;
-    color: var(--t2-text-secondary);
+    color: var(--t2-text-gray);
     cursor: pointer;
-    transition: all var(--t2-transition-fast);
-    white-space: nowrap;
+    transition: all 0.2s;
 }
 
 .theme-2-service-style .chip:hover {
-    background: var(--t2-bg-secondary);
-    border-color: var(--t2-navy-primary);
-    color: var(--t2-navy-primary);
+    background: var(--t2-bg-soft);
+    border-color: var(--t2-primary);
+    color: var(--t2-primary);
 }
 
 .theme-2-service-style .chip.active {
-    background: var(--t2-navy-primary);
-    border-color: var(--t2-navy-primary);
+    background: var(--t2-gradient-primary);
+    border-color: transparent;
     color: white;
+    box-shadow: var(--t2-shadow-sm);
 }
 
-/* Product Grid - Responsive */
+/* Product Grid */
 .theme-2-service-style .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--t2-spacing-lg);
+    gap: 1.5rem;
 }
 
 @media (max-width: 768px) {
     .theme-2-service-style .product-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: var(--t2-spacing-md);
+        gap: 1rem;
     }
-}
-
-/* Headers - Professional Typography */
-.theme-2-service-style h1,
-.theme-2-service-style h2,
-.theme-2-service-style h3 {
-    color: var(--t2-text-primary);
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.theme-2-service-style h1 {
-    font-size: var(--t2-font-size-2xl);
-}
-
-.theme-2-service-style h2 {
-    font-size: var(--t2-font-size-xl);
-}
-
-.theme-2-service-style h3 {
-    font-size: var(--t2-font-size-lg);
-}
-
-/* Input Fields - Clean & Professional */
-.theme-2-service-style input,
-.theme-2-service-style select,
-.theme-2-service-style textarea {
-    background: var(--t2-bg-primary);
-    border: 1px solid var(--t2-border-color);
-    border-radius: var(--t2-border-radius-md);
-    padding: var(--t2-spacing-sm) var(--t2-spacing-md);
-    font-size: var(--t2-font-size-sm);
-    color: var(--t2-text-primary);
-    transition: all var(--t2-transition-fast);
-}
-
-.theme-2-service-style input:focus,
-.theme-2-service-style select:focus,
-.theme-2-service-style textarea:focus {
-    outline: none;
-    border-color: var(--t2-navy-primary);
-    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
-}
-
-/* Utility Classes */
-.theme-2-service-style .text-primary {
-    color: var(--t2-text-primary);
-}
-
-.theme-2-service-style .text-secondary {
-    color: var(--t2-text-secondary);
-}
-
-.theme-2-service-style .text-tertiary {
-    color: var(--t2-text-tertiary);
-}
-
-.theme-2-service-style .bg-primary {
-    background-color: var(--t2-bg-primary);
-}
-
-.theme-2-service-style .bg-secondary {
-    background-color: var(--t2-bg-secondary);
 }
