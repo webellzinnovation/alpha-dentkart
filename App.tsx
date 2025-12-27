@@ -606,6 +606,11 @@ function App() {
     );
   }
 
+  // Theme 2 Demo Page
+  if (currentView === 'theme2-demo') {
+    return <Theme2Demo />;
+  }
+
   // Show loading state while data is being fetched (prevents flash of wrong content on direct URL access)
   if (isDataLoading) {
     return <Loading fullScreen message="Loading Alpha Dentkart..." />;
