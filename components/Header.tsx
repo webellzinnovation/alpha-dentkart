@@ -93,23 +93,16 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Center: Logo */}
             <a onClick={() => onNavigate('home')} className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
-              {settings.general.logo ? (
-                <img src={settings.general.logo} alt={settings.general.storeName} className="h-9 w-auto object-contain" />
-              ) : (
-                <>
-                  <div className="w-9 h-9 bg-gradient-to-br from-primary to-pink-600 text-white flex items-center justify-center rounded-xl shadow-md shadow-primary/20">
-                    <i className="fas fa-tooth text-base"></i>
-                  </div>
-                  <div className="flex flex-col justify-center">
-                    <span className="text-lg font-black tracking-tight leading-none text-gray-900 dark:text-white">
-                      {settings.general.storeName.split(' ')[0] || 'Alpha'}
-                    </span>
-                    <span className="text-[9px] font-bold text-primary tracking-[0.2em] leading-none uppercase">
-                      {settings.general.storeName.split(' ').slice(1).join(' ') || 'Dentkart'}
-                    </span>
-                  </div>
-                </>
-              )}
+              <img
+                src="/Alpha-dentkart-logo-icon.png"
+                alt="Alpha DentKart"
+                className="h-9 w-9 object-contain"
+              />
+              <img
+                src="/Alpha-dentkart-logo-600p.png"
+                alt="Alpha DentKart"
+                className="h-7 object-contain"
+              />
             </a>
 
             {/* Right: Search Icon */}
@@ -127,23 +120,16 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Logo */}
             <div className="flex items-center gap-4 flex-shrink-0">
               <a onClick={() => onNavigate('home')} className="flex items-center gap-3 cursor-pointer group active:scale-95 transition-transform origin-left">
-                {settings.general.logo ? (
-                  <img src={settings.general.logo} alt={settings.general.storeName} className="h-10 sm:h-12 w-auto object-contain" />
-                ) : (
-                  <>
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-pink-600 text-white flex items-center justify-center rounded-xl shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform duration-300">
-                      <i className="fas fa-tooth text-lg sm:text-xl"></i>
-                    </div>
-                    <div className="flex flex-col justify-center">
-                      <span className="text-xl sm:text-2xl font-black tracking-tight leading-none text-gray-900 dark:text-white group-hover:text-primary transition-colors">
-                        {settings.general.storeName.split(' ')[0] || 'Alpha'}
-                      </span>
-                      <span className="text-[10px] sm:text-xs font-bold text-primary tracking-[0.25em] leading-none uppercase mt-1">
-                        {settings.general.storeName.split(' ').slice(1).join(' ') || 'Dentkart'}
-                      </span>
-                    </div>
-                  </>
-                )}
+                <img
+                  src="/Alpha-dentkart-logo-icon.png"
+                  alt="Alpha DentKart"
+                  className="h-10 sm:h-12 w-10 sm:w-12 object-contain group-hover:scale-105 transition-transform duration-300"
+                />
+                <img
+                  src="/Alpha-dentkart-logo-600p.png"
+                  alt="Alpha DentKart"
+                  className="h-8 sm:h-9 object-contain"
+                />
               </a>
             </div>
 
