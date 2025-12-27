@@ -24,6 +24,7 @@ export interface Product {
   image: string;
   badge?: string;
   badgeColor?: 'blue' | 'green' | 'red' | 'purple';
+  badgeId?: 'clinic-essential' | 'bundle-deal' | 'new-arrival'; // NEW: For homepage customization
   timer?: string;
   brand?: string;
   description?: string;
@@ -116,4 +117,19 @@ export interface User {
   orders: Order[];
   cart: CartItem[];
   wishlist: Product[];
+}
+
+// Homepage Customization Types
+export interface ProductBadge {
+  id: 'clinic-essential' | 'bundle-deal' | 'new-arrival';
+  name: string;
+  color: string; // Text color
+  bgColor: string; // Background color
+  enabled: boolean;
+}
+
+export interface HomepageSettings {
+  badges: ProductBadge[];
+  showcaseCategories: string[]; // Category names in display order
+  showcaseBrands: string[]; // Brand names in display order
 }

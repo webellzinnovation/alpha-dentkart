@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Product, Order, Category, BrandProfile, ProductVariation, User, HeroSlide } from '../types';
 import { ThemesTab } from './ThemesTab';
+import { HomepageTab } from './HomepageTab';
 
 interface AdminDashboardProps {
     products: Product[];
@@ -265,8 +266,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     onDeleteHeroSlide,
     onReorderHeroSlides
 }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides' | 'appearance' | 'themes'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides' | 'homepage' | 'appearance' | 'themes'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
+
+    // Homepage Settings State
+    const [homepageSettings, setHomepageSettings] = useState({
+        badges: [
+            { id: 'clinic-essential' as const, name: 'CLINIC ESSENTIAL', color: '#0369a1', bgColor: '#e0f2fe', enabled: true },
+            { id: 'bundle-deal' as const, name: 'BUNDLE DEAL', color: '#15803d', bgColor: '#dcfce7', enabled: true },
+            { id: 'new-arrival' as const, name: 'NEW ARRIVAL', color: '#be123c', bgColor: '#ffe4e6', enabled: true }
+        ],
+        showcaseCategories: [],
+        showcaseBrands: []
+    });
 
     // Dashboard Chart State
     const [chartView, setChartView] = useState<'weekly' | 'monthly'>('weekly');
@@ -1109,6 +1121,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             { id: 'categories', icon: 'fas fa-layer-group', label: 'Categories' },
                             { id: 'brands', icon: 'fas fa-tags', label: 'Brands' },
                             { id: 'hero-slides', icon: 'fas fa-images', label: 'Hero Slides' },
+                            { id: 'homepage', icon: 'fas fa-home', label: 'Homepage' },
                             { id: 'themes', icon: 'fas fa-palette', label: 'Themes' },
                             { id: 'analytics', icon: 'fas fa-chart-bar', label: 'Analytics' },
                             { id: 'settings', icon: 'fas fa-cog', label: 'Settings' },
@@ -2275,6 +2288,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {/* THEMES TAB */}
                         {activeTab === 'themes' && <ThemesTab />}
                     </div>
+
+                    {/* HOMEPAGE TAB */}
+                    {activeTab === 'homepage' && (
+                        <div className="animate-fade-in">
+                            <HomepageTab
+                                homepageSettings={homepageSettings}
+                                setHomepageSettings={setHomepageSettings}
+                                categories={categories}
+                                brands={brands}
+                            />
+                        </div>
+                    )}
                 </main>
             </div >
 
