@@ -3,6 +3,9 @@ export { Header } from './components/Header';
 export { HeroCard } from './components/HeroCard';
 export { ProductCard } from './components/ProductCard';
 export { HomePage } from './pages/HomePage';
+export { ProductDetailPage } from './pages/ProductDetailPage';
+export { CategoryPage } from './pages/CategoryPage';
+export { CartPage } from './pages/CartPage';
 
 // Theme Configuration
 export const theme2Config = {
