@@ -1,0 +1,44 @@
+/* Theme 3: Pharmacy Reference Design - CSS Variables */
+
+:root {
+    /* Background Colors */
+    --t3-bg-main: #FAFAFA;
+    --t3-bg-white: #FFFFFF;
+
+    /* Text Colors */
+    --t3-text-primary: #1A1A1A;
+    --t3-text-secondary: #666666;
+    --t3-text-light: #999999;
+
+    /* Border */
+    --t3-border: #E5E5E5;
+
+    /* Category Colors (Pastel) */
+    --t3-pink: #FFE5F0;
+    --t3-peach: #FFE8D6;
+    --t3-blue: #E3F2FD;
+    --t3-purple: #F3E5F5;
+    --t3-yellow: #FFF9C4;
+    --t3-green: #E8F5E9;
+
+    /* Banner Colors */
+    --t3-banner-mint: #D4F4DD;
+    --t3-banner-yellow: #FFF4CC;
+    --t3-banner-peach: #FFE4CC;
+
+    /* Buttons */
+    --t3-btn-dark: #2C2C2C;
+    --t3-btn-hover: #000000;
+
+    /* Sale Badge */
+    --t3-sale-red: #FF4444;
+
+    /* Rating Star */
+    --t3-star: #FFA500;
+
+    /* Spacing & Borders */
+    --t3-radius: 12px;
+    --t3-radius-sm: 8px;
+    --t3-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --t3-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
