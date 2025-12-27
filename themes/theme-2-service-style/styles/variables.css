@@ -1,43 +1,35 @@
-/* Theme 2: Clean Pharmacy Style - Based on Reference Design */
+/* Theme 2: Professional Pharmacy Design - Exact Reference Match */
 
 :root {
-  /* Primary Colors - Clean & Fresh */
-  --t2-primary: #16A34A;
-  /* Fresh green - health/pharmacy */
-  --t2-primary-dark: #15803D;
-  --t2-primary-light: #22C55E;
+  /* Primary - Deep Professional Green (from reference) */
+  --t2-primary: #0D9488;
+  /* Teal/medical green */
+  --t2-primary-dark: #0F766E;
+  --t2-primary-hover: #14B8A6;
 
-  /* Accent Colors - Pastel & Vibrant */
-  --t2-yellow: #FDE047;
-  /* Bright yellow for promotions */
-  --t2-yellow-bg: #FEF9C3;
-  /* Light yellow background */
-  --t2-peach: #FDBA74;
-  /* Peach for warm sections */
-  --t2-peach-bg: #FED7AA;
-  --t2-mint: #6EE7B7;
-  /* Mint green */
-  --t2-mint-bg: #D1FAE5;
-  --t2-blue: #60A5FA;
-  /* Soft blue */
-  --t2-blue-bg: #DBEAFE;
+  /* Neutrals - Clean & Professional */
+  --t2-white: #FFFFFF;
+  --t2-gray-50: #F9FAFB;
+  --t2-gray-100: #F3F4F6;
+  --t2-gray-200: #E5E7EB;
+  --t2-gray-300: #D1D5DB;
+  --t2-gray-600: #4B5563;
+  --t2-gray-900: #111827;
 
-  /* Background Colors */
-  --t2-bg-main: #FFFFFF;
-  --t2-bg-gray: #F9FAFB;
-  --t2-bg-light: #F3F4F6;
+  /* Accent Colors (subtle, professional) */
+  --t2-yellow-light: #FEF3C7;
+  --t2-orange-light: #FFEDD5;
+  --t2-green-light: #D1FAE5;
+  --t2-blue-light: #DBEAFE;
 
-  /* Text Colors */
-  --t2-text-dark: #111827;
-  --t2-text-gray: #6B7280;
-  --t2-text-light: #9CA3AF;
+  /* Typography */
+  --t2-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 
-  /* Borders */
-  --t2-border: #E5E7EB;
-  --t2-radius: 12px;
-  --t2-radius-lg: 16px;
+  /* Spacing */
+  --t2-radius: 8px;
+  --t2-radius-lg: 12px;
 
-  /* Shadows - Minimal */
-  --t2-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --t2-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  /* Shadows - Very Subtle */
+  --t2-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --t2-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
