@@ -1,169 +1,241 @@
-/* Theme 2: Service Style - Global Styles */
-
+/* Theme 2: Professional Service Style - Global Styles */
 @import './variables.css';
 
 .theme-2-service-style {
     font-family: var(--t2-font-family);
-    background-color: var(--t2-cream-bg);
-    color: var(--t2-text-dark);
-    min-height: 100vh;
+    background-color: var(--t2-bg-secondary);
+    color: var(--t2-text-primary);
 }
 
-/* Button Styles */
+/* Buttons - Professional & Clean */
 .theme-2-service-style .btn-primary {
-    background: linear-gradient(135deg, var(--t2-orange-primary) 0%, var(--t2-orange-secondary) 100%);
+    background: linear-gradient(135deg, var(--t2-navy-primary) 0%, var(--t2-teal-accent) 100%);
     color: white;
-    border: none;
-    border-radius: var(--t2-radius-full);
-    padding: 12px 24px;
+    padding: var(--t2-spacing-sm) var(--t2-spacing-lg);
+    border-radius: var(--t2-border-radius-md);
     font-weight: 600;
-    font-size: var(--t2-font-size-base);
+    font-size: var(--t2-font-size-sm);
+    border: none;
     cursor: pointer;
-    box-shadow: var(--t2-shadow-soft);
-    transition: all 0.3s ease;
+    transition: all var(--t2-transition-base);
+    box-shadow: var(--t2-shadow-sm);
+    letter-spacing: 0.025em;
 }
 
 .theme-2-service-style .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--t2-shadow-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--t2-shadow-md);
 }
 
 .theme-2-service-style .btn-secondary {
-    background: var(--t2-white);
-    color: var(--t2-orange-primary);
-    border: 2px solid var(--t2-orange-primary);
-    border-radius: var(--t2-radius-full);
-    padding: 12px 24px;
+    background: var(--t2-bg-primary);
+    color: var(--t2-navy-primary);
+    padding: var(--t2-spacing-sm) var(--t2-spacing-lg);
+    border-radius: var(--t2-border-radius-md);
     font-weight: 600;
+    font-size: var(--t2-font-size-sm);
+    border: 1px solid var(--t2-border-color);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--t2-transition-base);
 }
 
 .theme-2-service-style .btn-secondary:hover {
-    background: var(--t2-orange-primary);
-    color: white;
+    border-color: var(--t2-navy-primary);
+    background: var(--t2-bg-secondary);
 }
 
-/* Card Styles */
+/* Cards - Clean & Professional */
 .theme-2-service-style .card {
-    background: var(--t2-white);
-    border-radius: var(--t2-radius-md);
-    padding: var(--t2-space-lg);
-    box-shadow: var(--t2-shadow-soft);
-    transition: all 0.3s ease;
+    background: var(--t2-bg-primary);
+    border-radius: var(--t2-border-radius-lg);
+    padding: var(--t2-spacing-lg);
+    box-shadow: var(--t2-shadow-sm);
+    border: 1px solid var(--t2-border-color);
+    transition: all var(--t2-transition-base);
 }
 
 .theme-2-service-style .card:hover {
-    box-shadow: var(--t2-shadow-card);
-    transform: translateY(-4px);
+    box-shadow: var(--t2-shadow-md);
+    border-color: var(--t2-teal-accent);
 }
 
-.theme-2-service-style .card-hero {
-    background: linear-gradient(135deg, var(--t2-orange-primary) 0%, var(--t2-orange-secondary) 100%);
-    border-radius: var(--t2-radius-lg);
-    padding: var(--t2-space-xl);
-    box-shadow: var(--t2-shadow-card);
-    color: white;
+/* Product Cards */
+.theme-2-service-style .product-card {
+    background: var(--t2-bg-primary);
+    border-radius: var(--t2-border-radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--t2-border-color);
+    transition: all var(--t2-transition-base);
+    cursor: pointer;
 }
 
-/* Chip Styles */
+.theme-2-service-style .product-card:hover {
+    box-shadow: var(--t2-shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--t2-teal-accent);
+}
+
+.theme-2-service-style .product-card-image {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: var(--t2-bg-secondary);
+}
+
+.theme-2-service-style .product-card-content {
+    padding: var(--t2-spacing-md);
+}
+
+.theme-2-service-style .product-card-title {
+    font-size: var(--t2-font-size-sm);
+    font-weight: 600;
+    color: var(--t2-text-primary);
+    margin-bottom: var(--t2-spacing-xs);
+    line-height: 1.4;
+}
+
+.theme-2-service-style .product-card-brand {
+    font-size: var(--t2-font-size-xs);
+    color: var(--t2-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--t2-spacing-sm);
+}
+
+.theme-2-service-style .product-card-price {
+    font-size: var(--t2-font-size-lg);
+    font-weight: 700;
+    color: var(--t2-navy-primary);
+}
+
+/* Badges - Professional */
+.theme-2-service-style .badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--t2-border-radius-sm);
+    font-size: var(--t2-font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.theme-2-service-style .badge-success {
+    background: #ECFDF5;
+    color: var(--t2-success);
+}
+
+.theme-2-service-style .badge-warning {
+    background: #FEF3C7;
+    color: var(--t2-warning);
+}
+
+.theme-2-service-style .badge-info {
+    background: #DBEAFE;
+    color: var(--t2-info);
+}
+
+/* Filter Chips - Clean Design */
 .theme-2-service-style .chip {
-    background: var(--t2-white);
-    color: var(--t2-text-gray);
-    border-radius: var(--t2-radius-full);
-    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--t2-bg-primary);
+    border: 1px solid var(--t2-border-color);
+    border-radius: var(--t2-border-radius-md);
     font-size: var(--t2-font-size-sm);
     font-weight: 500;
+    color: var(--t2-text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
-    border: 2px solid transparent;
+    transition: all var(--t2-transition-fast);
     white-space: nowrap;
 }
 
 .theme-2-service-style .chip:hover {
-    border-color: var(--t2-orange-light);
+    background: var(--t2-bg-secondary);
+    border-color: var(--t2-navy-primary);
+    color: var(--t2-navy-primary);
 }
 
 .theme-2-service-style .chip.active {
-    background: var(--t2-orange-primary);
+    background: var(--t2-navy-primary);
+    border-color: var(--t2-navy-primary);
     color: white;
-    box-shadow: var(--t2-shadow-soft);
 }
 
-/* Input Styles */
-.theme-2-service-style .input-search {
-    background: var(--t2-white);
-    border: none;
-    border-radius: var(--t2-radius-full);
-    padding: 12px 20px 12px 48px;
-    font-size: var(--t2-font-size-base);
-    width: 100%;
-    box-shadow: var(--t2-shadow-soft);
-    transition: all 0.3s ease;
-}
-
-.theme-2-service-style .input-search:focus {
-    outline: none;
-    box-shadow: 0 4px 24px rgba(255, 159, 67, 0.2);
-}
-
-/* Product Grid */
+/* Product Grid - Responsive */
 .theme-2-service-style .product-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--t2-space-md);
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--t2-spacing-lg);
 }
 
-@media (min-width: 768px) {
+@media (max-width: 768px) {
     .theme-2-service-style .product-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--t2-space-lg);
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--t2-spacing-md);
     }
 }
 
-@media (min-width: 1024px) {
-    .theme-2-service-style .product-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: var(--t2-space-xl);
-    }
+/* Headers - Professional Typography */
+.theme-2-service-style h1,
+.theme-2-service-style h2,
+.theme-2-service-style h3 {
+    color: var(--t2-text-primary);
+    font-weight: 700;
+    line-height: 1.2;
 }
 
-/* Rating Stars */
-.theme-2-service-style .rating {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--t2-orange-primary);
+.theme-2-service-style h1 {
+    font-size: var(--t2-font-size-2xl);
+}
+
+.theme-2-service-style h2 {
+    font-size: var(--t2-font-size-xl);
+}
+
+.theme-2-service-style h3 {
+    font-size: var(--t2-font-size-lg);
+}
+
+/* Input Fields - Clean & Professional */
+.theme-2-service-style input,
+.theme-2-service-style select,
+.theme-2-service-style textarea {
+    background: var(--t2-bg-primary);
+    border: 1px solid var(--t2-border-color);
+    border-radius: var(--t2-border-radius-md);
+    padding: var(--t2-spacing-sm) var(--t2-spacing-md);
     font-size: var(--t2-font-size-sm);
+    color: var(--t2-text-primary);
+    transition: all var(--t2-transition-fast);
 }
 
-/* Badge */
-.theme-2-service-style .badge {
-    background: var(--t2-orange-primary);
-    color: white;
-    border-radius: var(--t2-radius-sm);
-    padding: 4px 12px;
-    font-size: var(--t2-font-size-xs);
-    font-weight: 600;
-    display: inline-block;
+.theme-2-service-style input:focus,
+.theme-2-service-style select:focus,
+.theme-2-service-style textarea:focus {
+    outline: none;
+    border-color: var(--t2-navy-primary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
 }
 
-/* Scrollbar Styling */
-.theme-2-service-style ::-webkit-scrollbar {
-    height: 6px;
-    width: 6px;
+/* Utility Classes */
+.theme-2-service-style .text-primary {
+    color: var(--t2-text-primary);
 }
 
-.theme-2-service-style ::-webkit-scrollbar-track {
-    background: var(--t2-cream-light);
-    border-radius: var(--t2-radius-sm);
+.theme-2-service-style .text-secondary {
+    color: var(--t2-text-secondary);
 }
 
-.theme-2-service-style ::-webkit-scrollbar-thumb {
-    background: var(--t2-orange-light);
-    border-radius: var(--t2-radius-sm);
+.theme-2-service-style .text-tertiary {
+    color: var(--t2-text-tertiary);
 }
 
-.theme-2-service-style ::-webkit-scrollbar-thumb:hover {
-    background: var(--t2-orange-primary);
+.theme-2-service-style .bg-primary {
+    background-color: var(--t2-bg-primary);
+}
+
+.theme-2-service-style .bg-secondary {
+    background-color: var(--t2-bg-secondary);
 }
