@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { Header } from '../components/Header';
-import { HeroCard } from '../components/HeroCard';
-import { ProductCard } from '../components/ProductCard';
+import React from 'react';
 import { Product } from '../../../types';
+import { Header } from '../components/Header';
+import { ProductCard } from '../components/ProductCard';
 import '../styles/theme.css';
 
 interface HomePageProps {
@@ -16,177 +15,148 @@ export const HomePage: React.FC<HomePageProps> = ({
     onAddToCart,
     onProductClick
 }) => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [activeFilter, setActiveFilter] = useState('all');
-    const [cartItemCount, setCartItemCount] = useState(0);
-
-    // Filter products based on search and active filter
-    const filteredProducts = products.filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.brand.toLowerCase().includes(searchQuery.toLowerCase());
-
-        if (activeFilter === 'all') return matchesSearch;
-        if (activeFilter === 'featured') return matchesSearch && product.featured;
-        // Add more filter logic as needed
-
-        return matchesSearch;
+    // Convert Product to ProductCard format
+    const convertProduct = (p: Product) => ({
+        id: p.id.toString(),
+        name: p.name,
+        brand: p.brand,
+        price: p.price,
+        originalPrice: p.originalPrice,
+        image: p.image,
+        rating: p.rating,
+        reviewCount: typeof p.reviews === 'number' ? p.reviews : 0,
+        inStock: p.stock > 0
     });
 
-    const handleAddToCart = (productId: string) => {
-        setCartItemCount(prev => prev + 1);
-        onAddToCart?.(productId);
-    };
-
-    // Sample featured product for hero card
-    const featuredProduct = products.find(p => p.featured) || products[0];
-
     return (
-        <div className="theme-2-service-style min-h-screen pb-20">
-            {/* Header */}
-            <Header
-                onSearch={setSearchQuery}
-                onFilterChange={setActiveFilter}
-                cartItemCount={cartItemCount}
-            />
+        <div className="theme-2-service-style min-h-screen bg-white">
+            <Header cartItemCount={0} />
 
-            {/* Main Content */}
-            <main className="px-4 py-6 space-y-8">
-                {/* Hero Section */}
-                <HeroCard
-                    title="Premium Dental Care Products"
-                    subtitle="Special Offer"
-                    description="Get up to 40% off on selected dental equipment and supplies. Limited time offer!"
-                    buttonText="Shop Now"
-                    image={featuredProduct?.image || '/images/hero-product.png'}
-                    onButtonClick={() => onProductClick?.(featuredProduct?.id || '')}
-                />
-
-                {/* Categories Section */}
-                <section>
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-bold text-[var(--t2-text-dark)]">
-                            Shop by Category
-                        </h2>
-                        <button className="text-[var(--t2-orange-primary)] font-semibold text-sm hover:underline">
-                            View All →
+            <main className="max-w-7xl mx-auto px-4 py-8">
+                {/* Hero Banner */}
+                <div className="promo-banner promo-green mb-8">
+                    <div>
+                        <div className="text-sm font-semibold text-gray-700 mb-2">Order medicines and</div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Health Products</h2>
+                        <p className="text-gray-600 mb-4">Get up to 20% off on your first order</p>
+                        <button className="btn-primary">
+                            Order Now
                         </button>
                     </div>
+                    <div className="hidden md:block">
+                        <img
+                            src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300"
+                            alt="Healthcare"
+                            className="w-64 h-64 object-contain"
+                        />
+                    </div>
+                </div>
 
-                    <div className="grid grid-cols-4 gap-3">
+                {/* Shop by Category */}
+                <div className="mb-12">
+                    <div className="section-header">
+                        <h2 className="section-title">Shop by Category</h2>
+                        <a href="#" className="view-all">View all →</a>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         {[
-                            { name: 'Instruments', icon: '🦷', color: 'from-blue-400 to-blue-500' },
-                            { name: 'Equipment', icon: '⚙️', color: 'from-green-400 to-green-500' },
-                            { name: 'Supplies', icon: '📦', color: 'from-purple-400 to-purple-500' },
-                            { name: 'More', icon: '➕', color: 'from-orange-400 to-orange-500' },
-                        ].map((category) => (
-                            <button
-                                key={category.name}
-                                className={`bg-gradient-to-br ${category.color} rounded-2xl p-4 text-white shadow-md hover:shadow-lg transition-all hover:scale-105`}
+                            { name: 'Dental Care', icon: 'fas fa-tooth', color: 'bg-blue-50' },
+                            { name: 'Vitamins', icon: 'fas fa-pills', color: 'bg-orange-50' },
+                            { name: 'Equipment', icon: 'fas fa-stethoscope', color: 'bg-green-50' },
+                            { name: 'Supplies', icon: 'fas fa-box', color: 'bg-purple-50' },
+                            { name: 'Instruments', icon: 'fas fa-syringe', color: 'bg-pink-50' },
+                            { name: 'Safety', icon: 'fas fa-shield-alt', color: 'bg-yellow-50' }
+                        ].map((cat) => (
+                            <div
+                                key={cat.name}
+                                className={`${cat.color} rounded-lg p-6 text-center cursor-pointer hover:shadow-sm transition-shadow`}
                             >
-                                <div className="text-3xl mb-2">{category.icon}</div>
-                                <div className="text-xs font-semibold">{category.name}</div>
-                            </button>
+                                <div className="w-12 h-12 mx-auto mb-3 bg-white rounded-full flex items-center justify-center">
+                                    <i className={`${cat.icon} text-gray-700 text-xl`}></i>
+                                </div>
+                                <div className="text-sm font-medium text-gray-900">{cat.name}</div>
+                            </div>
                         ))}
                     </div>
-                </section>
+                </div>
 
-                {/* Products Section */}
-                <section>
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h2 className="text-2xl font-bold text-[var(--t2-text-dark)]">
-                                Our Products
-                            </h2>
-                            <p className="text-sm text-[var(--t2-text-gray)] mt-1">
-                                {filteredProducts.length} products available
-                            </p>
-                        </div>
-
-                        {/* Sort Dropdown */}
-                        <select className="bg-white border-2 border-[var(--t2-orange-light)] rounded-full px-4 py-2 text-sm font-medium text-[var(--t2-text-dark)] focus:outline-none focus:border-[var(--t2-orange-primary)]">
-                            <option>Popular</option>
-                            <option>Price: Low to High</option>
-                            <option>Price: High to Low</option>
-                            <option>Newest</option>
-                            <option>Rating</option>
-                        </select>
+                {/* Featured Products */}
+                <div className="mb-12">
+                    <div className="section-header">
+                        <h2 className="section-title">Featured Products</h2>
+                        <a href="#" className="view-all">View all →</a>
                     </div>
+                    <div className="product-grid">
+                        {products.slice(0, 6).map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={convertProduct(product)}
+                                onAddToCart={onAddToCart}
+                                onClick={onProductClick}
+                            />
+                        ))}
+                    </div>
+                </div>
 
-                    {/* Product Grid */}
-                    {filteredProducts.length > 0 ? (
-                        <div className="product-grid">
-                            {filteredProducts.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={{
-                                        id: product.id,
-                                        name: product.name,
-                                        brand: product.brand || 'Generic',
-                                        price: product.price,
-                                        originalPrice: product.originalPrice,
-                                        image: product.image,
-                                        rating: product.rating || 4.5,
-                                        reviewCount: product.reviews?.length || 0,
-                                        inStock: product.stock > 0,
-                                        badge: product.featured ? 'Featured' : undefined
-                                    }}
-                                    onAddToCart={handleAddToCart}
-                                    onClick={onProductClick}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-16">
-                            <div className="text-6xl mb-4">🔍</div>
-                            <h3 className="text-xl font-bold text-[var(--t2-text-dark)] mb-2">
-                                No products found
-                            </h3>
-                            <p className="text-[var(--t2-text-gray)]">
-                                Try adjusting your search or filters
-                            </p>
-                        </div>
-                    )}
-                </section>
-
-                {/* Promotional Banner */}
-                <section className="bg-gradient-to-r from-[var(--t2-orange-primary)] to-[var(--t2-orange-secondary)] rounded-3xl p-8 text-white text-center">
-                    <h3 className="text-2xl font-bold mb-2">
-                        🎉 Join Our Newsletter
-                    </h3>
-                    <p className="mb-4 text-white/90">
-                        Get exclusive deals and updates on new products
-                    </p>
-                    <div className="flex gap-2 max-w-md mx-auto">
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            className="flex-1 px-4 py-3 rounded-full text-[var(--t2-text-dark)] focus:outline-none"
-                        />
-                        <button className="bg-white text-[var(--t2-orange-primary)] px-6 py-3 rounded-full font-bold hover:bg-[var(--t2-cream-light)] transition-all">
-                            Subscribe
+                {/* Promo Banner 1 */}
+                <div className="promo-banner promo-yellow mb-8">
+                    <div>
+                        <div className="text-sm font-semibold text-gray-700 mb-2">Limited Time Offer</div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Save up to 30%</h2>
+                        <p className="text-gray-600 mb-4">On dental care products</p>
+                        <button className="btn-primary">
+                            Shop Now
                         </button>
                     </div>
-                </section>
-            </main>
+                </div>
 
-            {/* Bottom Navigation (Mobile) */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex justify-around items-center lg:hidden z-50 shadow-lg">
-                {[
-                    { icon: 'fa-home', label: 'Home', active: true },
-                    { icon: 'fa-th-large', label: 'Shop', active: false },
-                    { icon: 'fa-heart', label: 'Wishlist', active: false },
-                    { icon: 'fa-user', label: 'Account', active: false },
-                ].map((item) => (
-                    <button
-                        key={item.label}
-                        className={`flex flex-col items-center gap-1 ${item.active ? 'text-[var(--t2-orange-primary)]' : 'text-[var(--t2-text-gray)]'
-                            }`}
-                    >
-                        <i className={`fas ${item.icon} text-xl`}></i>
-                        <span className="text-xs font-medium">{item.label}</span>
-                    </button>
-                ))}
-            </nav>
+                {/* Popular Products */}
+                <div className="mb-12">
+                    <div className="section-header">
+                        <h2 className="section-title">Popular Products</h2>
+                        <a href="#" className="view-all">View all →</a>
+                    </div>
+                    <div className="product-grid">
+                        {products.slice(6, 12).map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={convertProduct(product)}
+                                onAddToCart={onAddToCart}
+                                onClick={onProductClick}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Promo Banner 2 */}
+                <div className="promo-banner promo-orange mb-8">
+                    <div>
+                        <div className="text-sm font-semibold text-gray-700 mb-2">New Arrivals</div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Latest Equipment</h2>
+                        <p className="text-gray-600 mb-4">Check out our newest additions</p>
+                        <button className="btn-primary">
+                            Explore
+                        </button>
+                    </div>
+                </div>
+
+                {/* All Products */}
+                <div>
+                    <div className="section-header">
+                        <h2 className="section-title">All Products</h2>
+                    </div>
+                    <div className="product-grid">
+                        {products.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={convertProduct(product)}
+                                onAddToCart={onAddToCart}
+                                onClick={onProductClick}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </main>
         </div>
     );
 };
