@@ -1073,34 +1073,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <div className="h-20 flex items-center px-4 border-b border-gray-100 dark:border-gray-800 relative bg-white dark:bg-[#1F2937]">
                         <div className={`flex items-center gap-3 transition-all duration-300 ${isSidebarOpen ? 'justify-start' : 'justify-center w-full'}`}>
                             {!isSidebarOpen && (
-                                <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
-                                    {settings.general.siteIcon ? (
-                                        <img src={settings.general.siteIcon} alt="Icon" className="w-full h-full object-contain" />
-                                    ) : (
-                                        <div className="w-full h-full bg-gradient-to-tr from-primary to-pink-600 flex items-center justify-center">
-                                            <i className="fas fa-tooth text-white text-lg"></i>
-                                        </div>
-                                    )}
-                                </div>
+                                <img
+                                    src="/Alpha-dentkart-logo-icon.png"
+                                    alt="Alpha DentKart"
+                                    className="h-10 w-10 object-contain"
+                                />
                             )}
                             {isSidebarOpen && (
-                                settings.general.logo ? (
-                                    <img src={settings.general.logo} alt="Logo" className="h-10 w-auto object-contain" />
-                                ) : (
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
-                                            {settings.general.siteIcon ? (
-                                                <img src={settings.general.siteIcon} alt="Icon" className="w-full h-full object-contain" />
-                                            ) : (
-                                                <div className="w-full h-full bg-gradient-to-tr from-primary to-pink-600 flex items-center justify-center">
-                                                    <i className="fas fa-tooth text-white text-lg"></i>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <span className="text-xl font-bold tracking-tight whitespace-nowrap text-gray-900 dark:text-white">
-                                            {settings.general.storeName || 'AlphaAdmin'}
-                                        </span>
-                                    </div>
                                 )
                             )}
                         </div>

@@ -94,14 +94,9 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Center: Logo */}
             <a onClick={() => onNavigate('home')} className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
               <img
-                src="/Alpha-dentkart-logo-icon.png"
-                alt="Alpha DentKart"
-                className="h-9 w-9 object-contain"
-              />
-              <img
                 src="/Alpha-dentkart-logo-600p.png"
                 alt="Alpha DentKart"
-                className="h-7 object-contain"
+                className="h-9 object-contain"
               />
             </a>
 
@@ -121,14 +116,9 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center gap-4 flex-shrink-0">
               <a onClick={() => onNavigate('home')} className="flex items-center gap-3 cursor-pointer group active:scale-95 transition-transform origin-left">
                 <img
-                  src="/Alpha-dentkart-logo-icon.png"
-                  alt="Alpha DentKart"
-                  className="h-10 sm:h-12 w-10 sm:w-12 object-contain group-hover:scale-105 transition-transform duration-300"
-                />
-                <img
                   src="/Alpha-dentkart-logo-600p.png"
                   alt="Alpha DentKart"
-                  className="h-8 sm:h-9 object-contain"
+                  className="h-10 sm:h-12 object-contain group-hover:scale-105 transition-transform duration-300"
                 />
               </a>
             </div>

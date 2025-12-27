@@ -20,14 +20,9 @@ export const Header: React.FC<HeaderProps> = ({
                     {/* Logo */}
                     <div className="flex items-center gap-3">
                         <img
-                            src="/Alpha-dentkart-logo-icon.png"
-                            alt="Alpha DentKart"
-                            className="h-10 w-10 object-contain"
-                        />
-                        <img
                             src="/Alpha-dentkart-logo-600p.png"
                             alt="Alpha DentKart"
-                            className="h-8 object-contain"
+                            className="h-10 object-contain"
                         />
                     </div>
 
