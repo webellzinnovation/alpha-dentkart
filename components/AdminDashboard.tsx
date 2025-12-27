@@ -1080,7 +1080,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 />
                             )}
                             {isSidebarOpen && (
-                                )
+                                <img
+                                    src="/Alpha-dentkart-logo-600p.png"
+                                    alt="Alpha DentKart"
+                                    className="h-10 object-contain"
+                                />
                             )}
                         </div>
 
