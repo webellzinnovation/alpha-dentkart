@@ -18,13 +18,17 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* Top Bar */}
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
-                    <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                            <i className="fas fa-tooth text-white text-xl"></i>
-                        </div>
-                        <h1 className="text-2xl font-bold" style={{ color: 'var(--t3-text-primary)' }}>
-                            Alpha <span className="text-green-600">DentKart</span>
-                        </h1>
+                    <div className="flex items-center gap-3">
+                        <img
+                            src="/Alpha-dentkart-logo-icon.png"
+                            alt="Alpha DentKart"
+                            className="h-10 w-10 object-contain"
+                        />
+                        <img
+                            src="/Alpha-dentkart-logo-600p.png"
+                            alt="Alpha DentKart"
+                            className="h-8 object-contain"
+                        />
                     </div>
 
                     {/* Search Bar */}
