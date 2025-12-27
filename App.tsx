@@ -18,6 +18,7 @@ import { Login } from './components/Login';
 import { Dashboard } from './components/Dashboard';
 import { AIChat } from './components/AIChat';
 import { AdminDashboard } from './components/AdminDashboard';
+import { Theme2Demo } from './components/Theme2Demo';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { StickyCartButton } from './components/StickyCartButton';
 import { PROMOS, HERO_SLIDES } from './constants';
@@ -25,7 +26,7 @@ import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide } fro
 import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
 
-type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard';
+type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewState>('home');
@@ -155,6 +156,8 @@ function App() {
       setCurrentView('dashboard');
     } else if (path === '/admin') {
       setCurrentView('admin-dashboard');
+    } else if (path === '/theme2-demo') {
+      setCurrentView('theme2-demo');
     } else if (path === '/') {
       setCurrentView('home');
     }
