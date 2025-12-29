@@ -9,13 +9,15 @@ interface CustomerManagementProps {
     onUpdateUser: (userId: number, updates: Partial<User>) => void;
     searchTerm: string;
     userTypeFilter: 'all' | 'dental-doctor' | 'student' | 'supplier' | 'regular';
+    onViewOrder?: (orderId: string) => void;
 }
 
 export const CustomerManagement: React.FC<CustomerManagementProps> = ({
     users,
     onUpdateUser,
     searchTerm,
-    userTypeFilter
+    userTypeFilter,
+    onViewOrder
 }) => {
     const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -473,16 +475,27 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
                                                             ₹{order.total.toLocaleString('en-IN')}
                                                         </p>
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${order.status === 'Delivered' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                                                                order.status === 'Processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                                                                    order.status === 'Shipped' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
-                                                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                            order.status === 'Processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                                                                order.status === 'Shipped' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                                                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                                                             }`}>
                                                             {order.status}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                    {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                                                <div className="flex justify-between items-center">
+                                                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                                                        {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                                                    </div>
+                                                    {onViewOrder && (
+                                                        <button
+                                                            onClick={() => onViewOrder(order.id)}
+                                                            className="px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                                        >
+                                                            <i className="fas fa-eye mr-1"></i>
+                                                            View Order
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

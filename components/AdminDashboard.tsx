@@ -1587,6 +1587,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     onUpdateUser={handleUpdateUser}
                                     searchTerm={customerSearchTerm}
                                     userTypeFilter={customerUserTypeFilter}
+                                    onViewOrder={handleViewOrder}
                                 />
                             </div>
                         )}
