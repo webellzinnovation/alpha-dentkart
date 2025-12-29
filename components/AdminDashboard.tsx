@@ -850,26 +850,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
 
     // Customer Handlers
-    const handleViewCustomer = (customer: typeof MOCK_CUSTOMERS[0]) => {
-        setSelectedCustomer(customer);
-        setCustomerFormData(customer);
-        setIsViewCustomerMode(true);
-        setIsCustomerModalOpen(true);
-    };
-
-    const handleEditCustomer = (customer: typeof MOCK_CUSTOMERS[0]) => {
-        setSelectedCustomer(customer);
-        setCustomerFormData({ ...customer });
-        setIsViewCustomerMode(false);
-        setIsCustomerModalOpen(true);
-    };
-
-    const handleDeleteCustomer = (customerId: number) => {
-        confirmDelete(
-            'Delete Customer',
-            'Are you sure you want to delete this customer? All data and order history will be removed.',
-            () => { } // Note: Users data is read-only from migration
-        );
+    const handleUpdateUser = (userIndex: number, updates: Partial<User>) => {
+        const updatedUsers = [...users];
+        updatedUsers[userIndex] = { ...updatedUsers[userIndex], ...updates };
+        // Note: In a real app, this would call an API to update the user
+        // For now, we'll just log the update
+        console.log('User updated:', updatedUsers[userIndex]);
+        // You can add a toast notification here
     };
 
     const handleSaveCustomer = (e: React.FormEvent) => {
@@ -1579,63 +1566,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {activeTab === 'customers' && (
                             <div className="animate-fade-in space-y-6">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-users text-primary"></i> Customers List</h2>
-                                    <SearchInput value={customerSearchTerm} onChange={setCustomerSearchTerm} placeholder="Search customers..." />
-                                </div>
-                                <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left min-w-[800px]">
-                                            <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                <tr>
-                                                    <th className="px-6 py-4">Customer</th>
-                                                    <th className="px-6 py-4">Contact</th>
-                                                    <th className="px-6 py-4">Orders</th>
-                                                    <th className="px-6 py-4">Spent</th>
-                                                    <th className="px-6 py-4">Status</th>
-                                                    <th className="px-6 py-4 text-right">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                                {currentCustomers.length > 0 ? currentCustomers.map(customer => (
-                                                    <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-4">
-                                                                <img src={customer.avatar} className="w-10 h-10 rounded-full object-cover border border-gray-100" alt="" />
-                                                                <div>
-                                                                    <span className="font-bold text-gray-900 dark:text-white block">{customer.name}</span>
-                                                                    <span className="text-xs text-gray-400">Joined {customer.joined}</span>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="text-sm">
-                                                                <p className="text-gray-900 dark:text-white">{customer.email}</p>
-                                                                <p className="text-gray-500 text-xs">{customer.phone}</p>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{customer.orders}</td>
-                                                        <td className="px-6 py-4 font-bold text-gray-800 dark:text-white">₹{(customer.spent || 0).toLocaleString('en-IN')}</td>
-                                                        <td className="px-6 py-4">
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${customer.status === 'Active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
-                                                                {customer.status}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex gap-2 justify-end">
-                                                                <button onClick={() => handleViewCustomer(customer)} className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 flex items-center justify-center transition-all shadow-sm" title="View Details"><i className="fas fa-eye text-xs"></i></button>
-                                                                <button onClick={() => handleEditCustomer(customer)} className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-primary hover:text-white hover:border-primary text-gray-500 flex items-center justify-center transition-all shadow-sm" title="Edit"><i className="fas fa-pen text-xs"></i></button>
-                                                                <button onClick={() => handleResetPassword(customer)} className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-500 hover:text-white hover:border-blue-500 text-gray-500 flex items-center justify-center transition-all shadow-sm" title="Reset Password"><i className="fas fa-key text-xs"></i></button>
-                                                                <button onClick={() => handleDeleteCustomer(customer.id)} className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-red-500 hover:text-white hover:border-red-500 text-gray-500 flex items-center justify-center transition-all shadow-sm" title="Delete"><i className="fas fa-trash text-xs"></i></button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )) : <TableEmptyState colSpan={6} message="No customers found" icon="fas fa-users" />}
-                                            </tbody>
-                                        </table>
+                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-users text-primary"></i> Customer Management</h2>
+                                    <div className="flex gap-4 w-full sm:w-auto">
+                                        <SearchInput value={customerSearchTerm} onChange={setCustomerSearchTerm} placeholder="Search customers..." />
+                                        <select
+                                            value={customerUserTypeFilter}
+                                            onChange={(e) => setCustomerUserTypeFilter(e.target.value as any)}
+                                            className="px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm"
+                                        >
+                                            <option value="all">All Types</option>
+                                            <option value="dental-doctor">Dental Doctors</option>
+                                            <option value="student">Students</option>
+                                            <option value="supplier">Suppliers</option>
+                                            <option value="regular">Regular</option>
+                                        </select>
                                     </div>
-                                    <Pagination currentPage={customerPage} totalItems={filteredCustomers.length} onPageChange={setCustomerPage} />
                                 </div>
+                                <CustomerManagement
+                                    users={users}
+                                    onUpdateUser={handleUpdateUser}
+                                    searchTerm={customerSearchTerm}
+                                    userTypeFilter={customerUserTypeFilter}
+                                />
                             </div>
+                        )}
                         )}
 
                         {/* CATEGORIES TAB */}
@@ -2857,296 +2811,300 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
 
             {/* Password Reset Modal */}
-            {isPasswordResetModalOpen && selectedCustomer && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-                    <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-gradient-to-r from-primary to-pink-600 text-white p-6 rounded-t-2xl">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h3 className="text-xl font-bold flex items-center gap-2">
-                                        <i className="fas fa-key"></i> Reset Password
-                                    </h3>
-                                    <p className="text-sm text-white/80 mt-1">For {selectedCustomer.name}</p>
+            {
+                isPasswordResetModalOpen && selectedCustomer && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                        <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                            <div className="sticky top-0 bg-gradient-to-r from-primary to-pink-600 text-white p-6 rounded-t-2xl">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h3 className="text-xl font-bold flex items-center gap-2">
+                                            <i className="fas fa-key"></i> Reset Password
+                                        </h3>
+                                        <p className="text-sm text-white/80 mt-1">For {selectedCustomer.name}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsPasswordResetModalOpen(false)}
+                                        className="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => setIsPasswordResetModalOpen(false)}
-                                    className="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
-                                >
+                            </div>
+
+                            <form onSubmit={handlePasswordResetSubmit} className="p-6 space-y-6">
+                                {/* Reset Method Selection */}
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+                                        Reset Method
+                                    </label>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-3 p-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:border-primary transition-colors">
+                                            <input
+                                                type="radio"
+                                                name="resetMethod"
+                                                value="manual"
+                                                checked={resetPasswordMethod === 'manual'}
+                                                onChange={(e) => setResetPasswordMethod(e.target.value as 'manual' | 'email')}
+                                                className="w-4 h-4 text-primary"
+                                            />
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-900 dark:text-white">Set New Password</div>
+                                                <div className="text-xs text-gray-500">Manually set a new password for the customer</div>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center gap-3 p-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:border-primary transition-colors">
+                                            <input
+                                                type="radio"
+                                                name="resetMethod"
+                                                value="email"
+                                                checked={resetPasswordMethod === 'email'}
+                                                onChange={(e) => setResetPasswordMethod(e.target.value as 'manual' | 'email')}
+                                                className="w-4 h-4 text-primary"
+                                            />
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-900 dark:text-white">Send Reset Link</div>
+                                                <div className="text-xs text-gray-500">Email a password reset link to {selectedCustomer.email}</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Password Input (only shown for manual method) */}
+                                {resetPasswordMethod === 'manual' && (
+                                    <div className="space-y-2">
+                                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+                                            New Password <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="password"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            placeholder="Enter new password (min 6 characters)"
+                                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                            required
+                                            minLength={6}
+                                        />
+                                        <p className="text-xs text-gray-500">Password must be at least 6 characters long</p>
+                                    </div>
+                                )}
+
+                                {/* Info Box */}
+                                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                                    <div className="flex gap-3">
+                                        <i className="fas fa-info-circle text-blue-600 dark:text-blue-400 mt-0.5"></i>
+                                        <div className="text-sm text-blue-800 dark:text-blue-300">
+                                            {resetPasswordMethod === 'manual' ? (
+                                                <p>The customer will be able to log in immediately with the new password you set.</p>
+                                            ) : (
+                                                <p>A secure password reset link will be sent to the customer's email address. The link will expire in 24 hours.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsPasswordResetModalOpen(false)}
+                                        className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:bg-pink-700 shadow-lg shadow-primary/30 transition-all active:scale-95"
+                                    >
+                                        {resetPasswordMethod === 'manual' ? 'Update Password' : 'Send Reset Link'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Hero Slide Modal */}
+            {
+                isHeroSlideModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsHeroSlideModalOpen(false)}></div>
+                        <div className="bg-white dark:bg-surface-dark rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl">
+                            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-20">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                                    {editingHeroSlide ? 'Edit Hero Slide' : 'Add New Hero Slide'}
+                                </h3>
+                                <button onClick={() => setIsHeroSlideModalOpen(false)} className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center hover:text-red-500 shadow-sm">
                                     <i className="fas fa-times"></i>
                                 </button>
                             </div>
-                        </div>
 
-                        <form onSubmit={handlePasswordResetSubmit} className="p-6 space-y-6">
-                            {/* Reset Method Selection */}
-                            <div className="space-y-3">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
-                                    Reset Method
-                                </label>
-                                <div className="space-y-2">
-                                    <label className="flex items-center gap-3 p-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                                        <input
-                                            type="radio"
-                                            name="resetMethod"
-                                            value="manual"
-                                            checked={resetPasswordMethod === 'manual'}
-                                            onChange={(e) => setResetPasswordMethod(e.target.value as 'manual' | 'email')}
-                                            className="w-4 h-4 text-primary"
-                                        />
-                                        <div className="flex-1">
-                                            <div className="font-medium text-gray-900 dark:text-white">Set New Password</div>
-                                            <div className="text-xs text-gray-500">Manually set a new password for the customer</div>
-                                        </div>
-                                    </label>
-                                    <label className="flex items-center gap-3 p-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:border-primary transition-colors">
-                                        <input
-                                            type="radio"
-                                            name="resetMethod"
-                                            value="email"
-                                            checked={resetPasswordMethod === 'email'}
-                                            onChange={(e) => setResetPasswordMethod(e.target.value as 'manual' | 'email')}
-                                            className="w-4 h-4 text-primary"
-                                        />
-                                        <div className="flex-1">
-                                            <div className="font-medium text-gray-900 dark:text-white">Send Reset Link</div>
-                                            <div className="text-xs text-gray-500">Email a password reset link to {selectedCustomer.email}</div>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            {/* Password Input (only shown for manual method) */}
-                            {resetPasswordMethod === 'manual' && (
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
-                                        New Password <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                        placeholder="Enter new password (min 6 characters)"
-                                        className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                        required
-                                        minLength={6}
-                                    />
-                                    <p className="text-xs text-gray-500">Password must be at least 6 characters long</p>
-                                </div>
-                            )}
-
-                            {/* Info Box */}
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-                                <div className="flex gap-3">
-                                    <i className="fas fa-info-circle text-blue-600 dark:text-blue-400 mt-0.5"></i>
-                                    <div className="text-sm text-blue-800 dark:text-blue-300">
-                                        {resetPasswordMethod === 'manual' ? (
-                                            <p>The customer will be able to log in immediately with the new password you set.</p>
-                                        ) : (
-                                            <p>A secure password reset link will be sent to the customer's email address. The link will expire in 24 hours.</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsPasswordResetModalOpen(false)}
-                                    className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="flex-1 bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:bg-pink-700 shadow-lg shadow-primary/30 transition-all active:scale-95"
-                                >
-                                    {resetPasswordMethod === 'manual' ? 'Update Password' : 'Send Reset Link'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Hero Slide Modal */}
-            {isHeroSlideModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsHeroSlideModalOpen(false)}></div>
-                    <div className="bg-white dark:bg-surface-dark rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl">
-                        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-20">
-                            <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                                {editingHeroSlide ? 'Edit Hero Slide' : 'Add New Hero Slide'}
-                            </h3>
-                            <button onClick={() => setIsHeroSlideModalOpen(false)} className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center hover:text-red-500 shadow-sm">
-                                <i className="fas fa-times"></i>
-                            </button>
-                        </div>
-
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            if (editingHeroSlide) {
-                                onUpdateHeroSlide({ ...heroSlideFormData, id: editingHeroSlide.id } as HeroSlide);
-                            } else {
-                                onAddHeroSlide({ ...heroSlideFormData, id: Date.now() } as HeroSlide);
-                            }
-                            setIsHeroSlideModalOpen(false);
-                        }} className="p-6 space-y-6">
-                            {/* Badge */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Badge Text</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={heroSlideFormData.badge || ''}
-                                    onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, badge: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
-                                    placeholder="e.g., NEW ARRIVAL, SALE, etc."
-                                />
-                            </div>
-
-                            {/* Title */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={heroSlideFormData.title || ''}
-                                    onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, title: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
-                                    placeholder="Main heading"
-                                />
-                            </div>
-
-                            {/* Subtitle */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subtitle</label>
-                                <textarea
-                                    rows={2}
-                                    value={heroSlideFormData.subtitle || ''}
-                                    onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, subtitle: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
-                                    placeholder="Supporting text"
-                                ></textarea>
-                            </div>
-
-                            {/* Image Upload */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slide Image</label>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-32 h-32 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                                        {heroSlideFormData.image ? (
-                                            <img src={heroSlideFormData.image} className="w-full h-full object-cover" alt="Preview" />
-                                        ) : (
-                                            <span className="text-xs text-gray-400">No Image</span>
-                                        )}
-                                    </div>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files?.[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onloadend = () => {
-                                                    setHeroSlideFormData({ ...heroSlideFormData, image: reader.result as string });
-                                                };
-                                                reader.readAsDataURL(file);
-                                            }
-                                        }}
-                                        className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Background Class */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Background Class</label>
-                                <select
-                                    value={heroSlideFormData.bgClass || 'bg-pink-50 dark:bg-gray-800'}
-                                    onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, bgClass: e.target.value })}
-                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
-                                >
-                                    <option value="bg-pink-50 dark:bg-gray-800">Pink</option>
-                                    <option value="bg-blue-50 dark:bg-gray-800">Blue</option>
-                                    <option value="bg-green-50 dark:bg-gray-800">Green</option>
-                                    <option value="bg-purple-50 dark:bg-gray-800">Purple</option>
-                                    <option value="bg-orange-50 dark:bg-gray-800">Orange</option>
-                                </select>
-                            </div>
-
-                            {/* Link Type */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link To</label>
-                                <select
-                                    value={heroSlideFormData.link?.type || 'none'}
-                                    onChange={(e) => {
-                                        const type = e.target.value;
-                                        if (type === 'none') {
-                                            const { link, ...rest } = heroSlideFormData;
-                                            setHeroSlideFormData(rest);
-                                        } else {
-                                            setHeroSlideFormData({
-                                                ...heroSlideFormData,
-                                                link: { type: type as any, value: '' }
-                                            });
-                                        }
-                                    }}
-                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
-                                >
-                                    <option value="none">No Link</option>
-                                    <option value="product">Product</option>
-                                    <option value="category">Category</option>
-                                    <option value="brand">Brand</option>
-                                    <option value="url">Custom URL</option>
-                                </select>
-                            </div>
-
-                            {/* Link Value */}
-                            {heroSlideFormData.link && heroSlideFormData.link.type !== 'none' && (
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                if (editingHeroSlide) {
+                                    onUpdateHeroSlide({ ...heroSlideFormData, id: editingHeroSlide.id } as HeroSlide);
+                                } else {
+                                    onAddHeroSlide({ ...heroSlideFormData, id: Date.now() } as HeroSlide);
+                                }
+                                setIsHeroSlideModalOpen(false);
+                            }} className="p-6 space-y-6">
+                                {/* Badge */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        {heroSlideFormData.link.type === 'product' ? 'Product ID' :
-                                            heroSlideFormData.link.type === 'category' ? 'Category Name' :
-                                                heroSlideFormData.link.type === 'brand' ? 'Brand Name' : 'URL'}
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Badge Text</label>
                                     <input
                                         type="text"
-                                        value={heroSlideFormData.link.value || ''}
-                                        onChange={(e) => setHeroSlideFormData({
-                                            ...heroSlideFormData,
-                                            link: { ...heroSlideFormData.link!, value: e.target.value }
-                                        })}
+                                        required
+                                        value={heroSlideFormData.badge || ''}
+                                        onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, badge: e.target.value })}
                                         className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
-                                        placeholder={
-                                            heroSlideFormData.link.type === 'product' ? 'Enter product ID' :
-                                                heroSlideFormData.link.type === 'category' ? 'Enter category name' :
-                                                    heroSlideFormData.link.type === 'brand' ? 'Enter brand name' : 'https://...'
-                                        }
+                                        placeholder="e.g., NEW ARRIVAL, SALE, etc."
                                     />
                                 </div>
-                            )}
 
-                            {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsHeroSlideModalOpen(false)}
-                                    className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-8 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-pink-700 shadow-lg shadow-primary/30"
-                                >
-                                    {editingHeroSlide ? 'Update Slide' : 'Add Slide'}
-                                </button>
-                            </div>
-                        </form>
+                                {/* Title */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={heroSlideFormData.title || ''}
+                                        onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, title: e.target.value })}
+                                        className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                        placeholder="Main heading"
+                                    />
+                                </div>
+
+                                {/* Subtitle */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subtitle</label>
+                                    <textarea
+                                        rows={2}
+                                        value={heroSlideFormData.subtitle || ''}
+                                        onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, subtitle: e.target.value })}
+                                        className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                        placeholder="Supporting text"
+                                    ></textarea>
+                                </div>
+
+                                {/* Image Upload */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slide Image</label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-32 h-32 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                                            {heroSlideFormData.image ? (
+                                                <img src={heroSlideFormData.image} className="w-full h-full object-cover" alt="Preview" />
+                                            ) : (
+                                                <span className="text-xs text-gray-400">No Image</span>
+                                            )}
+                                        </div>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => {
+                                                        setHeroSlideFormData({ ...heroSlideFormData, image: reader.result as string });
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                            className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Background Class */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Background Class</label>
+                                    <select
+                                        value={heroSlideFormData.bgClass || 'bg-pink-50 dark:bg-gray-800'}
+                                        onChange={(e) => setHeroSlideFormData({ ...heroSlideFormData, bgClass: e.target.value })}
+                                        className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                    >
+                                        <option value="bg-pink-50 dark:bg-gray-800">Pink</option>
+                                        <option value="bg-blue-50 dark:bg-gray-800">Blue</option>
+                                        <option value="bg-green-50 dark:bg-gray-800">Green</option>
+                                        <option value="bg-purple-50 dark:bg-gray-800">Purple</option>
+                                        <option value="bg-orange-50 dark:bg-gray-800">Orange</option>
+                                    </select>
+                                </div>
+
+                                {/* Link Type */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link To</label>
+                                    <select
+                                        value={heroSlideFormData.link?.type || 'none'}
+                                        onChange={(e) => {
+                                            const type = e.target.value;
+                                            if (type === 'none') {
+                                                const { link, ...rest } = heroSlideFormData;
+                                                setHeroSlideFormData(rest);
+                                            } else {
+                                                setHeroSlideFormData({
+                                                    ...heroSlideFormData,
+                                                    link: { type: type as any, value: '' }
+                                                });
+                                            }
+                                        }}
+                                        className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                    >
+                                        <option value="none">No Link</option>
+                                        <option value="product">Product</option>
+                                        <option value="category">Category</option>
+                                        <option value="brand">Brand</option>
+                                        <option value="url">Custom URL</option>
+                                    </select>
+                                </div>
+
+                                {/* Link Value */}
+                                {heroSlideFormData.link && heroSlideFormData.link.type !== 'none' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            {heroSlideFormData.link.type === 'product' ? 'Product ID' :
+                                                heroSlideFormData.link.type === 'category' ? 'Category Name' :
+                                                    heroSlideFormData.link.type === 'brand' ? 'Brand Name' : 'URL'}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={heroSlideFormData.link.value || ''}
+                                            onChange={(e) => setHeroSlideFormData({
+                                                ...heroSlideFormData,
+                                                link: { ...heroSlideFormData.link!, value: e.target.value }
+                                            })}
+                                            className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                            placeholder={
+                                                heroSlideFormData.link.type === 'product' ? 'Enter product ID' :
+                                                    heroSlideFormData.link.type === 'category' ? 'Enter category name' :
+                                                        heroSlideFormData.link.type === 'brand' ? 'Enter brand name' : 'https://...'
+                                            }
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Action Buttons */}
+                                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsHeroSlideModalOpen(false)}
+                                        className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-8 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-pink-700 shadow-lg shadow-primary/30"
+                                    >
+                                        {editingHeroSlide ? 'Update Slide' : 'Add Slide'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
         </div >
 
