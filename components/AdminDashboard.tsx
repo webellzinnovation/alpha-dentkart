@@ -1590,7 +1590,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 />
                             </div>
                         )}
-                        )}
 
                         {/* CATEGORIES TAB */}
                         {activeTab === 'categories' && (
