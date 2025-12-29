@@ -3,6 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Product, Order, Category, BrandProfile, ProductVariation, User, HeroSlide } from '../types';
 import { ThemesTab } from './ThemesTab';
 import { HomepageTab } from './HomepageTab';
+import { CustomerManagement } from './CustomerManagement';
 
 interface AdminDashboardProps {
     products: Product[];
@@ -365,6 +366,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [productBrandFilter, setProductBrandFilter] = useState('');
     const [productCategoryFilter, setProductCategoryFilter] = useState('');
     const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+    const [customerUserTypeFilter, setCustomerUserTypeFilter] = useState<'all' | 'dental-doctor' | 'student' | 'supplier' | 'regular'>('all');
     const [orderSearchTerm, setOrderSearchTerm] = useState('');
     const [orderStatusFilter, setOrderStatusFilter] = useState<'All' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'>('All');
     const [categorySearchTerm, setCategorySearchTerm] = useState('');
