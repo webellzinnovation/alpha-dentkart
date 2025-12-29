@@ -27,7 +27,9 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
             user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.phone.includes(searchTerm);
 
-        const matchesType = userTypeFilter === 'all' || user.userType === userTypeFilter;
+        // Default to 'regular' if userType is not set
+        const userType = user.userType || 'regular';
+        const matchesType = userTypeFilter === 'all' || userType === userTypeFilter;
 
         return matchesSearch && matchesType;
     });
@@ -90,8 +92,13 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
                             {filteredCustomers.map((user, index) => {
-                                const userTypeBadge = getUserTypeBadge(user.userType);
-                                const verificationBadge = getVerificationBadge(user.verificationStatus);
+                                // Provide defaults for new fields that might not exist on old user data
+                                const userType = user.userType || 'regular';
+                                const verificationStatus = user.verificationStatus || 'pending';
+                                const isVerified = user.isVerified !== undefined ? user.isVerified : false;
+
+                                const userTypeBadge = getUserTypeBadge(userType);
+                                const verificationBadge = getVerificationBadge(verificationStatus);
 
                                 return (
                                     <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -126,11 +133,11 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
                                             {user.orders?.length || 0}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.isVerified
-                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${isVerified
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                                                 }`}>
-                                                {user.isVerified ? 'Verified' : 'Unverified'}
+                                                {isVerified ? 'Verified' : 'Unverified'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
