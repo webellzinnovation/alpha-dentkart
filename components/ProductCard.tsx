@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Product } from '../types';
+import { Product, ProductBadge } from '../types';
 
 interface ProductCardProps {
   product: Product;
@@ -10,6 +10,7 @@ interface ProductCardProps {
   onAddToCart?: (product: Product, attributes?: Record<string, string>) => void;
   onQuickView?: (product: Product) => void;
   isInWishlist?: boolean;
+  homepageBadges?: ProductBadge[]; // NEW: Pass homepage badges for custom styling
 }
 
 const badgeColors = {
@@ -26,7 +27,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   onToggleWishlist,
   onAddToCart,
   onQuickView,
-  isInWishlist = false
+  isInWishlist = false,
+  homepageBadges = []
 }) => {
   const handleClick = () => {
     if (onProductClick) {
@@ -55,10 +57,23 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     }
   };
 
+  // Get homepage badge if assigned
+  const homepageBadge = product.badgeId ? homepageBadges.find(b => b.id === product.badgeId && b.enabled) : null;
+
   return (
     <div onClick={handleClick} className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 rounded-2xl p-3 sm:p-4 group hover:shadow-xl transition-all relative cursor-pointer flex flex-col h-full shadow-sm">
-      {/* Badge */}
-      {product.badge && (
+      {/* Homepage Badge (New System) */}
+      {homepageBadge && (
+        <span
+          className="absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full z-10 shadow-sm"
+          style={{ backgroundColor: homepageBadge.bgColor, color: homepageBadge.color }}
+        >
+          {homepageBadge.name}
+        </span>
+      )}
+
+      {/* Legacy Badge (Old System - fallback) */}
+      {!homepageBadge && product.badge && (
         <span className={`absolute top-3 left-3 text-white text-[10px] px-2 py-0.5 rounded-full z-10 ${badgeColors[product.badgeColor || 'blue']}`}>
           {product.badge}
         </span>

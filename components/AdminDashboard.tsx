@@ -2380,6 +2380,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 </div>
                                             </div>
                                             <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Homepage Badge</label>
+                                                <select
+                                                    value={productFormData.badgeId || ''}
+                                                    onChange={(e) => setProductFormData({ ...productFormData, badgeId: e.target.value as any })}
+                                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                                >
+                                                    <option value="">None</option>
+                                                    {homepageSettings.badges.filter(b => b.enabled).map(badge => (
+                                                        <option key={badge.id} value={badge.id}>{badge.name}</option>
+                                                    ))}
+                                                </select>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                    Customize badges in Admin → Homepage tab
+                                                </p>
+                                            </div>
+                                            <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Short Description</label>
                                                 <textarea rows={2} value={productFormData.shortDescription} onChange={(e) => setProductFormData({ ...productFormData, shortDescription: e.target.value })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"></textarea>
                                             </div>
