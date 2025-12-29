@@ -108,6 +108,7 @@ export interface Order {
   customerName?: string;
 }
 
+
 export interface User {
   name: string;
   email: string;
@@ -117,6 +118,47 @@ export interface User {
   orders: Order[];
   cart: CartItem[];
   wishlist: Product[];
+
+  // User Type System
+  userType: 'dental-doctor' | 'student' | 'supplier' | 'regular';
+
+  // Dental Doctor Information
+  dentalDoctorInfo?: {
+    licenseId: string;
+    licenseState: string;
+    specialization?: string;
+    clinicName?: string;
+    clinicAddress?: string;
+    yearsOfPractice?: number;
+  };
+
+  // Student Information
+  studentInfo?: {
+    studentId: string;
+    institution: string;
+    course: string;
+    yearOfStudy: number;
+    expectedGraduation?: string;
+  };
+
+  // Supplier Information
+  supplierInfo?: {
+    gstNumber: string;
+    businessName: string;
+    businessType: string;
+    panNumber?: string;
+    registrationDate?: string;
+    annualTurnover?: string;
+  };
+
+  // Additional Customer Details
+  dateOfBirth?: string;
+  gender?: 'male' | 'female' | 'other';
+  alternatePhone?: string;
+  registrationDate: string;
+  isVerified: boolean;
+  verificationStatus: 'pending' | 'approved' | 'rejected';
+  notes?: string;
 }
 
 // Homepage Customization Types
