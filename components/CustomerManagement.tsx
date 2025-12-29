@@ -414,6 +414,92 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
                                 )}
                             </div>
 
+                            {/* Addresses Section */}
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Addresses</h4>
+                                {selectedCustomer.addresses && selectedCustomer.addresses.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {selectedCustomer.addresses.map((address, idx) => (
+                                            <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="font-medium text-gray-900 dark:text-white">
+                                                        {address.type === 'billing' ? '📄 Billing Address' : '📦 Shipping Address'}
+                                                    </span>
+                                                    {address.isDefault && (
+                                                        <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full font-medium">
+                                                            Default
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                                                    <p>{address.street}</p>
+                                                    <p>{address.city}, {address.state} {address.zipCode}</p>
+                                                    <p>{address.country}</p>
+                                                    {address.phone && <p>📞 {address.phone}</p>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                        <i className="fas fa-map-marker-alt text-3xl mb-2"></i>
+                                        <p>No addresses added yet</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Order History Section */}
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Order History</h4>
+                                {selectedCustomer.orders && selectedCustomer.orders.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {selectedCustomer.orders.slice(0, 5).map((order, idx) => (
+                                            <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <span className="font-medium text-gray-900 dark:text-white">
+                                                            Order #{order.id}
+                                                        </span>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            {new Date(order.date).toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric'
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-bold text-gray-900 dark:text-white">
+                                                            ₹{order.total.toLocaleString('en-IN')}
+                                                        </p>
+                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${order.status === 'Delivered' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                                                                order.status === 'Processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                                                                    order.status === 'Shipped' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                                                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                            }`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                                    {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {selectedCustomer.orders.length > 5 && (
+                                            <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+                                                Showing 5 of {selectedCustomer.orders.length} orders
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                        <i className="fas fa-shopping-bag text-3xl mb-2"></i>
+                                        <p>No orders yet</p>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Notes */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Admin Notes</label>
