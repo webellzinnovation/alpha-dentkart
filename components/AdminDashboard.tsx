@@ -1,9 +1,27 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Product, Order, Category, BrandProfile, ProductVariation, User, HeroSlide } from '../types';
 import { ThemesTab } from './ThemesTab';
 import { HomepageTab } from './HomepageTab';
 import { CustomerManagement } from './CustomerManagement';
+import { AISettings } from './AISettings';
+import { ChatSupport } from './ChatSupport';
+import { sendOrderStatusEmail } from '../utils/orderEmailService';
+import {
+    getAllAdminNotifications,
+    getUnreadCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    getRelativeTime,
+    getNotificationIcon,
+    getNotificationColor,
+    notifyNewOrder,
+    notifyOrderStatusChange,
+    notifyLowStock,
+    notifyOutOfStock
+} from '../utils/adminNotificationService';
+
 
 interface AdminDashboardProps {
     products: Product[];
@@ -15,6 +33,7 @@ interface AdminDashboardProps {
     brands: BrandProfile[];
     setBrands: React.Dispatch<React.SetStateAction<BrandProfile[]>>;
     users: User[];
+    setUsers: React.Dispatch<React.SetStateAction<User[]>>; // Added for customer edit functionality
     onLogout: () => void;
     onVisitSite: () => void;
     settings: any;
@@ -24,6 +43,8 @@ interface AdminDashboardProps {
     onUpdateHeroSlide: (slide: HeroSlide) => void;
     onDeleteHeroSlide: (id: number) => void;
     onReorderHeroSlides: (slides: HeroSlide[]) => void;
+    apiKey?: string; // For AI features
+    modelName?: string; // For AI features
 }
 
 const MOCK_CUSTOMERS = [
@@ -257,6 +278,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     brands,
     setBrands,
     users,
+    setUsers,
     onLogout,
     onVisitSite,
     settings,
@@ -265,10 +287,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     onAddHeroSlide,
     onUpdateHeroSlide,
     onDeleteHeroSlide,
-    onReorderHeroSlides
+    onReorderHeroSlides,
+    apiKey,
+    modelName
 }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides' | 'homepage' | 'appearance' | 'themes'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides' | 'homepage' | 'appearance' | 'themes' | 'chat-support'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
+
+    // Count new orders (from last 48 hours)
+    const newOrdersCount = orders.filter(order => order.isNew).length;
+
+    // SMTP testing state
+    const [testingSMTP, setTestingSMTP] = useState(false);
+
+    // Admin Notifications State
+    const [notifications, setNotifications] = useState(getAllAdminNotifications());
+    const [unreadCount, setUnreadCount] = useState(getUnreadCount());
 
     // Homepage Settings State
     const [homepageSettings, setHomepageSettings] = useState({
@@ -360,6 +394,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     // Header State
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+    // Auto-refresh notifications every 5 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setNotifications(getAllAdminNotifications());
+            setUnreadCount(getUnreadCount());
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, []);
+
 
     // Search States
     const [productSearchTerm, setProductSearchTerm] = useState('');
@@ -469,12 +514,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         title: '',
         message: '',
         onConfirm: () => { },
+
     });
 
     // Product State
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const [activeProductTab, setActiveProductTab] = useState<'basic' | 'data' | 'images' | 'variations' | 'seo'>('basic');
+    const [activeProductTab, setActiveProductTab] = useState<'general' | 'variations' | 'seo'>('general');
+    const [isGeneratingSEO, setIsGeneratingSEO] = useState(false); // SEO Generation state
 
     const initialProductForm = {
         id: 0,
@@ -621,6 +668,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         return brands.filter(b => b.name.toLowerCase().includes(brandSearchTerm.toLowerCase()));
     }, [brands, brandSearchTerm]);
 
+
+    // --- SEO Generation Logic ---
+    const generateSEO = async () => {
+        if (!apiKey) {
+            alert("Please configure Gemini API Key in Settings > AI Chatbot first.");
+            return;
+        }
+
+        if (!productFormData.name || !productFormData.description) {
+            alert("Please enter Product Name and Description first.");
+            return;
+        }
+
+        setIsGeneratingSEO(true);
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: modelName || "gemini-1.5-flash-001" });
+
+            const prompt = `
+                Generate SEO metadata for a dental product.
+                Product Name: ${productFormData.name}
+                Category: ${productFormData.category}
+                Brand: ${productFormData.brand}
+                Description: ${productFormData.description}
+
+                Return ONLY a valid JSON object with the following keys:
+                {
+                    "seoTitle": "Optimized title (max 60 chars)",
+                    "seoDescription": "Optimized description (max 160 chars)",
+                    "seoKeywords": "comma, separated, keywords (max 10)"
+                }
+            `;
+
+            const result = await model.generateContent(prompt);
+            const text = await result.response.text();
+
+            // Extract JSON from response (handle potential markdown ticks)
+            const jsonStr = text.replace(/```json|```/g, '').trim();
+            const seoData = JSON.parse(jsonStr);
+
+            setProductFormData(prev => ({
+                ...prev,
+                seoTitle: seoData.seoTitle,
+                seoDescription: seoData.seoDescription,
+                seoKeywords: seoData.seoKeywords
+            }));
+
+            // Switch to SEO tab to show results
+            setActiveProductTab('seo');
+
+        } catch (error) {
+            console.error("SEO Generation Failed:", error);
+            alert("Failed to generate SEO. Please try again.");
+        } finally {
+            setIsGeneratingSEO(false);
+        }
+    };
 
     // --- Handlers ---
     const confirmDelete = (title: string, message: string, action: () => void) => {
@@ -836,10 +940,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         ));
     };
 
-    const handleOrderStatusChange = (orderId: string, newStatus: Order['status']) => {
+
+    const handleOrderStatusChange = async (orderId: string, newStatus: Order['status']) => {
+        // Find the order
+        const order = orders.find(o => o.id === orderId);
+        if (!order) return;
+
+        // Update order status
         setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
         if (selectedOrder && selectedOrder.id === orderId) {
             setSelectedOrder({ ...selectedOrder, status: newStatus });
+        }
+
+        // Send email notification if SMTP is configured
+        if (settings?.email?.host && order.customerName) {
+            try {
+                // Find customer email from users
+                const customer = users.find(u => u.name === order.customerName);
+                const customerEmail = customer?.email || '';
+
+                if (customerEmail) {
+                    const result = await sendOrderStatusEmail(
+                        {
+                            to: customerEmail,
+                            customerName: order.customerName,
+                            orderId: order.id,
+                            orderStatus: newStatus,
+                            orderTotal: order.total,
+                            orderDate: order.date
+                        },
+                        settings.email
+                    );
+
+                    if (result.success) {
+                        console.log(`✅ Order status email sent to ${customerEmail}`);
+                    } else {
+                        console.warn(`⚠️ Failed to send order status email: ${result.message}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error sending order status email:', error);
+            }
         }
     };
 
@@ -853,16 +994,81 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const handleUpdateUser = (userIndex: number, updates: Partial<User>) => {
         const updatedUsers = [...users];
         updatedUsers[userIndex] = { ...updatedUsers[userIndex], ...updates };
-        // Note: In a real app, this would call an API to update the user
-        // For now, we'll just log the update
+        setUsers(updatedUsers); // Actually update the state
         console.log('User updated:', updatedUsers[userIndex]);
-        // You can add a toast notification here
+        // Note: In a real app, this would also call an API to persist the changes
     };
 
     const handleSaveCustomer = (e: React.FormEvent) => {
         e.preventDefault();
         // Note: Users data is read-only from migration
         setIsCustomerModalOpen(false);
+    };
+
+    const handleDeleteUser = (userEmail: string) => {
+        const updatedUsers = users.filter(user => user.email !== userEmail);
+        setUsers(updatedUsers);
+        console.log(`User with email ${userEmail} deleted. Remaining users:`, updatedUsers.length);
+        // Note: In a real app, this would also call an API to delete the user from the database
+    };
+
+    // SMTP Test Handler
+    const handleTestSMTPConnection = async () => {
+        if (!settings.email.host || !settings.email.port || !settings.email.user || !settings.email.pass) {
+            alert('❌ Please fill in all SMTP settings before testing the connection.');
+            return;
+        }
+
+        setTestingSMTP(true);
+
+        // Since we can't test SMTP directly from the browser without a backend,
+        // we'll validate the settings and provide helpful feedback
+        try {
+            // Simulate a connection test with validation
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Validate settings format
+            const validations = [];
+
+            // Check host format
+            if (!settings.email.host.includes('.')) {
+                validations.push('⚠️ SMTP host should be a domain (e.g., smtp.gmail.com)');
+            }
+
+            // Check port
+            const commonPorts = [25, 465, 587, 2525];
+            if (!commonPorts.includes(settings.email.port)) {
+                validations.push(`ℹ️ Port ${settings.email.port} is uncommon. Standard ports are: 587 (TLS), 465 (SSL), 25 (unencrypted)`);
+            }
+
+            // Check email format
+            if (!settings.email.user.includes('@')) {
+                validations.push('⚠️ Username should typically be an email address');
+            }
+
+            // Provide recommendations
+            let message = '✅ SMTP Settings Validated!\n\n';
+            message += `Host: ${settings.email.host}\n`;
+            message += `Port: ${settings.email.port}\n`;
+            message += `Encryption: ${settings.email.encryption}\n`;
+            message += `Username: ${settings.email.user}\n\n`;
+
+            if (validations.length > 0) {
+                message += 'Recommendations:\n' + validations.join('\n') + '\n\n';
+            }
+
+            message += '📧 Settings look good!\n\n';
+            message += 'Note: Full connection testing requires a backend server.\n';
+            message += 'To test email sending, try the "Send Verification Email" feature in the Customers tab.';
+
+            alert(message);
+
+        } catch (error: any) {
+            console.error('SMTP test error:', error);
+            alert(`❌ Validation Failed\n\nError: ${error.message || 'Unknown error'}`);
+        } finally {
+            setTestingSMTP(false);
+        }
     };
 
     // Category Handlers
@@ -1102,10 +1308,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <nav className="flex-1 py-6 px-3 space-y-1.5 overflow-x-hidden overflow-y-auto">
                         {[
                             { id: 'overview', icon: 'fas fa-th-large', label: 'Dashboard' },
-                            { id: 'orders', icon: 'fas fa-shopping-bag', label: 'Orders' },
+                            { id: 'orders', icon: 'fas fa-shopping-bag', label: 'Orders', badge: newOrdersCount > 0 ? newOrdersCount : undefined },
                             { id: 'inventory', icon: 'fas fa-warehouse', label: 'Inventory' },
                             { id: 'products', icon: 'fas fa-box', label: 'Products' },
                             { id: 'customers', icon: 'fas fa-users', label: 'Customers' },
+                            { id: 'chat-support', icon: 'fas fa-comments', label: 'Chat Support' },
                             { id: 'reviews', icon: 'fas fa-star', label: 'Reviews' },
                             { id: 'categories', icon: 'fas fa-layer-group', label: 'Categories' },
                             { id: 'brands', icon: 'fas fa-tags', label: 'Brands' },
@@ -1123,6 +1330,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             >
                                 <i className={`${item.icon} w-6 text-center text-lg flex-shrink-0 transition-transform group-hover:scale-110`}></i>
                                 <span className={`whitespace-nowrap transition-all duration-300 origin-left ${isSidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0 hidden'}`}>{item.label}</span>
+                                {item.badge && item.badge > 0 && (
+                                    <span className={`ml-auto px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full ${isSidebarOpen ? 'animate-pulse' : 'absolute -top-1 -right-1'}`}>
+                                        {item.badge}
+                                    </span>
+                                )}
                                 {activeTab === item.id && !isSidebarOpen && <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-l-full"></div>}
                             </button>
                         ))}
@@ -1159,15 +1371,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 animate-pulse"></span>
                                 </button>
                                 {showNotifications && (
-                                    <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-surface-dark rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden animate-fade-in origin-top-right">
-                                        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center"><h4 className="font-bold text-gray-800 dark:text-white text-sm">Notifications</h4><span className="text-xs text-primary font-medium cursor-pointer">Mark all read</span></div>
-                                        <div className="max-h-80 overflow-y-auto">
-                                            <div className="p-4 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer flex gap-3 items-start">
-                                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5"><i className="fas fa-shopping-bag text-xs"></i></div>
-                                                <div><p className="font-medium text-gray-800 dark:text-white text-sm">New Order Received</p><p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Order #ORD-2023-1105 placed by Dr. Anjali</p><p className="text-[10px] text-gray-400 mt-1">2 min ago</p></div>
+                                    <>
+                                        {/* Backdrop */}
+                                        <div
+                                            className="fixed inset-0 z-[99998] bg-black/10"
+                                            onClick={() => setShowNotifications(false)}
+                                        ></div>
+
+                                        {/* Notification Panel - Fixed positioning */}
+                                        <div className="fixed right-4 top-20 w-80 bg-white dark:bg-surface-dark rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 z-[99999] overflow-hidden animate-fade-in">
+                                            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center"><h4 className="font-bold text-gray-800 dark:text-white text-sm">Notifications</h4><span onClick={() => { markAllNotificationsAsRead(); setNotifications(getAllAdminNotifications()); setUnreadCount(0); }} className="text-xs text-primary font-medium cursor-pointer hover:underline">Mark all read</span></div>
+                                            <div className="max-h-80 overflow-y-auto">
+                                                {notifications.length === 0 ? (
+                                                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                                                        <i className="fas fa-bell-slash text-3xl mb-2 text-gray-300 dark:text-gray-600"></i>
+                                                        <p className="text-sm font-medium">No notifications</p>
+                                                        <p className="text-xs mt-1">You're all caught up!</p>
+                                                    </div>
+                                                ) : (
+                                                    notifications.map(notification => (
+                                                        <div
+                                                            key={notification.id}
+                                                            onClick={() => {
+                                                                if (!notification.read) {
+                                                                    markNotificationAsRead(notification.id);
+                                                                    setNotifications(getAllAdminNotifications());
+                                                                    setUnreadCount(getUnreadCount());
+                                                                }
+                                                                if (notification.link) {
+                                                                    const tabMatch = notification.link.match(/tab=(\w+)/);
+                                                                    if (tabMatch) {
+                                                                        setActiveTab(tabMatch[1] as any);
+                                                                    }
+                                                                }
+                                                                setShowNotifications(false);
+                                                            }}
+                                                            className={`p-4 border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer flex gap-3 items-start ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/10' : ''
+                                                                }`}
+                                                        >
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${getNotificationColor(notification.type)}`}>
+                                                                <i className={`fas ${getNotificationIcon(notification.type, notification.category)} text-xs`}></i>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <p className="font-medium text-gray-800 dark:text-white text-sm">{notification.title}</p>
+                                                                    {!notification.read && (
+                                                                        <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"></span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{notification.message}</p>
+                                                                <p className="text-[10px] text-gray-400 mt-1">{getRelativeTime(notification.timestamp)}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
+                                    </>
                                 )}
                             </div>
                             <div className="relative">
@@ -1444,7 +1704,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
                                                 {currentOrders.length > 0 ? currentOrders.map(order => (
                                                     <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                                        <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{order.id}</td>
+                                                        <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
+                                                            <div className="flex items-center gap-2">
+                                                                {order.id}
+                                                                {order.isNew && (
+                                                                    <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded uppercase animate-pulse">
+                                                                        NEW
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
                                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{order.customerName}</td>
                                                         <td className="px-6 py-4 text-gray-500">{order.date}</td>
                                                         <td className="px-6 py-4 font-bold text-gray-800 dark:text-white">₹{order.total.toLocaleString('en-IN')}</td>
@@ -1585,12 +1854,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <CustomerManagement
                                     users={users}
                                     onUpdateUser={handleUpdateUser}
+                                    onDeleteUser={handleDeleteUser}
                                     searchTerm={customerSearchTerm}
                                     userTypeFilter={customerUserTypeFilter}
                                     onViewOrder={handleViewOrder}
+                                    settings={settings}
                                 />
                             </div>
                         )}
+
+                        {/* CHAT SUPPORT TAB */}
+                        {activeTab === 'chat-support' && (
+                            <div className="animate-fade-in p-4">
+                                <ChatSupport />
+                            </div>
+                        )}
+
 
                         {/* CATEGORIES TAB */}
                         {activeTab === 'categories' && (
@@ -1836,6 +2115,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 { id: 'shipping', label: 'Shipping', icon: 'fas fa-truck' },
                                                 { id: 'email', label: 'Email', icon: 'fas fa-envelope' },
                                                 { id: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
+                                                { id: 'ai-chatbot', label: 'AI Chatbot', icon: 'fas fa-robot' },
                                             ].map(tab => (
                                                 <button
                                                     key={tab.id}
@@ -2085,7 +2365,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     </div>
                                                 </div>
                                                 <div className="pt-4">
-                                                    <button className="text-primary text-sm font-medium hover:underline">Test Connection</button>
+                                                    <button
+                                                        onClick={handleTestSMTPConnection}
+                                                        disabled={testingSMTP}
+                                                        className={`text-sm font-medium px-4 py-2 rounded-lg transition-all ${testingSMTP
+                                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                            : 'text-primary hover:bg-primary/10'
+                                                            }`}
+                                                    >
+                                                        {testingSMTP ? (
+                                                            <>
+                                                                <i className="fas fa-spinner fa-spin mr-2"></i>
+                                                                Testing Connection...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <i className="fas fa-plug mr-2"></i>
+                                                                Test Connection
+                                                            </>
+                                                        )}
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
@@ -2124,15 +2423,145 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             <textarea rows={3} value={settings.notifications.orderShippedMessage} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderShippedMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
                                                         )}
                                                     </div>
+
+                                                    {/* Order Delivered */}
+                                                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-800 dark:text-white">Order Delivered</h4>
+                                                                <p className="text-xs text-gray-500 mt-1">Sent when order is successfully delivered</p>
+                                                            </div>
+                                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                                <input type="checkbox" checked={settings.notifications.orderDelivered || false} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderDelivered: e.target.checked } })} className="sr-only peer" />
+                                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                            </label>
+                                                        </div>
+                                                        {settings.notifications.orderDelivered && (
+                                                            <textarea rows={3} value={settings.notifications.orderDeliveredMessage || 'Great news! Your order has been delivered successfully. Thank you for shopping with us!'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderDeliveredMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                        )}
+                                                    </div>
+
+                                                    {/* Order Cancelled */}
+                                                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-800 dark:text-white">Order Cancelled</h4>
+                                                                <p className="text-xs text-gray-500 mt-1">Sent when order is cancelled</p>
+                                                            </div>
+                                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                                <input type="checkbox" checked={settings.notifications.orderCancelled || false} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderCancelled: e.target.checked } })} className="sr-only peer" />
+                                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                            </label>
+                                                        </div>
+                                                        {settings.notifications.orderCancelled && (
+                                                            <textarea rows={3} value={settings.notifications.orderCancelledMessage || 'Your order has been cancelled as requested. If you have any questions, please contact our support team.'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderCancelledMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                        )}
+                                                    </div>
+
+                                                    {/* Welcome Email */}
+                                                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-800 dark:text-white">Welcome Email 🎉</h4>
+                                                                <p className="text-xs text-gray-500 mt-1">Sent when new customer registers</p>
+                                                            </div>
+                                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                                <input type="checkbox" checked={settings.notifications.welcomeEmail || false} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, welcomeEmail: e.target.checked } })} className="sr-only peer" />
+                                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                            </label>
+                                                        </div>
+                                                        {settings.notifications.welcomeEmail && (
+                                                            <div className="space-y-3">
+                                                                <textarea rows={3} value={settings.notifications.welcomeEmailMessage || 'Welcome to Alpha Dentkart! Get 15% OFF on your first order with code WELCOME15. Valid for 7 days.'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, welcomeEmailMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <input type="text" value={settings.notifications.welcomeCouponCode || 'WELCOME15'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, welcomeCouponCode: e.target.value } })} className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Coupon Code" />
+                                                                    <input type="number" value={settings.notifications.welcomeDiscount || 15} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, welcomeDiscount: parseInt(e.target.value) } })} className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Discount %" />
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Promotional Email */}
+                                                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-800 dark:text-white">Promotional Email 🎁</h4>
+                                                                <p className="text-xs text-gray-500 mt-1">Marketing campaigns and special offers</p>
+                                                            </div>
+                                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                                <input type="checkbox" checked={settings.notifications.promotional || false} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, promotional: e.target.checked } })} className="sr-only peer" />
+                                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                            </label>
+                                                        </div>
+                                                        {settings.notifications.promotional && (
+                                                            <div className="space-y-3">
+                                                                <input type="text" value={settings.notifications.promotionalTitle || 'Flash Sale - Limited Time!'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, promotionalTitle: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Offer Title" />
+                                                                <textarea rows={2} value={settings.notifications.promotionalMessage || 'Massive discounts on premium dental equipment. Limited time offer!'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, promotionalMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Offer Description" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Abandoned Cart */}
+                                                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-800 dark:text-white">Abandoned Cart 🛒</h4>
+                                                                <p className="text-xs text-gray-500 mt-1">Recover lost sales from abandoned carts</p>
+                                                            </div>
+                                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                                <input type="checkbox" checked={settings.notifications.abandonedCart || false} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, abandonedCart: e.target.checked } })} className="sr-only peer" />
+                                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                            </label>
+                                                        </div>
+                                                        {settings.notifications.abandonedCart && (
+                                                            <div className="space-y-3">
+                                                                <textarea rows={2} value={settings.notifications.abandonedCartMessage || 'You left something in your cart! Complete your purchase now and get 10% OFF with code COMPLETE10.'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, abandonedCartMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Message body..." />
+                                                                <input type="number" value={settings.notifications.abandonedCartDelay || 1} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, abandonedCartDelay: parseInt(e.target.value) } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Send after (hours)" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Newsletter */}
+                                                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <div>
+                                                                <h4 className="font-bold text-gray-800 dark:text-white">Newsletter 📰</h4>
+                                                                <p className="text-xs text-gray-500 mt-1">Regular updates and industry news</p>
+                                                            </div>
+                                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                                <input type="checkbox" checked={settings.notifications.newsletter || false} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, newsletter: e.target.checked } })} className="sr-only peer" />
+                                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                                            </label>
+                                                        </div>
+                                                        {settings.notifications.newsletter && (
+                                                            <div className="space-y-3">
+                                                                <input type="text" value={settings.notifications.newsletterTitle || 'Alpha Dentkart Monthly Newsletter'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, newsletterTitle: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Newsletter Title" />
+                                                                <select value={settings.notifications.newsletterFrequency || 'monthly'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, newsletterFrequency: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm">
+                                                                    <option value="weekly">Weekly</option>
+                                                                    <option value="biweekly">Bi-weekly</option>
+                                                                    <option value="monthly">Monthly</option>
+                                                                </select>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
 
-                                        <div className="mt-6 flex justify-end">
-                                            <button onClick={handleSaveSettings} className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-pink-700 shadow-lg shadow-primary/30 transition-all active:scale-95">
-                                                Save Changes
-                                            </button>
-                                        </div>
+                                        {/* AI Chatbot Settings */}
+                                        {activeSettingsTab === 'ai-chatbot' && (
+                                            <div className="animate-fade-in">
+                                                <AISettings />
+                                            </div>
+                                        )}
+
+                                        {activeSettingsTab !== 'ai-chatbot' && (
+                                            <div className="mt-6 flex justify-end">
+                                                <button onClick={handleSaveSettings} className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-pink-700 shadow-lg shadow-primary/30 transition-all active:scale-95">
+                                                    Save Changes
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -2472,6 +2901,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     {/* SEO TAB */}
                                     {activeProductTab === 'seo' && (
                                         <div className="space-y-4">
+                                            <div className="flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={generateSEO}
+                                                    disabled={isGeneratingSEO || !apiKey}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+                                                >
+                                                    {isGeneratingSEO ? (
+                                                        <>
+                                                            <i className="fas fa-spinner fa-spin"></i>
+                                                            Generating...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <i className="fas fa-magic"></i>
+                                                            Generate Auto SEO
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SEO Title</label>
                                                 <input type="text" value={productFormData.seoTitle} onChange={(e) => setProductFormData({ ...productFormData, seoTitle: e.target.value })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
@@ -2497,6 +2946,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                 )
             }
+
+
 
             {/* Category Modal */}
             {
@@ -2737,6 +3188,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                             {/* Shipping Address */}
                             {(() => {
+                                // First, check if the order has a shipping address
+                                if (selectedOrder.shippingAddress) {
+                                    return (
+                                        <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
+                                            <h4 className="font-bold text-gray-800 dark:text-white mb-3 text-sm uppercase flex items-center">
+                                                <i className="fas fa-shipping-fast text-primary mr-2"></i>
+                                                Shipping Address
+                                            </h4>
+                                            <div className="text-sm text-gray-700 dark:text-gray-300">
+                                                <p className="font-bold">{selectedOrder.shippingAddress.name}</p>
+                                                <p>{selectedOrder.shippingAddress.street}</p>
+                                                <p>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} - {selectedOrder.shippingAddress.zip}</p>
+                                                <p className="mt-2">
+                                                    <i className="fas fa-phone mr-1"></i> {selectedOrder.shippingAddress.phone}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                // Fall back to customer lookup
                                 const customer = users.find(u => u.name === selectedOrder.customerName);
                                 const defaultAddress = customer?.addresses?.find(addr => addr.isDefault) || customer?.addresses?.[0];
                                 return defaultAddress ? (

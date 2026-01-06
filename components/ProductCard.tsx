@@ -1,6 +1,8 @@
 
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Product, ProductBadge } from '../types';
+import { subscribeToProduct, unsubscribeFromProduct, isSubscribedToProduct } from '../utils/stockNotificationService';
 
 interface ProductCardProps {
   product: Product;
@@ -11,6 +13,8 @@ interface ProductCardProps {
   onQuickView?: (product: Product) => void;
   isInWishlist?: boolean;
   homepageBadges?: ProductBadge[]; // NEW: Pass homepage badges for custom styling
+  currentUserEmail?: string; // For checking subscription status
+  currentUserName?: string; // For subscribing
 }
 
 const badgeColors = {
@@ -28,8 +32,20 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   onAddToCart,
   onQuickView,
   isInWishlist = false,
-  homepageBadges = []
+  homepageBadges = [],
+  currentUserEmail,
+  currentUserName
 }) => {
+  // Stock notification state
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  // Check subscription status on mount and when product/user changes
+  useEffect(() => {
+    if (currentUserEmail && product.stock === 0) {
+      setIsSubscribed(isSubscribedToProduct(product.id, currentUserEmail));
+    }
+  }, [product.id, currentUserEmail, product.stock]);
   const handleClick = () => {
     if (onProductClick) {
       onProductClick(product);
@@ -54,6 +70,49 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     if (onQuickView) {
       onQuickView(product);
+    }
+  };
+
+  const handleNotifyMe = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!currentUserEmail || !currentUserName) {
+      alert('Please log in to subscribe to stock notifications');
+      return;
+    }
+
+    setIsSubscribing(true);
+
+    try {
+      if (isSubscribed) {
+        // Unsubscribe
+        const result = unsubscribeFromProduct(product.id, currentUserEmail);
+        if (result.success) {
+          setIsSubscribed(false);
+          alert('✅ ' + result.message);
+        } else {
+          alert('❌ ' + result.message);
+        }
+      } else {
+        // Subscribe
+        const result = subscribeToProduct(
+          product.id,
+          product.name,
+          currentUserEmail,
+          currentUserName
+        );
+        if (result.success) {
+          setIsSubscribed(true);
+          alert('🔔 ' + result.message);
+        } else {
+          alert('❌ ' + result.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error managing stock notification:', error);
+      alert('❌ An error occurred. Please try again.');
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
@@ -142,12 +201,40 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           {product.originalPrice && <span className="text-gray-400 text-xs line-through">₹{product.originalPrice.toLocaleString('en-IN')}</span>}
         </div>
 
-        <button
-          onClick={handleAddToCart}
-          className="w-full py-3 min-h-[44px] text-sm font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 active:scale-95 bg-white dark:bg-transparent"
-        >
-          Add to cart
-        </button>
+        {product.stock === 0 ? (
+          <button
+            onClick={handleNotifyMe}
+            disabled={isSubscribing}
+            className={`w-full py-3 min-h-[44px] text-sm font-bold rounded-lg transition-all duration-300 active:scale-95 ${isSubscribed
+                ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-2 border-green-500'
+                : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-2 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+              } ${isSubscribing ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isSubscribing ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2"></i>
+                Processing...
+              </>
+            ) : isSubscribed ? (
+              <>
+                <i className="fas fa-check-circle mr-2"></i>
+                Subscribed ✓
+              </>
+            ) : (
+              <>
+                <i className="fas fa-bell mr-2"></i>
+                Notify When Available
+              </>
+            )}
+          </button>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            className="w-full py-3 min-h-[44px] text-sm font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 active:scale-95 bg-white dark:bg-transparent"
+          >
+            Add to cart
+          </button>
+        )}
       </div>
     </div>
   );

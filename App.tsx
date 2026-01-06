@@ -22,12 +22,14 @@ import { Theme2Demo } from './components/Theme2Demo';
 import { Theme3Demo } from './components/Theme3Demo';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { StickyCartButton } from './components/StickyCartButton';
+import { Checkout } from './components/Checkout';
 import { PROMOS, HERO_SLIDES } from './constants';
 import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide } from './types';
 import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
+import { MOCK_USER } from './data/mockData';
 
-type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo';
+type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo' | 'checkout';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewState>('home');
@@ -41,7 +43,10 @@ function App() {
 
   // App Data State (Initially Empty - Populated by Migration Data)
   const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<Order[]>(() => {
+    const saved = localStorage.getItem('alpha_orders');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<BrandProfile[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -60,8 +65,14 @@ function App() {
         setProducts(realProducts);
         setCategories(realCategories);
         setBrands(realBrands);
-        setOrders(realOrders || []);
         setUsers(realUsers || []);
+
+        // Only set orders from JSON if localStorage was empty
+        setOrders(prev => {
+          if (prev.length > 0) return prev;
+          return realOrders || [];
+        });
+
         setIsDataLoading(false);
       })
       .catch(err => {
@@ -213,6 +224,8 @@ function App() {
       newPath = '/admin';
     } else if (currentView === 'home') {
       newPath = '/';
+    } else if (currentView === 'checkout') {
+      newPath = '/checkout';
     }
 
     if (window.location.pathname !== newPath) {
@@ -284,18 +297,46 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Cart & Wishlist State
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<Product[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const saved = localStorage.getItem('alpha_cart');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [wishlist, setWishlist] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('alpha_wishlist');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>(() => {
     const saved = localStorage.getItem('alpha_recently_viewed');
     return saved ? JSON.parse(saved) : [];
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  // Persist Cart & Wishlist
+  useEffect(() => {
+    localStorage.setItem('alpha_cart', JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem('alpha_wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
+
+  // Auto-login for development and hydrate orders
+  useEffect(() => {
+    if (!user) {
+      // Filter orders for this user from the persisted global orders
+      const userOrders = orders.filter(order => order.userId === MOCK_USER.email);
+      const userWithOrders = { ...MOCK_USER, orders: userOrders };
+
+      setUser(userWithOrders);
+      setIsLoggedIn(true);
+    }
+  }, [orders]); // Re-run if orders change (e.g. initial load)
+
   // Persistence Sync (Only for user data, not migrated data)
   useEffect(() => { localStorage.setItem('alpha_settings', JSON.stringify(settings)); }, [settings]);
   useEffect(() => { localStorage.setItem('alpha_cart', JSON.stringify(cart)); }, [cart]);
   useEffect(() => { localStorage.setItem('alpha_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
+  useEffect(() => { localStorage.setItem('alpha_orders', JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem('alpha_recently_viewed', JSON.stringify(recentlyViewed)); }, [recentlyViewed]);
 
   const categoryScrollRef = useRef<HTMLDivElement>(null);
@@ -384,15 +425,8 @@ function App() {
   };
 
   // Demo User for Local Mode
-  const DEMO_USER: User = {
-    name: 'Demo Dentist',
-    email: 'demo@dentist.com',
-    phone: '9876543210',
-    addresses: [],
-    orders: [],
-    cart: [],
-    wishlist: []
-  };
+  // Demo User for Local Mode - Use MOCK_USER from data
+  // const DEMO_USER used locally was incomplete
 
   // Auth Logic
   const handleLogin = (email?: string, password?: string) => {
@@ -401,13 +435,13 @@ function App() {
 
     if (cleanEmail === 'admin@alphadentkart.com' && cleanPassword === 'admin') {
       // Admin Login
-      setUser({ ...DEMO_USER, name: 'Admin User' });
+      setUser({ ...MOCK_USER, name: 'Admin User' });
       setIsAdmin(true);
       setIsLoggedIn(true);
       setCurrentView('admin-dashboard');
     } else {
       // Normal User Login
-      setUser(DEMO_USER);
+      setUser(MOCK_USER);
       setIsAdmin(false);
       setIsLoggedIn(true);
       setCart([]);
@@ -527,6 +561,55 @@ function App() {
     }
   };
 
+  const handlePlaceOrder = (paymentId: string, transactionId: string) => {
+    if (!user) return;
+
+    const newOrder: Order = {
+      id: `ORD-${Date.now()}`,
+      userId: user.email,
+      date: new Date().toLocaleDateString(),
+      status: 'Processing',
+      total: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+      items: cart.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      customerName: user.name,
+      shippingAddress: user.addresses.find(a => a.isDefault),
+      isNew: true,
+      paymentId: paymentId,
+      paymentStatus: 'paid',
+      paymentMethod: 'razorpay',
+      transactionId: transactionId
+    };
+
+    setOrders(prev => [newOrder, ...prev]);
+
+    // Update USER state directly without waiting for next reload
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        orders: [newOrder, ...prevUser.orders]
+      };
+    });
+
+    // Clear cart
+    setCart([]);
+    if (isLoggedIn && !isAdmin) {
+      // Update MOCK_USER for reference (though state is primary)
+      if (typeof MOCK_USER !== 'undefined') {
+        MOCK_USER.cart = [];
+        MOCK_USER.orders = [...MOCK_USER.orders, newOrder];
+      }
+    }
+
+    alert('Order placed successfully! Order ID: ' + newOrder.id);
+    setCurrentView('dashboard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const renderProductSection = (
     title: string,
     sectionProducts: Product[],
@@ -619,6 +702,7 @@ function App() {
     return <Theme3Demo />;
   }
 
+
   // Show loading state while data is being fetched (prevents flash of wrong content on direct URL access)
   if (isDataLoading) {
     return <Loading fullScreen message="Loading Alpha Dentkart..." />;
@@ -649,6 +733,16 @@ function App() {
         onUpdateQuantity={updateCartQuantity}
         onRemoveItem={removeFromCart}
         onStartShopping={() => navigateToShop()}
+        user={user}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setCurrentView('checkout');
+        }}
+        onLogin={() => {
+          setIsCartOpen(false);
+          handleNavigate('login');
+        }}
       />
 
       <ProductModal
@@ -858,6 +952,19 @@ function App() {
           {currentView === 'dashboard' && user && (
             <Dashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />
           )}
+
+          {currentView === 'checkout' && user && (
+            <div className="bg-gray-50 dark:bg-background-dark min-h-[60vh]">
+              <Checkout
+                cart={cart}
+                user={user}
+                onUpdateUser={handleUpdateUser}
+                onPlaceOrder={handlePlaceOrder}
+                onNavigateBack={() => navigateToShop()}
+                razorpayKey={settings.payment?.razorpay?.keyId}
+              />
+            </div>
+          )}
         </div>
 
         {/* Recently Viewed */}
@@ -900,7 +1007,7 @@ function App() {
       {/* Sticky Cart Button - Mobile Only */}
       <StickyCartButton
         cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)}
-        cartTotal={cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0)}
+        cartTotal={cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)}
         onOpenCart={() => setIsCartOpen(true)}
         currency={settings.general.currency}
       />

@@ -1,4 +1,4 @@
-import { Product, ProductAttribute, ProductVariation, Order, User } from '../types';
+import { Product, ProductAttribute, ProductVariation, Order, User, Address } from '../types';
 
 interface RawProduct {
     id: number;
@@ -155,6 +155,22 @@ export const adaptDemoData = (data: RawData) => {
         // WordPress exports items as an object, convert to array
         const itemsArray = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
 
+        // Transform WordPress shipping address to our format
+        const shippingAddress = o.shipping ? {
+            name: `${o.shipping.first_name || ''} ${o.shipping.last_name || ''}`.trim() || 'N/A',
+            street: [o.shipping.address_1, o.shipping.address_2].filter(Boolean).join(', ') || 'N/A',
+            city: o.shipping.city || 'N/A',
+            state: o.shipping.state || 'N/A',
+            zip: o.shipping.postcode || 'N/A',
+            phone: o.shipping.phone || o.billing?.phone || 'N/A'
+        } : undefined;
+
+        // Mark orders from last 48 hours as new
+        const orderDate = new Date(o.date);
+        const now = new Date();
+        const hoursSinceOrder = (now.getTime() - orderDate.getTime()) / (1000 * 60 * 60);
+        const isNew = hoursSinceOrder <= 48; // Orders within 48 hours are considered new
+
         return {
             id: o.id.toString(),
             userId: o.user_id.toString(),
@@ -163,7 +179,7 @@ export const adaptDemoData = (data: RawData) => {
                 : o.shipping?.first_name && o.shipping?.last_name
                     ? `${o.shipping.first_name} ${o.shipping.last_name}`.trim()
                     : o.billing?.first_name || o.shipping?.first_name || 'Guest Customer',
-            items: itemsArray.map(item => ({
+            items: itemsArray.map((item: any) => ({
                 productId: item.product_id,
                 name: item.name,
                 quantity: item.quantity,
@@ -172,21 +188,54 @@ export const adaptDemoData = (data: RawData) => {
             total: typeof o.total === 'string' ? parseFloat(o.total) : o.total,
             status: statusMap[o.status] || 'Processing',
             date: o.date,
-            shippingAddress: o.shipping || {},
-            billingAddress: o.billing || {}
+            shippingAddress: shippingAddress,
+            isNew: isNew
         };
     });
 
     // Process Users (Customers)
-    const users: User[] = (data.users || []).map(u => ({
-        name: u.name || 'Customer',
-        email: u.email,
-        phone: u.billing_phone || '',
-        addresses: [],
-        orders: orders.filter(o => o.userId === u.id.toString()),
-        cart: [],
-        wishlist: []
-    }));
+    const users: User[] = (data.users || []).map(u => {
+        const userOrders = orders.filter(o => o.userId === u.id.toString());
+
+        // Extract unique addresses from user's orders
+        const addressMap = new Map<string, Address>();
+        let addressIdCounter = 1;
+
+        userOrders.forEach(order => {
+            if (order.shippingAddress) {
+                // Create a unique key for the address
+                const addressKey = `${order.shippingAddress.street}-${order.shippingAddress.city}-${order.shippingAddress.zip}`;
+
+                if (!addressMap.has(addressKey)) {
+                    addressMap.set(addressKey, {
+                        id: addressIdCounter++,
+                        type: 'Home', // Default to Home, could be enhanced based on address data
+                        name: order.shippingAddress.name,
+                        street: order.shippingAddress.street,
+                        city: order.shippingAddress.city,
+                        state: order.shippingAddress.state,
+                        zip: order.shippingAddress.zip,
+                        phone: order.shippingAddress.phone,
+                        isDefault: addressIdCounter === 2 // First address is default
+                    });
+                }
+            }
+        });
+
+        return {
+            name: u.name || 'Customer',
+            email: u.email,
+            phone: u.billing_phone || '',
+            addresses: Array.from(addressMap.values()),
+            orders: userOrders,
+            cart: [],
+            wishlist: [],
+            userType: 'regular' as const,
+            registrationDate: u.registered || new Date().toISOString(),
+            isVerified: false,
+            verificationStatus: 'pending' as const
+        };
+    });
 
     return {
         products,

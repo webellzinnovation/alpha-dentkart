@@ -106,6 +106,11 @@ export interface Order {
   total: number;
   items: { name: string; quantity: number; price: number }[];
   customerName?: string;
+  shippingAddress?: Address;
+  paymentId?: string; // Razorpay payment ID
+  paymentStatus?: 'pending' | 'paid' | 'failed';
+  paymentMethod?: string; // 'razorpay', 'cod', etc.
+  transactionId?: string; // Razorpay order ID
 }
 
 
