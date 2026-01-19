@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Main Header */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 border-b ${scrolled
+        className={`sticky top-0 z-50 transition-all duration-300 border-b pt-safe ${scrolled
           ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-gray-200/50 dark:border-gray-700/50 py-3'
           : 'bg-white dark:bg-surface-dark border-transparent dark:border-gray-800 pt-4 sm:pt-6'
           }`}

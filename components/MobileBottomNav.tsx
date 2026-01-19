@@ -19,7 +19,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   isLoggedIn
 }) => {
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 h-16 pb-safe">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700 shadow-[0_-8px_15px_-5px_rgba(0,0,0,0.1)] z-50 h-[calc(64px+env(safe-area-inset-bottom,0px))] pb-safe">
       <div className="flex justify-around items-center h-full">
         <button
           onClick={() => onNavigate('home')}

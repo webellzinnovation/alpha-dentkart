@@ -17,7 +17,7 @@ export const StickyCartButton: React.FC<StickyCartButtonProps> = ({
     if (cartCount === 0) return null;
 
     return (
-        <div className="lg:hidden fixed bottom-20 left-0 right-0 z-40 px-4 pb-4 pointer-events-none">
+        <div className="lg:hidden fixed bottom-[calc(80px+env(safe-area-inset-bottom,0px))] left-0 right-0 z-[60] px-4 pb-4 pointer-events-none">
             <button
                 onClick={onOpenCart}
                 className="w-full bg-gradient-to-r from-primary to-pink-600 text-white rounded-2xl shadow-2xl shadow-primary/40 flex items-center justify-between px-6 py-4 pointer-events-auto active:scale-98 transition-transform"

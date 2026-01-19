@@ -807,7 +807,7 @@ function App() {
         onLoginRedirect={() => handleNavigate('login')}
       />
 
-      <main className={`container mx-auto px-0 md:px-4 pb-4 md:pb-8 space-y-8 md:space-y-12 flex-1 ${currentView === 'shop' ? 'pt-2 md:pt-4' : 'pt-4 md:pt-8'}`}>
+      <main className={`container mx-auto px-0 md:px-4 pb-24 md:pb-8 space-y-8 md:space-y-12 flex-1 ${currentView === 'shop' ? 'pt-2 md:pt-4' : 'pt-4 md:pt-8'}`}>
 
         {currentView === 'home' && (
           <>
