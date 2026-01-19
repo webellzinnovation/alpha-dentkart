@@ -5,21 +5,32 @@
 @tailwind utilities;
 
 @layer utilities {
-  /* Safe Area Utilities for Mobile (Capacitor) */
+
+  /* Safe Area Utilities with fallbacks for older devices */
   .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 16px);
   }
-  
+
   .pt-safe {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: env(safe-area-inset-top, 24px);
   }
-  
+
   .mb-safe {
-    margin-bottom: env(safe-area-inset-bottom, 0px);
+    margin-bottom: env(safe-area-inset-bottom, 16px);
   }
-  
+
   .mt-safe {
-    margin-top: env(safe-area-inset-top, 0px);
+    margin-top: env(safe-area-inset-top, 24px);
+  }
+
+  /* Status Bar Background Filler for Immersive Apps */
+  .status-bar-filler {
+    height: env(safe-area-inset-top, 24px);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
   }
 
   /* Custom Scrollbar Design */
@@ -34,7 +45,8 @@
 }
 
 /* Force consistency across fixed elements */
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   overflow-x: hidden;

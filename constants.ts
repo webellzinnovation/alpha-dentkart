@@ -658,15 +658,62 @@ export const PROMOS: PromoBanner[] = [
 ];
 
 export const ALL_PRODUCTS: Product[] = [
-  ...NEW_PRODUCTS,
-  ...RESTORATIVE_PRODUCTS,
-  ...ENDO_PRODUCTS,
-  ...EQUIPMENT_PRODUCTS,
-  ...INSTRUMENT_PRODUCTS,
-  ...DISPOSABLE_PRODUCTS,
-  ...ORTHO_PRODUCTS,
-  ...PROSTHETICS_PRODUCTS,
-  ...BUR_PRODUCTS
+  ...BUR_PRODUCTS,
+  {
+    id: 901,
+    name: "Prevest DenPro Micron Luting Cement",
+    category: "Restorative",
+    brand: "Prevest",
+    price: 1200,
+    rating: 4.5,
+    reviews: 32,
+    image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=Luting+Cement",
+    description: "Glass ionomer luting cement for crowns, bridges, inlays, and onlays."
+  },
+  {
+    id: 902,
+    name: "MDI Surgical Scalpel Blades",
+    category: "Instruments",
+    brand: "MDI",
+    price: 850,
+    rating: 4,
+    reviews: 15,
+    image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=Scalpel+Blades",
+    description: "Stainless steel surgical blades for precision dental procedures."
+  },
+  {
+    id: 903,
+    name: "Zhermack Occlufast Rock",
+    category: "Prosthetics",
+    brand: "Zhermack",
+    price: 2800,
+    rating: 5,
+    reviews: 24,
+    image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=Occlufast",
+    description: "Fast-setting addition silicone for bite registration."
+  },
+  {
+    id: 904,
+    name: "3M RelyX U200 Self-Adhesive Cement",
+    category: "Restorative",
+    brand: "3M",
+    price: 6500,
+    rating: 5,
+    reviews: 56,
+    image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=RelyX+U200",
+    description: "Universal self-adhesive resin cement for high strength bonding."
+  },
+  {
+    id: 905,
+    name: "NSK S-Max M95L Increase Head",
+    category: "Equipment",
+    brand: "NSK",
+    price: 45000,
+    rating: 5,
+    reviews: 8,
+    image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=NSK+S-Max",
+    description: "Optic speed increasing handpiece for precise clinical work."
+  }
 ];
 
 export const MOCK_USER: User = {
