@@ -68,25 +68,31 @@ function App() {
 
         console.log("Loading secure backend data...");
 
-        if (productsRes.products) {
+        if (productsRes.products && productsRes.products.length > 0) {
           setProducts(productsRes.products);
+        } else {
+          setProducts(ALL_PRODUCTS);
         }
 
-        if (categoriesRes.categories) {
+        if (categoriesRes.categories && categoriesRes.categories.length > 0) {
           // Add slug and default icons for UI
           setCategories(categoriesRes.categories.map((cat: any) => ({
             ...cat,
             slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
             iconClass: cat.iconClass || 'fas fa-teeth'
           })));
+        } else {
+          setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
         }
 
-        if (brandsRes.brands) {
+        if (brandsRes.brands && brandsRes.brands.length > 0) {
           setBrands(brandsRes.brands.map((brand: any) => ({
             ...brand,
             logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
             productCount: brand.productCount || 0
           })));
+        } else {
+          setBrands(BRAND_PROFILES);
         }
 
         if (meData?.user) {

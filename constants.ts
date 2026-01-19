@@ -123,6 +123,20 @@ export const BRAND_PROFILES: BrandProfile[] = [
     logo: "https://placehold.co/200x200/white/990000?text=Meta",
     description: "High quality endodontic materials and equipment.",
     productCount: 12
+  },
+  {
+    id: 12,
+    name: "MDI",
+    logo: "https://placehold.co/200x200/white/000000?text=MDI",
+    description: "Quality dental instruments and consumables.",
+    productCount: 8
+  },
+  {
+    id: 13,
+    name: "Prevest",
+    logo: "https://placehold.co/200x200/white/cc3300?text=Prevest",
+    description: "Quality dental materials and chemicals.",
+    productCount: 15
   }
 ];
 
@@ -235,10 +249,10 @@ export const NEW_PRODUCTS: Product[] = [
     image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=NSK+Handpiece",
     description: "Pana-Max is the latest of NSK's popular PANA series. Every feature is engineered to deliver performance vs. cost ratio, thus offering higher reliability and endurance.",
     specs: {
-        "Speed": "380,000-450,000 min-1",
-        "Head Size": "Standard",
-        "Water Spray": "Single Spray",
-        "Body Material": "Stainless Steel"
+      "Speed": "380,000-450,000 min-1",
+      "Head Size": "Standard",
+      "Water Spray": "Single Spray",
+      "Body Material": "Stainless Steel"
     },
     attributes: [
       { name: "Connection", options: ["2-Hole", "4-Hole"] },
@@ -255,10 +269,10 @@ export const NEW_PRODUCTS: Product[] = [
     image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=GC+Gold+Label",
     description: "Packable glass ionomer restorative. It is the gold standard for high strength wear resistant posterior restorations.",
     features: [
-        "High wear resistance",
-        "Packable consistency",
-        "Fluoride release",
-        "Chemical bonding"
+      "High wear resistance",
+      "Packable consistency",
+      "Fluoride release",
+      "Chemical bonding"
     ],
     attributes: [
       { name: "Pack Type", options: ["1-1 Pack", "Mini Pack"] }
@@ -660,6 +674,10 @@ export const MOCK_USER: User = {
   email: "anjali.sharma@example.com",
   phone: "+91 98765 43210",
   avatar: "https://placehold.co/200x200/DD3B5F/white?text=AS",
+  userType: "dental-doctor",
+  registrationDate: new Date().toISOString(),
+  isVerified: true,
+  verificationStatus: "approved",
   addresses: [
     {
       id: 1,
@@ -707,7 +725,7 @@ export const MOCK_USER: User = {
         { name: "K-Files Mani", quantity: 1, price: 700 }
       ]
     },
-     {
+    {
       id: "ORD-2023-1105",
       date: "Nov 05, 2023",
       status: "Shipped",
@@ -720,34 +738,34 @@ export const MOCK_USER: User = {
   ],
   cart: [
     {
-       id: 101,
-       name: "3M Filtek Ultimate Syringe",
-       category: "Restorative",
-       brand: "3M",
-       price: 4600,
-       rating: 5,
-       reviews: 124,
-       image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=3M+Filtek+Ult",
-       description: "Universal restorative with true nanofiller technology. Excellent polish retention and aesthetics.",
-       cartItemId: "101-Shade:A1B",
-       quantity: 2,
-       selectedAttributes: { "Shade": "A1B" }
+      id: 101,
+      name: "3M Filtek Ultimate Syringe",
+      category: "Restorative",
+      brand: "3M",
+      price: 4600,
+      rating: 5,
+      reviews: 124,
+      image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=3M+Filtek+Ult",
+      description: "Universal restorative with true nanofiller technology. Excellent polish retention and aesthetics.",
+      cartItemId: "101-Shade:A1B",
+      quantity: 2,
+      selectedAttributes: { "Shade": "A1B" }
     }
   ],
   wishlist: [
-      {
-        id: 201,
-        name: "Apex Locator Woodpecker",
-        category: "Endodontics",
-        brand: "Woodpecker",
-        price: 15000,
-        originalPrice: 18500,
-        rating: 4.5,
-        reviews: 45,
-        badge: "-18%",
-        badgeColor: "red",
-        image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=Apex+Locator",
-        description: "Highly precise apex locator with colorful LCD screen and folding design."
-      }
+    {
+      id: 201,
+      name: "Apex Locator Woodpecker",
+      category: "Endodontics",
+      brand: "Woodpecker",
+      price: 15000,
+      originalPrice: 18500,
+      rating: 4.5,
+      reviews: 45,
+      badge: "-18%",
+      badgeColor: "red",
+      image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=Apex+Locator",
+      description: "Highly precise apex locator with colorful LCD screen and folding design."
+    }
   ]
 };
