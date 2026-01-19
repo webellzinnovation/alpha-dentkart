@@ -55,7 +55,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
       <div className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white dark:bg-surface-dark shadow-2xl transform transition-transform duration-300 z-50 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
         {/* Header */}
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-surface-dark z-10">
+        <div className="p-4 pt-safe border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-surface-dark z-10">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <i className="fas fa-shopping-bag text-primary"></i>
             Your Cart ({cartItems.length})
