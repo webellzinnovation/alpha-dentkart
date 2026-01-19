@@ -24,8 +24,16 @@ app.use(helmet({
     contentSecurityPolicy: false, // Allow Tailwind CDN for now
 }));
 
+const ALLOWED_ORIGINS = [CLIENT_URL, 'capacitor://localhost', 'http://localhost:3000'];
+
 app.use(cors({
-    origin: CLIENT_URL,
+    origin: (origin, callback) => {
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true, // Allow cookies
 }));
 
