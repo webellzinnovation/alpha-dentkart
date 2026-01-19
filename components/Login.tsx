@@ -15,10 +15,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister }) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     // Simulate API call
     setTimeout(() => {
-        onLogin(email, password);
+      onLogin(email, password);
     }, 500);
   };
 
@@ -35,69 +35,65 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister }) =
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             {isRegistering ? 'Sign up to get started' : 'Sign in to access your dashboard'}
           </p>
-          <div className="mt-2 text-xs text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded border border-dashed border-gray-300 dark:border-gray-600">
-            <p>Admin: admin@alphadentkart.com / admin</p>
-            <p>User: user@example.com / (any)</p>
-          </div>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && <div className="text-red-500 text-sm text-center">{error}</div>}
           <div className="rounded-md shadow-sm space-y-4">
             {isRegistering && (
-                <div>
+              <div>
                 <label htmlFor="name" className="sr-only">Full Name</label>
                 <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i className="fas fa-user text-gray-400"></i>
-                    </div>
-                    <input
-                        id="name"
-                        name="name"
-                        type="text"
-                        required={isRegistering}
-                        className="appearance-none rounded-lg relative block w-full px-3 py-3 pl-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                        placeholder="Full Name"
-                    />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i className="fas fa-user text-gray-400"></i>
+                  </div>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    required={isRegistering}
+                    className="appearance-none rounded-lg relative block w-full px-3 py-3 pl-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                    placeholder="Full Name"
+                  />
                 </div>
-                </div>
+              </div>
             )}
             <div>
               <label htmlFor="email-address" className="sr-only">Email address</label>
               <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <i className="fas fa-envelope text-gray-400"></i>
-                  </div>
-                  <input
-                    id="email-address"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none rounded-lg relative block w-full px-3 py-3 pl-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                    placeholder="Email address"
-                  />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i className="fas fa-envelope text-gray-400"></i>
+                </div>
+                <input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none rounded-lg relative block w-full px-3 py-3 pl-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Email address"
+                />
               </div>
             </div>
             <div>
               <label htmlFor="password" className="sr-only">Password</label>
               <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <i className="fas fa-lock text-gray-400"></i>
-                  </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="appearance-none rounded-lg relative block w-full px-3 py-3 pl-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                    placeholder="Password"
-                  />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i className="fas fa-lock text-gray-400"></i>
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none rounded-lg relative block w-full px-3 py-3 pl-10 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white dark:bg-gray-800 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Password"
+                />
               </div>
             </div>
           </div>
@@ -133,18 +129,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister }) =
               {isRegistering ? 'Create Account' : 'Sign in'}
             </button>
           </div>
-          
+
           <div className="mt-6 text-center">
-             <p className="text-sm text-gray-600 dark:text-gray-400">
-                 {isRegistering ? "Already have an account?" : "Don't have an account?"}{' '}
-                 <button 
-                    type="button"
-                    onClick={() => setIsRegistering(!isRegistering)}
-                    className="font-medium text-primary hover:text-pink-700"
-                 >
-                     {isRegistering ? 'Sign In' : 'Sign Up'}
-                 </button>
-             </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {isRegistering ? "Already have an account?" : "Don't have an account?"}{' '}
+              <button
+                type="button"
+                onClick={() => setIsRegistering(!isRegistering)}
+                className="font-medium text-primary hover:text-pink-700"
+              >
+                {isRegistering ? 'Sign In' : 'Sign Up'}
+              </button>
+            </p>
           </div>
         </form>
       </div>

@@ -1,0 +1,140 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User model with authentication
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String    // Hashed with bcrypt
+  name          String
+  phone         String?
+  avatar        String?
+  role          String    @default("user") // user, admin, dental-doctor
+  userType      String    @default("regular") // regular, dental-doctor
+  isVerified    Boolean   @default(false)
+  verificationStatus String @default("pending") // pending, approved, rejected
+  
+  // Dental doctor specific fields
+  licenseId     String?
+  licenseState  String?
+  specialization String?
+  clinicName    String?
+  clinicAddress String?
+  yearsOfPractice Int?
+  
+  registrationDate DateTime @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  orders        Order[]
+  addresses     Address[]
+}
+
+// Product model
+model Product {
+  id              Int       @id @default(autoincrement())
+  name            String
+  
+  // Relations
+  categoryId      Int?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  brandId         Int?
+  brand           Brand?    @relation(fields: [brandId], references: [id])
+  
+  // Legacy fields for migration support (optional, can be phased out)
+  categoryName    String?   @map("category") // Mapping old field
+  brandName       String?   @map("brand")    // Mapping old field
+
+  price           Float
+  originalPrice   Float?
+  rating          Float?    @default(4.5)
+  reviews         Int?      @default(0)
+  image           String?
+  images          String?   // JSON array of images
+  description     String?
+  shortDescription String?
+  features        String?   // JSON array
+  specs           String?   // JSON object
+  attributes      String?   // JSON array of attributes
+  variations      String?   // JSON array of variations
+  stock           Int       @default(100)
+  badge           String?
+  badgeColor      String?
+  timer           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([name])
+  @@index([categoryId])
+  @@index([brandId])
+}
+
+// Order model
+model Order {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  customerName    String
+  status          String    @default("Processing") // Processing, Shipped, Delivered, Cancelled
+  total           Float
+  items           String    // JSON array of order items
+  shippingAddress String?   // JSON object
+  paymentId       String?
+  paymentStatus   String?   @default("pending") // pending, paid, failed
+  paymentMethod   String?   // razorpay, phonepe, cod
+  transactionId   String?
+  isNew           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Address model
+model Address {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // Home, Office, Clinic
+  name      String
+  street    String
+  city      String
+  state     String
+  zip       String
+  phone     String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Category model
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  iconClass String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Brand model
+model Brand {
+  id           Int       @id @default(autoincrement())
+  name         String    @unique
+  slug         String    @unique
+  logo         String?
+  description  String?
+  productCount Int       @default(0)
+  products     Product[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}

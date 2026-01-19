@@ -23,7 +23,7 @@ import { Theme3Demo } from './components/Theme3Demo';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { StickyCartButton } from './components/StickyCartButton';
 import { Checkout } from './components/Checkout';
-import { PROMOS, HERO_SLIDES } from './constants';
+import { PROMOS, HERO_SLIDES, ALL_PRODUCTS, CATEGORIES, BRAND_PROFILES } from './constants';
 import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide } from './types';
 import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
@@ -52,33 +52,60 @@ function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
 
-  // Load Migrated Data
+  // Load Real Data from Secure Backend API
   useEffect(() => {
-    fetch('/alphadentkart_data.json')
-      .then(res => {
-        if (!res.ok) throw new Error("No migrated data found");
-        return res.json();
-      })
-      .then(data => {
-        console.log("Loading migrated data...", data);
-        const { products: realProducts, categories: realCategories, brands: realBrands, orders: realOrders, users: realUsers } = adaptDemoData(data);
-        setProducts(realProducts);
-        setCategories(realCategories);
-        setBrands(realBrands);
-        setUsers(realUsers || []);
+    const loadAppData = async () => {
+      try {
+        const { productsAPI, categoriesAPI, brandsAPI, authAPI } = await import('./utils/api');
 
-        // Only set orders from JSON if localStorage was empty
-        setOrders(prev => {
-          if (prev.length > 0) return prev;
-          return realOrders || [];
-        });
+        // Fetch all data independently for scale
+        const [productsRes, categoriesRes, brandsRes, meData] = await Promise.all([
+          productsAPI.getAll({ limit: 20 }).catch(() => ({ products: [] })),
+          categoriesAPI.getAll().catch(() => ({ categories: [] })),
+          brandsAPI.getAll().catch(() => ({ brands: [] })),
+          authAPI.me().catch(() => ({ user: null }))
+        ]);
+
+        console.log("Loading secure backend data...");
+
+        if (productsRes.products) {
+          setProducts(productsRes.products);
+        }
+
+        if (categoriesRes.categories) {
+          // Add slug and default icons for UI
+          setCategories(categoriesRes.categories.map((cat: any) => ({
+            ...cat,
+            slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
+            iconClass: cat.iconClass || 'fas fa-teeth'
+          })));
+        }
+
+        if (brandsRes.brands) {
+          setBrands(brandsRes.brands.map((brand: any) => ({
+            ...brand,
+            logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
+            productCount: brand.productCount || 0
+          })));
+        }
+
+        if (meData?.user) {
+          setUser(meData.user);
+          setIsLoggedIn(true);
+          setIsAdmin(meData.user.role === 'admin');
+        }
 
         setIsDataLoading(false);
-      })
-      .catch(err => {
-        console.error("FAILED TO LOAD MIGRATED DATA", err);
+      } catch (err) {
+        console.warn("SECURE BACKEND UNREACHABLE - Using fallback constants", err);
+        setProducts(ALL_PRODUCTS);
+        setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
+        setBrands(BRAND_PROFILES);
         setIsDataLoading(false);
-      });
+      }
+    };
+
+    loadAppData();
   }, []);
 
   // Initialize Hero Slides from localStorage or use defaults
@@ -428,27 +455,48 @@ function App() {
   // Demo User for Local Mode - Use MOCK_USER from data
   // const DEMO_USER used locally was incomplete
 
-  // Auth Logic
-  const handleLogin = (email?: string, password?: string) => {
-    const cleanEmail = email?.trim().toLowerCase();
-    const cleanPassword = password?.trim();
-
-    if (cleanEmail === 'admin@alphadentkart.com' && cleanPassword === 'admin') {
-      // Admin Login
-      setUser({ ...MOCK_USER, name: 'Admin User' });
-      setIsAdmin(true);
-      setIsLoggedIn(true);
-      setCurrentView('admin-dashboard');
-    } else {
-      // Normal User Login
-      setUser(MOCK_USER);
-      setIsAdmin(false);
-      setIsLoggedIn(true);
-      setCart([]);
-      setWishlist([]);
-      setCurrentView('dashboard');
+  // SECURE Auth Logic - Uses Backend API
+  const handleLogin = async (email?: string, password?: string) => {
+    if (!email || !password) {
+      alert('Please enter email and password');
+      return;
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    try {
+      // Call secure backend API
+      const { authAPI } = await import('./utils/api');
+      const { user } = await authAPI.login(email, password);
+
+      // Set user state from backend response
+      setUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone || '',
+        avatar: user.avatar || '',
+        cart: [],
+        wishlist: [],
+        orders: [],
+        recentlyViewed: [],
+        addresses: [],
+      });
+
+      // Set admin status based on backend role
+      setIsAdmin(user.role === 'admin');
+      setIsLoggedIn(true);
+
+      // Navigate to appropriate dashboard
+      if (user.role === 'admin') {
+        setCurrentView('admin-dashboard');
+      } else {
+        setCurrentView('dashboard');
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      alert(error.response?.data?.error || 'Login failed. Please check your credentials.');
+    }
   };
 
   const handleLogout = () => {
@@ -577,7 +625,6 @@ function App() {
       })),
       customerName: user.name,
       shippingAddress: user.addresses.find(a => a.isDefault),
-      isNew: true,
       paymentId: paymentId,
       paymentStatus: 'paid',
       paymentMethod: 'razorpay',
