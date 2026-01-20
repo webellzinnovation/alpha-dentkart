@@ -6,27 +6,37 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const NotificationService = {
     async init() {
-        if (Capacitor.getPlatform() === 'web') {
-            console.log('Push notifications not supported on web.');
-            return;
-        }
+        try {
+            if (Capacitor.getPlatform() === 'web') {
+                console.log('Push notifications not supported on web.');
+                return;
+            }
 
-        await this.registerNotifications();
-        this.addListeners();
+            // Wrap in try-catch to prevent app crash if Firebase is not configured
+            await this.registerNotifications();
+            this.addListeners();
+        } catch (err) {
+            console.error('NotificationService init failed (likely missing Firebase config):', err);
+        }
     },
 
     async registerNotifications() {
-        let permStatus = await PushNotifications.checkPermissions();
+        try {
+            let permStatus = await PushNotifications.checkPermissions();
 
-        if (permStatus.receive === 'prompt') {
-            permStatus = await PushNotifications.requestPermissions();
+            if (permStatus.receive === 'prompt') {
+                permStatus = await PushNotifications.requestPermissions();
+            }
+
+            if (permStatus.receive !== 'granted') {
+                console.warn('Push notification permissions denied.');
+                return;
+            }
+
+            await PushNotifications.register();
+        } catch (err) {
+            console.error('PushNotifications.register() failed:', err);
         }
-
-        if (permStatus.receive !== 'granted') {
-            throw new Error('User denied permissions!');
-        }
-
-        await PushNotifications.register();
     },
 
     addListeners() {
