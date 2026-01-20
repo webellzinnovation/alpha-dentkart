@@ -47,20 +47,23 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-40 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-[90] ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
 
       {/* Sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white dark:bg-surface-dark shadow-2xl transform transition-transform duration-300 z-50 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white dark:bg-surface-dark shadow-2xl transform transition-transform duration-300 z-[100] flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+
+        {/* Status Bar Filler for Mobile */}
+        <div className="status-bar-filler lg:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800/50"></div>
 
         {/* Header */}
-        <div className="p-4 pt-safe border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-surface-dark z-10">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-surface-dark z-10">
           <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <i className="fas fa-shopping-bag text-primary"></i>
             Your Cart ({cartItems.length})
           </h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-sm">
             <i className="fas fa-times"></i>
           </button>
         </div>

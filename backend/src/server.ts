@@ -9,8 +9,12 @@ import categoryRoutes from './routes/categories';
 import brandRoutes from './routes/brands';
 import orderRoutes from './routes/orders';
 import aiRoutes from './routes/ai';
+import notificationRoutes from './routes/notification.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
+import admin from 'firebase-admin';
+import path from 'path';
+import fs from 'fs';
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +22,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+
+// Initialize Firebase Admin (only if service account exists)
+const serviceAccountPath = path.join(process.cwd(), 'firebase-service-account.json');
+if (fs.existsSync(serviceAccountPath)) {
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+    console.log('Firebase Admin initialized');
+} else {
+    console.warn('Firebase Service Account not found. Push notifications will be disabled.');
+}
 
 // Security middleware
 app.use(helmet({
@@ -55,6 +71,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/brands', brandRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/ai', aiRoutes);
 

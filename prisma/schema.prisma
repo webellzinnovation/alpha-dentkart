@@ -32,6 +32,7 @@ model User {
   yearsOfPractice Int?
   
   registrationDate DateTime @default(now())
+  fcmToken      String?   // For push notifications
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   

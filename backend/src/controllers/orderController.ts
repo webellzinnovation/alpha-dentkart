@@ -21,6 +21,19 @@ export async function createOrder(req: Request, res: Response) {
             },
         });
 
+        // Trigger Push Notification
+        try {
+            const { NotificationService } = await import('../services/NotificationService');
+            await NotificationService.sendToUser(
+                userId,
+                "Order Placed Successfully! 🦷📦",
+                `Your order #${order.id.split('-')[0]} is being processed.`,
+                { orderId: order.id }
+            );
+        } catch (pushErr) {
+            console.error('Failed to send order push notification:', pushErr);
+        }
+
         res.status(201).json({ order });
     } catch (error) {
         throw error;

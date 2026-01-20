@@ -17,6 +17,8 @@ interface HeaderProps {
   onSearch: (query: string) => void;
   recentlyViewed: Product[];
   onProductClick: (product: Product) => void;
+  isMobileMenuOpen: boolean;
+  setIsMobileMenuOpen: (isOpen: boolean) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,9 +34,10 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   onSearch,
   recentlyViewed,
-  onProductClick
+  onProductClick,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen
 }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -75,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Main Header */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 border-b pt-safe ${scrolled
+        className={`sticky top-0 z-50 transition-all duration-300 border-b ${scrolled
           ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-gray-200/50 dark:border-gray-700/50 py-3'
           : 'bg-white dark:bg-surface-dark border-transparent dark:border-gray-800'
           }`}
@@ -83,8 +86,8 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Status Bar Filler for Mobile */}
         <div className="status-bar-filler lg:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800/50"></div>
 
-        {/* Header Content with Safe Area Padding */}
-        <div className="container mx-auto px-4 lg:px-8 pt-safe lg:pt-0">
+        {/* Header Content */}
+        <div className="container mx-auto px-4 lg:px-8 lg:pt-0">
           {/* Mobile Header Layout */}
           <div className="lg:hidden flex items-center justify-between py-3">
             {/* Left: Menu Icon */}
@@ -329,17 +332,20 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Mobile Sidebar (Right) */}
       <div
-        className={`fixed inset-0 bg-black/50 z-[60] transition-opacity duration-300 lg:hidden ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 bg-black/50 z-[110] transition-opacity duration-300 lg:hidden ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
 
       <div
-        className={`fixed inset-y-0 right-0 w-[280px] bg-gradient-to-b from-white via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 shadow-2xl z-[70] transform transition-all duration-300 lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed inset-y-0 right-0 w-[280px] bg-gradient-to-b from-white via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 shadow-2xl z-[120] transform transition-all duration-300 lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
       >
+        {/* Status Bar Filler for Mobile */}
+        <div className="status-bar-filler lg:hidden bg-primary border-b border-white/10"></div>
+
         {/* Sidebar Header - Gradient */}
-        <div className="relative p-6 pt-safe bg-gradient-to-r from-primary to-pink-600 overflow-hidden">
+        <div className="relative p-6 bg-gradient-to-r from-primary to-pink-600 overflow-hidden">
           {/* Decorative circles */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>

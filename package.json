@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
+    "@capacitor/push-notifications": "^8.0.0",
     "@google/genai": "^1.33.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
@@ -24,6 +25,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
+    "firebase-admin": "^13.6.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "prisma": "^5.22.0",

@@ -54,6 +54,11 @@ function App() {
 
   // Load Real Data from Secure Backend API
   useEffect(() => {
+    // Initialize Push Notifications
+    import('./utils/NotificationService').then(({ NotificationService }) => {
+      NotificationService.init().catch(console.error);
+    });
+
     const loadAppData = async () => {
       try {
         const { productsAPI, categoriesAPI, brandsAPI, authAPI } = await import('./utils/api');
@@ -343,6 +348,7 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Persist Cart & Wishlist
   useEffect(() => {
@@ -414,6 +420,8 @@ function App() {
   };
 
   const handleNavigate = (page: ViewState, category?: string) => {
+    setIsCartOpen(false);
+    setIsMobileMenuOpen(false); // Close menu on any navigation
     if (page === 'home') navigateToHome();
     else if (page === 'brands') navigateToBrands();
     else if (page === 'categories') navigateToCategories();
@@ -771,6 +779,8 @@ function App() {
         onOpenCart={() => setIsCartOpen(true)}
         isLoggedIn={isLoggedIn}
         user={user}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
         categories={categories}
         settings={settings}
         searchQuery={searchQuery}
@@ -1058,12 +1068,14 @@ function App() {
       />
 
       {/* Sticky Cart Button - Mobile Only */}
-      <StickyCartButton
-        cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)}
-        cartTotal={cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)}
-        onOpenCart={() => setIsCartOpen(true)}
-        currency={settings.general.currency}
-      />
+      {!isCartOpen && (
+        <StickyCartButton
+          cartCount={cart.reduce((acc, item) => acc + item.quantity, 0)}
+          cartTotal={cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)}
+          onOpenCart={() => setIsCartOpen(true)}
+          currency={settings.general.currency}
+        />
+      )}
 
       {(currentView as string) !== 'admin-dashboard' && <Footer />}
     </div>
