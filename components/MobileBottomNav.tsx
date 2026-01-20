@@ -18,70 +18,55 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   wishlistCount,
   isLoggedIn
 }) => {
+  const navItems = [
+    { id: 'home', icon: 'fa-home', label: 'Home', view: 'home' },
+    { id: 'categories', icon: 'fa-grid-2', label: 'Category', view: 'categories' },
+    { id: 'brands', icon: 'fa-award', label: 'Brand', view: 'brands' },
+    { id: 'search', icon: 'fa-search', label: 'Search', view: 'search' },
+    { id: 'wishlist', icon: 'fa-heart', label: 'Wishlist', view: 'wishlist', badge: wishlistCount, badgeColor: 'bg-accent' },
+    { id: 'cart', icon: 'fa-shopping-bag', label: 'Cart', view: 'cart', badge: cartCount, badgeColor: 'bg-primary' },
+  ];
+
+  const isActive = (item: any) => {
+    if (item.view === 'cart') return false; // Cart triggers overlay
+    return currentView === item.view;
+  };
+
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] z-50 h-[calc(64px+env(safe-area-inset-bottom,0px))] pb-safe">
-      <div className="flex justify-around items-center h-full max-w-lg mx-auto">
-        <button
-          onClick={() => onNavigate('home')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 group transition-all ${currentView === 'home' ? 'text-primary' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600'}`}
-        >
-          <div className={`p-1.5 rounded-xl transition-all ${currentView === 'home' ? 'bg-primary/10' : 'group-hover:bg-gray-50'}`}>
-            <i className={`fas fa-home ${currentView === 'home' ? 'text-lg' : 'text-base'}`}></i>
-          </div>
-          <span className={`text-[9px] font-black uppercase tracking-widest ${currentView === 'home' ? 'opacity-100' : 'opacity-0 scale-90 group-hover:opacity-50 transition-all'}`}>Home</span>
-        </button>
-
-        <button
-          onClick={() => onNavigate('shop')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 group transition-all ${currentView === 'shop' ? 'text-primary' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600'}`}
-        >
-          <div className={`p-1.5 rounded-xl transition-all ${currentView === 'shop' ? 'bg-primary/10' : 'group-hover:bg-gray-50'}`}>
-            <i className={`fas fa-grid-2 ${currentView === 'shop' ? 'text-lg' : 'text-base'}`}></i>
-          </div>
-          <span className={`text-[9px] font-black uppercase tracking-widest ${currentView === 'shop' ? 'opacity-100' : 'opacity-0 scale-90 group-hover:opacity-50 transition-all'}`}>Shop</span>
-        </button>
-
-        <button
-          onClick={() => onNavigate('wishlist')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 group relative transition-all ${currentView === 'wishlist' ? 'text-primary' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600'}`}
-        >
-          <div className={`p-1.5 rounded-xl transition-all relative ${currentView === 'wishlist' ? 'bg-primary/10' : 'group-hover:bg-gray-50'}`}>
-            <i className={`fas fa-heart ${currentView === 'wishlist' ? 'text-lg' : 'text-base'}`}></i>
-            {wishlistCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-black min-w-[14px] h-[14px] flex items-center justify-center rounded-full shadow-sm ring-2 ring-white dark:ring-gray-900 px-0.5">
-                {wishlistCount}
-              </span>
-            )}
-          </div>
-          <span className={`text-[9px] font-black uppercase tracking-widest ${currentView === 'wishlist' ? 'opacity-100' : 'opacity-0 scale-90 group-hover:opacity-50 transition-all'}`}>Wishlist</span>
-        </button>
-
-        <button
-          onClick={onOpenCart}
-          className="flex flex-col items-center justify-center w-full h-full space-y-1 group text-gray-400 dark:text-gray-500 hover:text-gray-600 transition-all"
-        >
-          <div className="p-1.5 rounded-xl group-hover:bg-gray-50 relative transition-all">
-            <i className="fas fa-shopping-bag text-base"></i>
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-primary text-white text-[8px] font-black min-w-[14px] h-[14px] flex items-center justify-center rounded-full shadow-sm ring-2 ring-white dark:ring-gray-900 px-0.5 animate-bounce">
-                {cartCount}
-              </span>
-            )}
-          </div>
-          <span className="text-[9px] font-black uppercase tracking-widest opacity-0 scale-90 group-hover:opacity-50 transition-all">Cart</span>
-        </button>
-
-        <button
-          onClick={() => onNavigate(isLoggedIn ? 'dashboard' : 'login')}
-          className={`flex flex-col items-center justify-center w-full h-full space-y-1 group transition-all ${['dashboard', 'login', 'profile'].includes(currentView) ? 'text-primary' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600'}`}
-        >
-          <div className={`p-1.5 rounded-xl transition-all ${['dashboard', 'login', 'profile'].includes(currentView) ? 'bg-primary/10' : 'group-hover:bg-gray-50'}`}>
-            <i className={`fas fa-user ${['dashboard', 'login', 'profile'].includes(currentView) ? 'text-lg' : 'text-base'}`}></i>
-          </div>
-          <span className={`text-[9px] font-black uppercase tracking-widest ${['dashboard', 'login', 'profile'].includes(currentView) ? 'opacity-100' : 'opacity-0 scale-90 group-hover:opacity-50 transition-all'}`}>Account</span>
-        </button>
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] z-50 h-[calc(68px+env(safe-area-inset-bottom,0px))] pb-safe">
+      <div className="flex justify-around items-center h-full px-2">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => {
+              if (item.id === 'cart') onOpenCart();
+              else if (item.id === 'search') {
+                // Trigger search focus or navigate to shop
+                onNavigate('shop');
+                setTimeout(() => {
+                  document.querySelector<HTMLInputElement>('input[placeholder*="Search"]')?.focus();
+                }, 100);
+              }
+              else onNavigate(item.view);
+            }}
+            className={`flex flex-col items-center justify-center flex-1 h-[52px] rounded-2xl transition-all duration-300 relative ${isActive(item) ? 'bg-pink-50 dark:bg-pink-900/20 shadow-sm' : ''}`}
+          >
+            <div className="relative">
+              <i className={`fas ${item.icon} ${isActive(item) ? 'text-primary scale-110' : 'text-gray-400 dark:text-gray-500'} text-lg transition-all`}></i>
+              {item.badge !== undefined && item.badge > 0 && (
+                <span className={`absolute -top-1.5 -right-2 ${item.badgeColor} text-white text-[8px] font-black min-w-[14px] h-[14px] flex items-center justify-center rounded-full shadow-sm ring-1 ring-white dark:ring-gray-900 px-0.5 ${item.id === 'cart' ? 'animate-bounce' : ''}`}>
+                  {item.badge}
+                </span>
+              )}
+            </div>
+            <span className={`text-[9px] font-black uppercase tracking-tighter mt-1 transition-all ${isActive(item) ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`}>
+              {item.label}
+            </span>
+          </button>
+        ))}
       </div>
     </div>
+
 
   );
 };
