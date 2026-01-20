@@ -54,17 +54,6 @@ function App() {
 
   // Load Real Data from Secure Backend API
   useEffect(() => {
-    // Initialize Push Notifications with extra safety
-    setTimeout(() => {
-      import('./utils/NotificationService')
-        .then(({ NotificationService }) => {
-          NotificationService.init().catch(err => {
-            console.error('Safe Push Init Error:', err);
-          });
-        })
-        .catch(err => console.error('Failed to load NotificationService:', err));
-    }, 1000);
-
     const loadAppData = async () => {
       try {
         const { productsAPI, categoriesAPI, brandsAPI, authAPI } = await import('./utils/api');

@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.0.1",
-    "@capacitor/push-notifications": "^8.0.0",
     "@google/genai": "^1.33.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
