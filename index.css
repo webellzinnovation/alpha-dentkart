@@ -8,19 +8,19 @@
 
   /* Safe Area Utilities with fallbacks for older devices */
   .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 16px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .pt-safe {
-    padding-top: env(safe-area-inset-top, 24px);
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   .mb-safe {
-    margin-bottom: env(safe-area-inset-bottom, 16px);
+    margin-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .mt-safe {
-    margin-top: env(safe-area-inset-top, 24px);
+    margin-top: env(safe-area-inset-top, 0px);
   }
 
   /* Status Bar Background Filler for Immersive Apps */

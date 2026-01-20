@@ -339,7 +339,7 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
       >
         {/* Sidebar Header - Gradient */}
-        <div className="relative p-6 bg-gradient-to-r from-primary to-pink-600 overflow-hidden">
+        <div className="relative p-6 pt-safe bg-gradient-to-r from-primary to-pink-600 overflow-hidden">
           {/* Decorative circles */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
