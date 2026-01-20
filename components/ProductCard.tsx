@@ -120,121 +120,88 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const homepageBadge = product.badgeId ? homepageBadges.find(b => b.id === product.badgeId && b.enabled) : null;
 
   return (
-    <div onClick={handleClick} className="bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 rounded-2xl p-3 sm:p-4 group hover:shadow-xl transition-all relative cursor-pointer flex flex-col h-full shadow-sm">
-      {/* Homepage Badge (New System) */}
-      {homepageBadge && (
-        <span
-          className="absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full z-10 shadow-sm"
-          style={{ backgroundColor: homepageBadge.bgColor, color: homepageBadge.color }}
+    <div onClick={handleClick} className="premium-card p-3 flex flex-col h-full bg-white dark:bg-surface-dark group">
+      {/* Badge Area */}
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex flex-col gap-1">
+          {homepageBadge ? (
+            <span
+              className="text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider"
+              style={{ backgroundColor: homepageBadge.bgColor, color: homepageBadge.color }}
+            >
+              {homepageBadge.name}
+            </span>
+          ) : product.badge ? (
+            <span className={`text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider ${badgeColors[product.badgeColor || 'blue']}`}>
+              {product.badge}
+            </span>
+          ) : null}
+
+          {product.timer && (
+            <span className="text-[9px] font-bold text-primary flex items-center gap-1">
+              <i className="far fa-clock"></i> {product.timer}
+            </span>
+          )}
+        </div>
+
+        {/* Wishlist Button - Glassmorphic */}
+        <button
+          onClick={handleWishlistClick}
+          className={`w-8 h-8 rounded-xl shadow-sm flex items-center justify-center transition-all ${isInWishlist ? 'bg-accent text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-accent hover:bg-white'}`}
         >
-          {homepageBadge.name}
-        </span>
-      )}
+          <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart text-xs`}></i>
+        </button>
+      </div>
 
-      {/* Legacy Badge (Old System - fallback) */}
-      {!homepageBadge && product.badge && (
-        <span className={`absolute top-3 left-3 text-white text-[10px] px-2 py-0.5 rounded-full z-10 ${badgeColors[product.badgeColor || 'blue']}`}>
-          {product.badge}
-        </span>
-      )}
-
-      {/* Wishlist Button - Always visible top right */}
-      <button
-        onClick={handleWishlistClick}
-        className={`absolute top-3 right-3 w-9 h-9 rounded-full shadow-md flex items-center justify-center z-10 transition-all ${isInWishlist ? 'bg-white text-red-500 border border-red-100 scale-110' : 'bg-white/90 dark:bg-gray-800/90 text-gray-400 hover:text-red-500 backdrop-blur-sm hover:scale-110'}`}
-        title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-      >
-        <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart text-sm`}></i>
-      </button>
-
-      <div className={`relative mb-3 ${compact ? 'h-48 sm:h-56 p-4' : 'h-40 sm:h-48'} flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden shrink-0`}>
+      {/* Product Image Area */}
+      <div className="relative aspect-square flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl overflow-hidden mb-3">
         <img
           alt={product.name}
-          className={`h-full object-contain mix-blend-multiply dark:mix-blend-normal ${compact ? 'group-hover:scale-110 transition-transform duration-300' : ''}`}
+          className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500 mix-blend-multiply dark:mix-blend-normal"
           src={product.image}
           loading="lazy"
         />
-
-        {/* Quick View - Desktop Hover Only */}
-        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity hidden lg:flex">
-          <button
-            onClick={handleQuickView}
-            className="w-8 h-8 bg-white dark:bg-gray-700 rounded-full shadow hover:bg-primary hover:text-white transition-colors flex items-center justify-center"
-            title="Quick View"
-          >
-            <i className="fas fa-eye text-xs"></i>
-          </button>
-        </div>
       </div>
 
-      {/* Stock Indicator - Mobile Friendly */}
-      {product.stock !== undefined && product.stock < 20 && (
-        <div className="mb-2 px-2 py-1 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-          <p className="text-[10px] text-orange-600 dark:text-orange-400 font-semibold flex items-center gap-1">
-            <i className="fas fa-box text-[8px]"></i>
-            {product.stock} Stocks Left
-          </p>
-        </div>
-      )}
+      {/* Info Area */}
+      <div className="flex flex-col flex-1">
+        <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-1">{product.category}</span>
+        <h4 className="text-sm font-bold text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug mb-2 group-hover:text-primary transition-colors">
+          {product.name}
+        </h4>
 
-      {product.timer && (
-        <div className="w-full bg-primary text-white text-[10px] sm:text-xs text-center py-1.5 rounded-md font-medium mb-3 shrink-0 shadow-sm shadow-primary/20">
-          {product.timer}
-        </div>
-      )}
-
-      <div className="text-[10px] text-gray-400 mb-1 uppercase tracking-wide line-clamp-1">{product.category}</div>
-      <h4 className="text-sm font-semibold text-gray-800 dark:text-white truncate mb-2 hover:text-primary leading-tight" title={product.name}>{product.name}</h4>
-
-      <div className="flex items-center gap-1 mb-3">
-        <div className="flex text-yellow-400 text-xs">
-          {[...Array(5)].map((_, i) => (
-            <i key={i} className={`${i < Math.floor(product.rating) ? 'fas' : (i < product.rating ? 'fas fa-star-half-alt' : 'far')} fa-star`}></i>
-          ))}
-        </div>
-        {product.reviews && <span className="text-xs text-gray-400">({product.reviews})</span>}
-      </div>
-
-      <div className="mt-auto">
-        <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 mb-4">
-          <span className="text-primary font-bold text-base">₹{product.price.toLocaleString('en-IN')}</span>
-          {product.originalPrice && <span className="text-gray-400 text-xs line-through">₹{product.originalPrice.toLocaleString('en-IN')}</span>}
+        {/* Rating */}
+        <div className="flex items-center gap-1 mb-3">
+          <span className="text-xs font-black text-gray-700 dark:text-gray-300">{product.rating ? Number(product.rating).toFixed(1) : '5.0'}</span>
+          <i className="fas fa-star text-[10px] text-yellow-400"></i>
+          {product.reviews && <span className="text-[10px] text-gray-400 font-medium">({product.reviews})</span>}
         </div>
 
-        {product.stock === 0 ? (
-          <button
-            onClick={handleNotifyMe}
-            disabled={isSubscribing}
-            className={`w-full py-3 min-h-[44px] text-sm font-bold rounded-lg transition-all duration-300 active:scale-95 ${isSubscribed
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-2 border-green-500'
-                : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-2 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30'
-              } ${isSubscribing ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {isSubscribing ? (
-              <>
-                <i className="fas fa-spinner fa-spin mr-2"></i>
-                Processing...
-              </>
-            ) : isSubscribed ? (
-              <>
-                <i className="fas fa-check-circle mr-2"></i>
-                Subscribed ✓
-              </>
-            ) : (
-              <>
-                <i className="fas fa-bell mr-2"></i>
-                Notify When Available
-              </>
+        {/* Price & Action */}
+        <div className="mt-auto flex items-center justify-between gap-2">
+          <div className="flex flex-col">
+            <span className="text-base font-black text-gray-900 dark:text-white">₹{product.price.toLocaleString('en-IN')}</span>
+            {product.originalPrice && (
+              <span className="text-[10px] text-gray-400 line-through">₹{product.originalPrice.toLocaleString('en-IN')}</span>
             )}
-          </button>
-        ) : (
-          <button
-            onClick={handleAddToCart}
-            className="w-full py-3 min-h-[44px] text-sm font-bold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 active:scale-95 bg-white dark:bg-transparent"
-          >
-            Add to cart
-          </button>
-        )}
+          </div>
+
+          {product.stock === 0 ? (
+            <button
+              onClick={handleNotifyMe}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isSubscribed ? 'bg-green-500 text-white' : 'bg-orange-100 text-orange-600'}`}
+            >
+              <i className={`fas ${isSubscribed ? 'fa-check' : 'fa-bell'}`}></i>
+            </button>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              className="w-10 h-10 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 flex items-center justify-center active:scale-90 transition-transform"
+            >
+              <i className="fas fa-plus"></i>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

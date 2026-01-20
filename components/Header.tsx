@@ -87,34 +87,50 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="status-bar-filler lg:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800/50"></div>
 
         {/* Header Content */}
-        <div className="container mx-auto px-4 lg:px-8 lg:pt-0">
-          {/* Mobile Header Layout */}
-          <div className="lg:hidden flex items-center justify-between py-3">
-            {/* Left: Menu Icon */}
-            <button
-              className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-all active:scale-90"
-              onClick={() => setIsMobileMenuOpen(true)}
-            >
-              <i className="fas fa-bars text-base"></i>
-            </button>
+        <div className="container mx-auto">
+          {/* Mobile Header Layout (Premium Search-Centric) */}
+          <div className="lg:hidden flex flex-col px-4 pt-2 pb-3 gap-3">
+            <div className="flex items-center justify-between">
+              {/* Menu Icon */}
+              <button
+                className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-all active:scale-90"
+                onClick={() => setIsMobileMenuOpen(true)}
+              >
+                <i className="fas fa-bars-staggered text-base"></i>
+              </button>
 
-            {/* Center: Logo */}
-            <a onClick={() => onNavigate('home')} className="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
-              <img
-                src="/Alpha-dentkart-logo-600p.png"
-                alt="Alpha DentKart"
-                className="h-9 object-contain"
+              {/* Center: Logo */}
+              <a onClick={() => onNavigate('home')} className="flex items-center cursor-pointer active:scale-95 transition-transform">
+                <div className="flex flex-col items-center">
+                  <h1 className="text-xl font-black tracking-tighter leading-none bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent uppercase">
+                    Alpha
+                  </h1>
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-gray-400 -mt-0.5 uppercase">Dentkart</span>
+                </div>
+              </a>
+
+              {/* Right: User Icon */}
+              <button
+                onClick={() => onNavigate(isLoggedIn ? 'dashboard' : 'login')}
+                className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-all active:scale-90"
+              >
+                <i className="fas fa-user-circle text-lg"></i>
+              </button>
+            </div>
+
+            {/* Search Bar - Integrated & Always Visible on Mobile */}
+            <form onSubmit={handleSearchSubmit} className="relative group">
+              <input
+                type="text"
+                placeholder="Search Alpha Dentkart..."
+                className="w-full h-12 bg-gray-100 dark:bg-gray-800 border-none rounded-2xl pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
-            </a>
-
-            {/* Right: Search Icon */}
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${isSearchOpen ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-            >
-              <i className={`fas ${isSearchOpen ? 'fa-times' : 'fa-search'} text-base`}></i>
-            </button>
+              <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors"></i>
+            </form>
           </div>
+
 
           {/* Desktop Header Layout */}
           <div className="hidden lg:flex items-center justify-between gap-4 lg:gap-8 xl:gap-12">

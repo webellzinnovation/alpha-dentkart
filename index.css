@@ -1,12 +1,39 @@
 /* Main CSS with Mobile / Capacitor Optimizations */
 
-@tailwind base;
-@tailwind components;
+@layer base {
+  :root {
+    --primary: #0ea5e9;
+    /* Sleek sky blue */
+    --primary-dark: #0284c7;
+    --accent: #d946ef;
+    /* Vibrant magenta */
+    --accent-dark: #c026d3;
+    --background: #f8fafc;
+    /* Soft architectural gray */
+    --surface: #ffffff;
+    --text-main: #0f172a;
+    /* Slate 900 */
+    --text-muted: #64748b;
+    /* Slate 500 */
+    --border: #e2e8f0;
+    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    --shadow-premium: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark {
+    --background: #0f172a;
+    --surface: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+  }
+}
+
 @tailwind utilities;
 
 @layer utilities {
 
-  /* Safe Area Utilities with fallbacks for older devices */
+  /* Safe Area Utilities with fallbacks */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 12px);
   }
@@ -15,22 +42,26 @@
     padding-top: env(safe-area-inset-top, 24px);
   }
 
-  .mb-safe {
-    margin-bottom: env(safe-area-inset-bottom, 12px);
-  }
-
-  .mt-safe {
-    margin-top: env(safe-area-inset-top, 24px);
-  }
-
-  /* Status Bar Background Filler for Immersive Apps */
+  /* Status Bar Background Filler */
   .status-bar-filler {
     height: env(safe-area-inset-top, 24px);
     width: 100%;
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
     z-index: 100;
+  }
+
+  .premium-card {
+    background: var(--surface);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .premium-card:hover {
+    box-shadow: var(--shadow-premium);
+    transform: translateY(-2px);
   }
 
   /* Custom Scrollbar Design */

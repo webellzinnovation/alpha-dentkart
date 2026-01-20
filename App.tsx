@@ -834,27 +834,36 @@ function App() {
               <BrandScroll onBrandClick={(brand) => navigateToShop(undefined, brand)} brands={brands} />
             </div>
 
-            {/* Categories - Horizontal Scroll */}
+            {/* Premium Categories Box Mesh - Horizontal Scroll */}
             <section className="px-4 md:px-0">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg md:text-xl font-bold text-gray-800 dark:text-white">Categories</h3>
-                <div className="flex gap-2 hidden md:flex">
-                  <button onClick={() => scrollCategories('left')} className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center hover:bg-primary hover:text-white transition-colors dark:text-white"><i className="fas fa-chevron-left text-xs"></i></button>
-                  <button onClick={() => scrollCategories('right')} className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center hover:bg-primary hover:text-white transition-colors dark:text-white"><i className="fas fa-chevron-right text-xs"></i></button>
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white tracking-tighter">Shop by Category</h3>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Professional Excellence</p>
                 </div>
+                <button
+                  onClick={() => navigateToShop()}
+                  className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-accent transition-colors"
+                >
+                  View All <i className="fas fa-arrow-right ml-1"></i>
+                </button>
               </div>
 
-              <div ref={categoryScrollRef} className="flex overflow-x-auto gap-4 pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:pb-2 scrollbar-hide scroll-smooth snap-x">
+              <div ref={categoryScrollRef} className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide scroll-smooth snap-x">
                 {categories.map(cat => (
-                  <a key={cat.id} onClick={() => navigateToShop(cat.name)} className="flex flex-col items-center min-w-[90px] md:min-w-[120px] gap-2 md:gap-4 group cursor-pointer snap-start">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-full bg-white dark:bg-surface-dark shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:bg-primary group-hover:text-white transition-all duration-300 text-2xl md:text-3xl group-hover:scale-105 group-hover:shadow-md">
-                      <i className={cat.iconClass}></i>
+                  <a key={cat.id} onClick={() => navigateToShop(cat.name)} className="flex flex-col items-center min-w-[100px] md:min-w-[140px] gap-3 group cursor-pointer snap-start">
+                    <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] bg-white dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:border-primary/30 group-hover:shadow-premium transition-all duration-500 overflow-hidden relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <i className={`${cat.icon || 'fas fa-tooth'} text-2xl md:text-4xl group-hover:scale-110 group-hover:text-primary transition-transform duration-500`}></i>
                     </div>
-                    <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 text-center whitespace-nowrap">{cat.name}</span>
+                    <span className="text-[10px] md:text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest group-hover:text-primary transition-colors text-center px-1 truncate w-full">
+                      {cat.name}
+                    </span>
                   </a>
                 ))}
               </div>
             </section>
+
 
             {/* Dynamic Tabs Section: New Arrivals | Top Selling | Featured */}
             <section className="px-0 md:px-0">

@@ -65,63 +65,55 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCateg
   return (
     <div className="w-full">
       <div
-        className={`w-full ${currentSlide.bgClass} rounded-2xl overflow-hidden relative group h-[350px] md:h-[500px] transition-all duration-700 shadow-sm ${currentSlide.link ? 'cursor-pointer' : ''}`}
+        className={`w-full ${currentSlide.bgClass} rounded-[2rem] overflow-hidden relative group h-[300px] md:h-[500px] transition-all duration-700 shadow-premium ${currentSlide.link ? 'cursor-pointer' : ''}`}
         onClick={currentSlide.link ? handleSlideClick : undefined}
       >
-        <div key={currentSlide.id} className="absolute inset-0 flex items-center justify-between p-6 md:p-12 z-20 animate-fade-in">
-          <div className="max-w-xl space-y-3 md:space-y-6">
-            <span className="bg-white/90 dark:bg-black/50 backdrop-blur-sm text-primary dark:text-white text-[10px] md:text-sm font-bold px-3 py-1.5 md:px-4 md:py-1.5 rounded-lg uppercase tracking-wider shadow-sm border border-white/20">
-              {currentSlide.badge}
-            </span>
-            <h2 className="text-3xl md:text-6xl font-black text-gray-900 dark:text-white leading-[1.1] tracking-tight drop-shadow-sm whitespace-pre-line">
-              {currentSlide.title}
-            </h2>
-            <p className="text-lg md:text-2xl text-primary font-bold">{currentSlide.subtitle}</p>
-            <div className="flex gap-3 md:gap-4 mt-4">
+        <div key={currentSlide.id} className="absolute inset-0 flex items-center p-6 md:p-16 z-20 animate-fade-in">
+          <div className="max-w-xl space-y-4 md:space-y-8">
+            <div className="flex flex-col gap-2 md:gap-4">
+              <span className="bg-white/95 dark:bg-accent/20 backdrop-blur-md text-primary dark:text-accent text-[9px] md:text-sm font-black px-3 py-1 md:px-5 md:py-2 rounded-xl uppercase tracking-[0.2em] shadow-sm w-fit">
+                {currentSlide.badge}
+              </span>
+              <h2 className="text-3xl md:text-7xl font-black text-gray-900 dark:text-white leading-[1.05] tracking-tighter whitespace-pre-line">
+                {currentSlide.title}
+              </h2>
+            </div>
+
+            <p className="text-base md:text-2xl text-gray-600 dark:text-gray-300 font-medium max-w-sm md:max-w-md">
+              Discover the future of professional dental care.
+            </p>
+
+            <div className="flex gap-4">
               <button
                 onClick={onShopClick}
-                className="bg-primary text-white px-5 py-2.5 md:px-10 md:py-4 rounded-xl font-bold hover:bg-pink-700 transition-all shadow-lg shadow-primary/30 text-xs md:text-lg active:scale-95"
+                className="bg-primary text-white px-6 py-3 md:px-12 md:py-5 rounded-2xl font-black hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 text-xs md:text-xl active:scale-95 flex items-center gap-2"
               >
                 Shop Now
+                <i className="fas fa-arrow-right text-[10px]"></i>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Image */}
+        {/* Image - Improved placement and blend */}
         <img
           key={`img-${currentSlide.id}`}
           alt={currentSlide.title}
-          className="absolute right-[-10%] md:right-0 top-0 h-full w-[80%] md:w-2/3 object-cover object-center md:object-left opacity-90 group-hover:scale-105 transition-transform duration-[2000ms] mask-image-gradient"
+          className="absolute right-[-15%] md:right-0 top-0 h-full w-full md:w-2/3 object-contain object-right opacity-100 group-hover:scale-105 transition-transform duration-[3000ms] z-15 p-4 md:p-12"
           src={currentSlide.image}
         />
 
-        {/* Gradients */}
-        <div className={`absolute inset-0 bg-gradient-to-r ${currentSlide.gradientClass} to-transparent dark:from-gray-900 dark:via-gray-900/80 dark:to-transparent pointer-events-none transition-all duration-500 z-10`}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent dark:from-gray-900 dark:via-transparent z-10 lg:hidden"></div>
+        {/* Premium Gradients */}
+        <div className={`absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent dark:from-gray-950 dark:via-gray-950/80 dark:to-transparent pointer-events-none z-10`}></div>
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-white/40 via-transparent to-transparent z-10 lg:hidden"></div>
 
-        {/* Controls */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-12 md:h-12 bg-white/30 dark:bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-black transition-all z-30 group/btn border border-white/20"
-        >
-          <i className="fas fa-chevron-left text-gray-800 dark:text-white group-hover/btn:text-primary text-xs md:text-base"></i>
-        </button>
-
-        <button
-          onClick={nextSlide}
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-12 md:h-12 bg-white/30 dark:bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-black transition-all z-30 group/btn border border-white/20"
-        >
-          <i className="fas fa-chevron-right text-gray-800 dark:text-white group-hover/btn:text-primary text-xs md:text-base"></i>
-        </button>
-
-        {/* Dots */}
-        <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-30">
+        {/* Modern Dots */}
+        <div className="absolute bottom-6 left-10 flex gap-1.5 z-30">
           {slides.map((_, index) => (
             <div
               key={index}
-              onClick={() => goToSlide(index)}
-              className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 shadow-sm ${index === currentSlideIndex ? 'w-6 bg-primary' : 'w-2 bg-gray-300/80 dark:bg-gray-600 hover:bg-primary'}`}
+              onClick={(e) => { e.stopPropagation(); goToSlide(index); }}
+              className={`h-1.5 rounded-full cursor-pointer transition-all duration-500 ${index === currentSlideIndex ? 'w-8 bg-primary shadow-sm shadow-primary/50' : 'w-1.5 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400'}`}
             ></div>
           ))}
         </div>
@@ -129,3 +121,4 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCateg
     </div>
   );
 };
+
