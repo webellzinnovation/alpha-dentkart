@@ -13,10 +13,17 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@capacitor/android": "^8.0.1",
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
+    "@fortawesome/fontawesome-svg-core": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.1",
     "@google/genai": "^1.33.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
+    "@types/multer": "^2.0.0",
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
@@ -27,6 +34,7 @@
     "firebase-admin": "^13.6.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
     "prisma": "^5.22.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -35,8 +43,9 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.0.1",
-    "@capacitor/core": "^8.0.1",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/push-notifications": "^8.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
@@ -49,5 +58,10 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.4.1"
-  }
+  },
+  "description": "A modern, full-featured e-commerce platform for dental supplies built with React, TypeScript, and Vite.",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
