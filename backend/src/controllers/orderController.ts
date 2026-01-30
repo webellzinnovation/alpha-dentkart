@@ -7,6 +7,25 @@ export async function createOrder(req: Request, res: Response) {
         const userId = (req as any).user?.userId;
         const validatedData = createOrderSchema.parse(req.body);
 
+        // --- Payment Verification Logic ---
+        if (validatedData.paymentMethod === 'razorpay') {
+            const { paymentId, transactionId, signature } = req.body; // Expecting signature from client
+
+            if (!paymentId || !transactionId || !signature) {
+                return res.status(400).json({ error: 'Missing payment details for verification' });
+            }
+
+            // Lazy import to avoid circular dependencies if any
+            const { verifyRazorpaySignature } = await import('../utils/payment');
+            const isValid = verifyRazorpaySignature(transactionId, paymentId, signature);
+
+            if (!isValid) {
+                console.warn(`Invalid Razorpay Signature: User ${userId}, Order ${transactionId}`);
+                return res.status(400).json({ error: 'Payment verification failed' });
+            }
+        }
+        // ----------------------------------
+
         const order = await prisma.order.create({
             data: {
                 userId,
@@ -17,6 +36,9 @@ export async function createOrder(req: Request, res: Response) {
                     ? JSON.stringify(validatedData.shippingAddress)
                     : null,
                 paymentMethod: validatedData.paymentMethod || 'cod',
+                paymentId: req.body.paymentId, // Store payment ID
+                transactionId: req.body.transactionId, // Store Razorpay Order ID as transactionId
+                paymentStatus: validatedData.paymentMethod === 'razorpay' ? 'paid' : 'pending',
                 status: 'Processing',
             },
         });

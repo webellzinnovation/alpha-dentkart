@@ -29,4 +29,7 @@ export const createOrderSchema = z.object({
         phone: z.string(),
     }).optional(),
     paymentMethod: z.string().optional(),
+    paymentId: z.string().optional(),
+    transactionId: z.string().optional(),
+    signature: z.string().optional(),
 });
