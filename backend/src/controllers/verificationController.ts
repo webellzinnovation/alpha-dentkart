@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import * as multer from 'multer';
+import multer from 'multer';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import VerificationService, { VerificationSubmissionData, VerificationAuditData } from '../services/verificationService';
@@ -119,8 +119,9 @@ export const getVerificationById = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
+    const verificationId = Array.isArray(id) ? id[0] : id;
 
-    const document = await verificationService.getVerificationById(id);
+    const document = await verificationService.getVerificationById(verificationId);
 
     if (!document) {
       return res.status(404).json({
@@ -190,6 +191,7 @@ export const getAllVerifications = async (req: AuthRequest, res: Response) => {
 export const updateVerificationStatus = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const verificationId = Array.isArray(id) ? id[0] : id;
     const { status, notes, rejectionReason } = req.body;
     const reviewerId = req.user?.userId;
 
@@ -205,13 +207,13 @@ export const updateVerificationStatus = async (req: AuthRequest, res: Response) 
     }
 
     // Get the document to get the userId
-    const document = await verificationService.getVerificationById(id);
+    const document = await verificationService.getVerificationById(verificationId);
     if (!document) {
       return res.status(404).json({ success: false, error: 'Verification document not found' });
     }
 
     const result = await verificationService.updateVerificationStatus(
-      id,
+      verificationId,
       status as 'approved' | 'rejected',
       {
         userId: document.userId,
@@ -246,10 +248,11 @@ export const updateVerificationStatus = async (req: AuthRequest, res: Response) 
 export const deleteVerification = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const verificationId = Array.isArray(id) ? id[0] : id;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
 
-    const result = await verificationService.deleteVerification(id, userRole === 'admin' ? undefined : userId);
+    const result = await verificationService.deleteVerification(verificationId, userRole === 'admin' ? undefined : userId);
 
     if (result.success) {
       return res.status(200).json({
