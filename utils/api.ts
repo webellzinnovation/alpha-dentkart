@@ -61,6 +61,50 @@ export const brandsAPI = {
         const response = await api.get('/brands');
         return response.data;
     },
+    update: async (id: number, data: any) => {
+        const response = await api.put(`/brands/${id}`, data);
+        return response.data;
+    },
+    reorder: async (brands: any[]) => {
+        const response = await api.post('/brands/reorder', { brands });
+        return response.data;
+    }
+};
+
+// Hero Slides API
+export const heroSlidesAPI = {
+    getAll: async () => {
+        const response = await api.get('/hero-slides');
+        return response.data;
+    },
+    create: async (data: any) => {
+        const response = await api.post('/hero-slides', data);
+        return response.data;
+    },
+    update: async (id: number, data: any) => {
+        const response = await api.put(`/hero-slides/${id}`, data);
+        return response.data;
+    },
+    delete: async (id: number) => {
+        const response = await api.delete(`/hero-slides/${id}`);
+        return response.data;
+    },
+    reorder: async (slides: any[]) => {
+        const response = await api.post('/hero-slides/reorder', { slides });
+        return response.data;
+    }
+};
+
+// Promotional Tiles API
+export const promotionalTilesAPI = {
+    getAll: async () => {
+        const response = await api.get('/promotional-tiles');
+        return response.data;
+    },
+    update: async (id: number, data: any) => {
+        const response = await api.put(`/promotional-tiles/${id}`, data);
+        return response.data;
+    }
 };
 
 // Orders API

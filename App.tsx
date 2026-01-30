@@ -24,10 +24,11 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { StickyCartButton } from './components/StickyCartButton';
 import { Checkout } from './components/Checkout';
 import { PROMOS, HERO_SLIDES, ALL_PRODUCTS, CATEGORIES, BRAND_PROFILES } from './constants';
-import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide } from './types';
+import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile } from './types';
 import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
 import { MOCK_USER } from './data/mockData';
+import { ordersAPI } from './utils/api';
 
 type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo' | 'checkout';
 
@@ -50,20 +51,24 @@ function App() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<BrandProfile[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [promotionalTiles, setPromotionalTiles] = useState<PromotionalTile[]>([]);
 
   // Load Real Data from Secure Backend API
   useEffect(() => {
     const loadAppData = async () => {
       try {
-        const { productsAPI, categoriesAPI, brandsAPI, authAPI } = await import('./utils/api');
+        const { productsAPI, categoriesAPI, brandsAPI, authAPI, heroSlidesAPI, promotionalTilesAPI } = await import('./utils/api');
 
         // Fetch all data independently for scale
-        const [productsRes, categoriesRes, brandsRes, meData] = await Promise.all([
+        const [productsRes, categoriesRes, brandsRes, meData, heroRes, promoRes] = await Promise.all([
           productsAPI.getAll({ limit: 20 }).catch(() => ({ products: [] })),
           categoriesAPI.getAll().catch(() => ({ categories: [] })),
           brandsAPI.getAll().catch(() => ({ brands: [] })),
-          authAPI.me().catch(() => ({ user: null }))
+          authAPI.me().catch(() => ({ user: null })),
+          heroSlidesAPI.getAll().catch(() => ({ slides: [] })),
+          promotionalTilesAPI.getAll().catch(() => ({ tiles: [] }))
         ]);
 
         console.log("Loading secure backend data...");
@@ -95,6 +100,31 @@ function App() {
           setBrands(BRAND_PROFILES);
         }
 
+        if (heroRes.slides && heroRes.slides.length > 0) {
+          setHeroSlides(heroRes.slides);
+        } else {
+          setHeroSlides(HERO_SLIDES);
+        }
+
+        if (promoRes.tiles && promoRes.tiles.length > 0) {
+          setPromotionalTiles(promoRes.tiles);
+        } else {
+          // Fallback map PROMOS to PromotionalTiles
+          setPromotionalTiles(PROMOS.map((p, i) => ({
+            id: p.id,
+            title: p.title,
+            subtitle: p.subtitle,
+            category: p.tag,
+            price: p.price,
+            image: p.image,
+            link: '',
+            badge: p.tag,
+            badgeColor: p.tagColorClass,
+            order: i,
+            isActive: true
+          })));
+        }
+
         if (meData?.user) {
           setUser(meData.user);
           setIsLoggedIn(true);
@@ -107,26 +137,12 @@ function App() {
         setProducts(ALL_PRODUCTS);
         setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
         setBrands(BRAND_PROFILES);
+        setHeroSlides(HERO_SLIDES);
         setIsDataLoading(false);
       }
     };
 
     loadAppData();
-  }, []);
-
-  // Initialize Hero Slides from localStorage or use defaults
-  useEffect(() => {
-    const savedSlides = localStorage.getItem('heroSlides');
-    if (savedSlides) {
-      try {
-        setHeroSlides(JSON.parse(savedSlides));
-      } catch (e) {
-        console.error('Failed to parse saved hero slides', e);
-        setHeroSlides(HERO_SLIDES);
-      }
-    } else {
-      setHeroSlides(HERO_SLIDES);
-    }
   }, []);
 
   // React Router navigation
@@ -154,8 +170,8 @@ function App() {
           return;
         }
       }
-      navigate('/');
-      return;
+      // navigate('/');
+      // return;
     }
 
     // Brand page: /brand/colgate
@@ -436,28 +452,74 @@ function App() {
     else navigateToShop(category);
   };
 
-  // Hero Slides CRUD Handlers
-  const handleAddHeroSlide = (slide: HeroSlide) => {
-    const newSlides = [...heroSlides, { ...slide, id: Date.now() }];
-    setHeroSlides(newSlides);
-    localStorage.setItem('heroSlides', JSON.stringify(newSlides));
+  // Hero Slides CRUD Handlers (Connected to API)
+  const handleAddHeroSlide = async (slide: HeroSlide) => {
+    try {
+      const { heroSlidesAPI } = await import('./utils/api');
+      const newSlide = await heroSlidesAPI.create(slide);
+      setHeroSlides(prev => [...prev, newSlide]);
+    } catch (e) {
+      console.error("Failed to create slide", e);
+      // Fallback
+      setHeroSlides([...heroSlides, { ...slide, id: Date.now() }]);
+    }
   };
 
-  const handleUpdateHeroSlide = (updatedSlide: HeroSlide) => {
-    const newSlides = heroSlides.map(s => s.id === updatedSlide.id ? updatedSlide : s);
-    setHeroSlides(newSlides);
-    localStorage.setItem('heroSlides', JSON.stringify(newSlides));
+  const handleUpdateHeroSlide = async (updatedSlide: HeroSlide) => {
+    try {
+      const { heroSlidesAPI } = await import('./utils/api');
+      await heroSlidesAPI.update(updatedSlide.id, updatedSlide);
+      setHeroSlides(heroSlides.map(s => s.id === updatedSlide.id ? updatedSlide : s));
+    } catch (e) {
+      console.error("Failed to update slide", e);
+    }
   };
 
-  const handleDeleteHeroSlide = (id: number) => {
-    const newSlides = heroSlides.filter(s => s.id !== id);
-    setHeroSlides(newSlides);
-    localStorage.setItem('heroSlides', JSON.stringify(newSlides));
+  const handleDeleteHeroSlide = async (id: number) => {
+    try {
+      const { heroSlidesAPI } = await import('./utils/api');
+      await heroSlidesAPI.delete(id);
+      setHeroSlides(heroSlides.filter(s => s.id !== id));
+    } catch (e) {
+      console.error("Failed to delete slide", e);
+    }
   };
 
-  const handleReorderHeroSlides = (reorderedSlides: HeroSlide[]) => {
-    setHeroSlides(reorderedSlides);
-    localStorage.setItem('heroSlides', JSON.stringify(reorderedSlides));
+  const handleReorderHeroSlides = async (reorderedSlides: HeroSlide[]) => {
+    setHeroSlides(reorderedSlides); // Optimistic update
+    try {
+      const { heroSlidesAPI } = await import('./utils/api');
+      await heroSlidesAPI.reorder(reorderedSlides);
+    } catch (e) {
+      console.error("Failed to reorder", e);
+    }
+  };
+
+  const handleUpdatePromotionalTile = async (updatedTile: PromotionalTile) => {
+    try {
+      const { promotionalTilesAPI } = await import('./utils/api');
+      await promotionalTilesAPI.update(updatedTile.id, updatedTile);
+      setPromotionalTiles(prev => prev.map(t => t.id === updatedTile.id ? updatedTile : t));
+    } catch (e) {
+      console.error("Failed to update tile", e);
+    }
+  };
+
+  const handleToggleBrandFeatured = async (brandId: number, isFeatured: boolean) => {
+    // Optimistic update
+    setBrands(prev => prev.map(b => b.id === brandId ? { ...b, isFeatured } : b));
+    try {
+      const { brandsAPI } = await import('./utils/api');
+      // Assuming update method handles partials
+      await brandsAPI.update(brandId, { isFeatured });
+    } catch (e) {
+      console.error("Failed to toggle featured brand", e);
+    }
+  };
+
+  const handleReorderFeaturedBrands = async (reorderedBrands: BrandProfile[]) => {
+    // Logic for reordering if needed in future
+    console.log("Reorder not implemented yet");
   };
 
   // Demo User for Local Mode
@@ -526,6 +588,7 @@ function App() {
 
   // Logic
   const handleProductClick = (product: Product) => {
+    console.log("Product Clicked:", product.name, product.id);
     setRecentlyViewed(prev => {
       const filtered = prev.filter(p => p.id !== product.id);
       return [product, ...filtered].slice(0, 6);
@@ -618,52 +681,65 @@ function App() {
     }
   };
 
-  const handlePlaceOrder = (paymentId: string, transactionId: string) => {
+  const handlePlaceOrder = async (paymentId: string, transactionId: string, signature?: string) => {
     if (!user) return;
 
-    const newOrder: Order = {
-      id: `ORD-${Date.now()}`,
-      userId: user.email,
-      date: new Date().toLocaleDateString(),
-      status: 'Processing',
-      total: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
-      items: cart.map(item => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      })),
-      customerName: user.name,
-      shippingAddress: user.addresses.find(a => a.isDefault),
-      paymentId: paymentId,
-      paymentStatus: 'paid',
+    // 1. Prepare Order Data calling Backend API
+    const orderItems = cart.map(item => ({
+      productId: item.id, // Assuming cart item has ID
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price
+    }));
+
+    const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const shippingAddress = user.addresses.find(a => a.isDefault) || user.addresses[0];
+
+    const orderPayload = {
+      items: orderItems,
+      total: totalAmount,
+      shippingAddress: shippingAddress,
       paymentMethod: 'razorpay',
-      transactionId: transactionId
+      paymentId: paymentId,
+      transactionId: transactionId, // Razorpay Order ID
+      signature: signature
     };
 
-    setOrders(prev => [newOrder, ...prev]);
+    try {
+      setIsDataLoading(true);
+      const response = await ordersAPI.create(orderPayload);
+      const newOrder = response.order; // Assuming backend returns { order: ... }
 
-    // Update USER state directly without waiting for next reload
-    setUser(prevUser => {
-      if (!prevUser) return null;
-      return {
-        ...prevUser,
-        orders: [newOrder, ...prevUser.orders]
-      };
-    });
+      // 2. Update Local State with Server Response
+      setOrders(prev => [newOrder, ...prev]);
 
-    // Clear cart
-    setCart([]);
-    if (isLoggedIn && !isAdmin) {
-      // Update MOCK_USER for reference (though state is primary)
-      if (typeof MOCK_USER !== 'undefined') {
+      setUser(prevUser => {
+        if (!prevUser) return null;
+        return {
+          ...prevUser,
+          orders: [newOrder, ...(prevUser.orders || [])]
+        };
+      });
+
+      // 3. Clear Cart
+      setCart([]);
+
+      // Update MOCK if needed (optional)
+      if (typeof MOCK_USER !== 'undefined' && isLoggedIn && !isAdmin) {
         MOCK_USER.cart = [];
         MOCK_USER.orders = [...MOCK_USER.orders, newOrder];
       }
-    }
 
-    alert('Order placed successfully! Order ID: ' + newOrder.id);
-    setCurrentView('dashboard');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+      alert('Order placed successfully! Order ID: ' + newOrder.id);
+      setCurrentView('dashboard');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (error) {
+      console.error('Failed to create order on backend:', error);
+      alert('Order creation failed on server. Please contact support if payment was deducted.');
+    } finally {
+      setIsDataLoading(false);
+    }
   };
 
   const renderProductSection = (
@@ -744,6 +820,10 @@ function App() {
         onUpdateHeroSlide={handleUpdateHeroSlide}
         onDeleteHeroSlide={handleDeleteHeroSlide}
         onReorderHeroSlides={handleReorderHeroSlides}
+        promotionalTiles={promotionalTiles}
+        onUpdatePromotionalTile={handleUpdatePromotionalTile}
+        onToggleBrandFeatured={handleToggleBrandFeatured}
+        onReorderFeaturedBrands={handleReorderFeaturedBrands}
       />
     );
   }
@@ -758,6 +838,8 @@ function App() {
     return <Theme3Demo />;
   }
 
+
+  console.log("App Render:", { currentView, selectedProductId: selectedProduct?.id, productsCount: products.length });
 
   // Show loading state while data is being fetched (prevents flash of wrong content on direct URL access)
   if (isDataLoading) {

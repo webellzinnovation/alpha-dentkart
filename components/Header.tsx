@@ -78,8 +78,8 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Main Header */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 border-b ${scrolled
-          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-gray-200/50 dark:border-gray-700/50 py-3'
+        className={`sticky top-0 z-50 transition-all duration-300 border-b pt-4 ${scrolled
+          ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-gray-200/50 dark:border-gray-700/50'
           : 'bg-white dark:bg-surface-dark border-transparent dark:border-gray-800'
           }`}
       >
@@ -87,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="status-bar-filler lg:hidden bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800/50"></div>
 
         {/* Header Content */}
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4 lg:px-6 xl:px-8">
           {/* Mobile Header Layout (Premium Search-Centric) */}
           <div className="lg:hidden flex flex-col px-4 pt-2 pb-3 gap-3">
             <div className="flex items-center justify-between">

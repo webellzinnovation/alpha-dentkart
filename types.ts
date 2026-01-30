@@ -41,6 +41,41 @@ export interface Product {
   stock?: number;
 }
 
+export interface Review {
+  id: string;
+  productId: number;
+  userId: string;
+  orderId?: string;
+  rating: number;
+  title: string;
+  content: string;
+  images?: string[];
+  isVerified: boolean;
+  isApproved: boolean;
+  helpful: number;
+  clinicalUse?: string;
+  efficacy?: number;
+  safety?: number;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+    userType: string;
+    verificationStatus: string;
+    avatar?: string;
+  };
+  product?: {
+    id: number;
+    name: string;
+    image?: string;
+  };
+  order?: {
+    id: string;
+    createdAt: string;
+  };
+}
+
 export interface CartItem extends Product {
   cartItemId: string; // Unique ID for cart item (product.id + attributes)
   quantity: number;
@@ -64,6 +99,20 @@ export interface PromoBanner {
   tagColorClass: string;
 }
 
+export interface PromotionalTile {
+  id: number;
+  title: string;
+  subtitle?: string;
+  category: string;
+  price: string;
+  image: string;
+  link: string;
+  badge?: string;
+  badgeColor?: string;
+  order: number;
+  isActive: boolean;
+}
+
 export interface HeroSlide {
   id: number;
   badge: string;
@@ -74,8 +123,10 @@ export interface HeroSlide {
   gradientClass: string;
   link?: {
     type: 'product' | 'category' | 'brand' | 'url';
-    value: string | number; // product ID, category name, brand name, or URL
+    value: string | number;
   };
+  order?: number;
+  isActive?: boolean;
 }
 
 export interface BrandProfile {
@@ -84,6 +135,8 @@ export interface BrandProfile {
   logo: string;
   description: string;
   productCount: number;
+  isFeatured?: boolean;
+  featuredOrder?: number;
 }
 
 export interface Address {

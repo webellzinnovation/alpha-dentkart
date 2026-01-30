@@ -120,7 +120,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const homepageBadge = product.badgeId ? homepageBadges.find(b => b.id === product.badgeId && b.enabled) : null;
 
   return (
-    <div onClick={handleClick} className="premium-card p-3 flex flex-col h-full bg-white dark:bg-surface-dark group">
+    <div onClick={handleClick} className="premium-card p-3 flex flex-col h-full bg-white dark:bg-surface-dark group cursor-pointer">
       {/* Badge Area */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-col gap-1">
@@ -165,7 +165,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
       {/* Info Area */}
       <div className="flex flex-col flex-1">
-        <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-1">{product.category}</span>
+        <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-1">
+          {typeof product.category === 'object' && product.category?.name ? product.category.name : product.category || 'General'}
+        </span>
         <h4 className="text-sm font-bold text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug mb-2 group-hover:text-primary transition-colors">
           {product.name}
         </h4>

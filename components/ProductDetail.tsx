@@ -26,6 +26,13 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   onCategoryClick,
   onQuickView
 }) => {
+  console.log("Rendering ProductDetail for:", product?.name, product?.id);
+
+  if (!product) {
+    console.error("ProductDetail rendered without product!");
+    return <div className="p-8 text-center">Product not found.</div>;
+  }
+
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(product.image);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -242,7 +249,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
           </div>
 
           <div className="flex items-end gap-3 mb-6">
-            <span className="text-4xl font-bold text-primary">₹{currentPrice.toLocaleString('en-IN')}</span>
+            <span className="text-4xl font-bold text-primary">₹{(currentPrice || 0).toLocaleString('en-IN')}</span>
             {currentOriginalPrice && (
               <span className="text-xl text-gray-400 line-through mb-1">₹{currentOriginalPrice.toLocaleString('en-IN')}</span>
             )}

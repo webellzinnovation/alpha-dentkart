@@ -6,7 +6,7 @@ interface CheckoutProps {
     cart: CartItem[];
     user: User;
     onUpdateUser: (data: Partial<User>) => void;
-    onPlaceOrder: (paymentId: string, transactionId: string) => void;
+    onPlaceOrder: (paymentId: string, transactionId: string, signature?: string) => void;
     onNavigateBack: () => void;
     razorpayKey?: string;
 }
@@ -119,7 +119,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
                 description: `Order for ${cart.length} items`,
                 // order_id: orderId, // Removed to support client-side testing without backend
                 handler: (response: RazorpayResponse) => {
-                    onPlaceOrder(response.razorpay_payment_id, orderId);
+                    onPlaceOrder(response.razorpay_payment_id, orderId, response.razorpay_signature);
                 },
                 prefill: {
                     name: user.name,

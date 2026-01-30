@@ -45,6 +45,12 @@ interface AdminDashboardProps {
     onReorderHeroSlides: (slides: HeroSlide[]) => void;
     apiKey?: string; // For AI features
     modelName?: string; // For AI features
+    // Promotional Tiles
+    promotionalTiles: import('../types').PromotionalTile[];
+    onUpdatePromotionalTile: (tile: import('../types').PromotionalTile) => void;
+    // Featured Brands
+    onToggleBrandFeatured: (brandId: number, isFeatured: boolean) => void;
+    onReorderFeaturedBrands: (brands: BrandProfile[]) => void;
 }
 
 const MOCK_CUSTOMERS = [
@@ -289,9 +295,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     onDeleteHeroSlide,
     onReorderHeroSlides,
     apiKey,
-    modelName
+    modelName,
+    promotionalTiles,
+    onUpdatePromotionalTile,
+    onToggleBrandFeatured,
+    onReorderFeaturedBrands
 }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'hero-slides' | 'homepage' | 'appearance' | 'themes' | 'chat-support'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'homepage' | 'appearance' | 'themes' | 'chat-support'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
     // Count new orders (from last 48 hours)
@@ -1316,7 +1326,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             { id: 'reviews', icon: 'fas fa-star', label: 'Reviews' },
                             { id: 'categories', icon: 'fas fa-layer-group', label: 'Categories' },
                             { id: 'brands', icon: 'fas fa-tags', label: 'Brands' },
-                            { id: 'hero-slides', icon: 'fas fa-images', label: 'Hero Slides' },
                             { id: 'homepage', icon: 'fas fa-home', label: 'Homepage' },
                             { id: 'themes', icon: 'fas fa-palette', label: 'Themes' },
                             { id: 'analytics', icon: 'fas fa-chart-bar', label: 'Analytics' },
@@ -2567,108 +2576,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </div>
                         )}
 
-                        {/* HERO SLIDES TAB */}
-                        {activeTab === 'hero-slides' && (
-                            <div className="animate-fade-in space-y-6">
-                                <div className="flex justify-between items-center bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                                        <i className="fas fa-images text-primary"></i> Hero Slides Management
-                                    </h2>
-                                    <button
-                                        onClick={() => {
-                                            setEditingHeroSlide(null);
-                                            setHeroSlideFormData({
-                                                badge: '',
-                                                title: '',
-                                                subtitle: '',
-                                                image: '',
-                                                bgClass: 'bg-pink-50 dark:bg-gray-800',
-                                                gradientClass: 'from-pink-50 via-pink-50/80'
-                                            });
-                                            setProductSearchQuery('');
-                                            setIsHeroSlideModalOpen(true);
-                                        }}
-                                        className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-pink-700 transition-colors flex items-center gap-2"
-                                    >
-                                        <i className="fas fa-plus"></i> Add New Slide
-                                    </button>
-                                </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {heroSlides.map((slide, index) => (
-                                        <div key={slide.id} className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                            <div className={`h-40 ${slide.bgClass} relative overflow-hidden`}>
-                                                {slide.image && (
-                                                    <img src={slide.image} alt={slide.title} className="w-full h-full object-cover opacity-80" />
-                                                )}
-                                                <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent p-4 flex flex-col justify-end">
-                                                    <span className="bg-white/90 text-primary text-xs font-bold px-2 py-1 rounded w-fit mb-2">{slide.badge}</span>
-                                                    <h3 className="text-white font-bold text-sm line-clamp-2">{slide.title}</h3>
-                                                </div>
-                                            </div>
-                                            <div className="p-4">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{slide.subtitle}</p>
-                                                {slide.link && (
-                                                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-3">
-                                                        <i className="fas fa-link mr-1"></i>
-                                                        Links to: {slide.link.type} ({slide.link.value})
-                                                    </p>
-                                                )}
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditingHeroSlide(slide);
-                                                            setHeroSlideFormData(slide);
-                                                            setProductSearchQuery('');
-                                                            setIsHeroSlideModalOpen(true);
-                                                        }}
-                                                        className="flex-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                                                    >
-                                                        <i className="fas fa-edit mr-1"></i> Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            if (confirm('Are you sure you want to delete this slide?')) {
-                                                                onDeleteHeroSlide(slide.id);
-                                                            }
-                                                        }}
-                                                        className="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-3 py-2 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-                                                    >
-                                                        <i className="fas fa-trash mr-1"></i> Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {heroSlides.length === 0 && (
-                                    <div className="bg-white dark:bg-surface-dark rounded-xl p-12 text-center border border-gray-200 dark:border-gray-700">
-                                        <i className="fas fa-images text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
-                                        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">No Hero Slides Yet</h3>
-                                        <p className="text-gray-600 dark:text-gray-400 mb-4">Create your first hero slide to get started</p>
-                                        <button
-                                            onClick={() => {
-                                                setEditingHeroSlide(null);
-                                                setHeroSlideFormData({
-                                                    badge: '',
-                                                    title: '',
-                                                    subtitle: '',
-                                                    image: '',
-                                                    bgClass: 'bg-pink-50 dark:bg-gray-800',
-                                                    gradientClass: 'from-pink-50 via-pink-50/80'
-                                                });
-                                                setProductSearchQuery('');
-                                                setIsHeroSlideModalOpen(true);
-                                            }}
-                                            className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-pink-700 transition-colors"
-                                        >
-                                            <i className="fas fa-plus mr-2"></i> Add First Slide
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
 
                         {/* THEMES TAB */}
                         {activeTab === 'themes' && <ThemesTab />}
@@ -2682,6 +2590,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 setHomepageSettings={setHomepageSettings}
                                 categories={categories}
                                 brands={brands}
+                                heroSlides={heroSlides}
+                                onAddHeroSlide={onAddHeroSlide}
+                                onUpdateHeroSlide={onUpdateHeroSlide}
+                                onDeleteHeroSlide={onDeleteHeroSlide}
+                                onReorderHeroSlides={onReorderHeroSlides}
+                                promotionalTiles={promotionalTiles}
+                                onUpdatePromotionalTile={onUpdatePromotionalTile}
+                                onToggleBrandFeatured={onToggleBrandFeatured}
+                                onReorderFeaturedBrands={onReorderFeaturedBrands}
                             />
                         </div>
                     )}
