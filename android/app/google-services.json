@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "388315003341",
+    "project_id": "alphadentkart-001",
+    "storage_bucket": "alphadentkart-001.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:388315003341:android:d9d72644a0ce45fdb7ac84",
+        "android_client_info": {
+          "package_name": "com.adk.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2DG1Eao8LWENCGfnTKXcBPHrHrFbqrNo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

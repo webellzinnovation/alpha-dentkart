@@ -60,10 +60,11 @@ export enum WhatsAppTemplateType {
   REFUND_PROCESSING = 'refund_processing'
 }
 
+import { API_BASE_URL } from '../config/api';
+
 export class WhatsAppService {
-  private static readonly API_BASE_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://api.alphadentkart.com/api' 
-    : 'http://localhost:8000/api';
+  private static readonly API_BASE_URL = API_BASE_URL.replace('/v1', ''); // WhatsApp routes might not be under v1 based on previous code, inspecting endpoints...
+
 
   private static readonly ENDPOINTS = {
     SEND_MESSAGE: '/whatsapp/send-message',
@@ -87,7 +88,7 @@ export class WhatsAppService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.API_BASE_URL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         headers: {
@@ -378,7 +379,7 @@ export class WhatsAppService {
   }): Promise<{ messages: WhatsAppMessage[]; total: number; error?: string }> {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (filters?.phoneNumber) queryParams.append('phoneNumber', filters.phoneNumber);
       if (filters?.orderId) queryParams.append('orderId', filters.orderId);
       if (filters?.status) queryParams.append('status', filters.status);
@@ -387,7 +388,7 @@ export class WhatsAppService {
       if (filters?.limit) queryParams.append('limit', filters.limit.toString());
       if (filters?.offset) queryParams.append('offset', filters.offset.toString());
 
-      const endpoint = queryParams.toString() 
+      const endpoint = queryParams.toString()
         ? `${this.ENDPOINTS.MESSAGE_HISTORY}?${queryParams.toString()}`
         : this.ENDPOINTS.MESSAGE_HISTORY;
 
@@ -412,9 +413,9 @@ export class WhatsAppService {
     }
   }
 
-  static async getFailedNotifications(limit: number = 10): Promise<{ 
-    messages: WhatsAppMessage[]; 
-    error?: string 
+  static async getFailedNotifications(limit: number = 10): Promise<{
+    messages: WhatsAppMessage[];
+    error?: string
   }> {
     try {
       const result = await this.makeRequest<{
@@ -477,10 +478,10 @@ export class WhatsAppService {
     }
   }
 
-  static async validatePhoneNumber(phoneNumber: string): Promise<{ 
-    isValid: boolean; 
-    formatted?: string; 
-    error?: string 
+  static async validatePhoneNumber(phoneNumber: string): Promise<{
+    isValid: boolean;
+    formatted?: string;
+    error?: string
   }> {
     try {
       const result = await this.makeRequest<{
