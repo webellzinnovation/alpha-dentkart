@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { db, admin } from '../config/firebase'; // Firestore
+import { z } from 'zod';
+import logger from '../utils/logger';
 
+// Types for request modules
 interface AuthenticatedRequest extends Request {
     user?: {
         id: string;
@@ -9,77 +13,62 @@ interface AuthenticatedRequest extends Request {
     };
 }
 
-// Simple session storage (in production, use Redis/external storage)
-const guestSessions = new Map<string, any>();
+// Validation schemas
+const guestSessionSchema = z.object({
+    email: z.string().email().optional().or(z.literal('')),
+    phone: z.string().optional().or(z.literal(''))
+});
 
-// Validation helpers
-const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-};
-
-const validatePhone = (phone: string): boolean => {
-    const phoneRegex = /^[6-9]\d{9,15}$/;
-    return phoneRegex.test(phone.replace(/\D/g, ''));
-};
+const guestOrderSchema = z.object({
+    guestSessionId: z.string(),
+    items: z.array(z.object({
+        productId: z.string().or(z.number().transform(String)), // Handle both ID types
+        quantity: z.number(),
+        price: z.number().optional()
+    })),
+    shippingAddress: z.object({
+        name: z.string(),
+        street: z.string(),
+        city: z.string(),
+        state: z.string(),
+        zip: z.string(),
+        phone: z.string(),
+        email: z.string().email()
+    }),
+    paymentMethod: z.string(),
+    total: z.number()
+});
 
 // Create guest session
 export const createGuestSession = async (req: Request, res: Response) => {
     try {
-        const { email, phone } = req.body;
-
-        if (!email && !phone) {
-            return res.status(400).json({
-                success: false,
-                message: 'Either email or phone is required'
-            });
-        }
-
-        if (email && !validateEmail(email)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid email format'
-            });
-        }
-
-        if (phone && !validatePhone(phone)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid phone number format'
-            });
-        }
-
+        const { email, phone } = guestSessionSchema.parse(req.body);
         const sessionId = uuidv4();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
 
-        const guestSession = {
-            id: uuidv4(),
+        // Store in Database
+        await db.collection('guest_sessions').doc(sessionId).set({
+            sessionId,
             email: email || null,
             phone: phone || null,
-            sessionId,
             expiresAt,
-            createdAt: new Date(),
-            orders: []
-        };
+            createdAt: new Date().toISOString()
+        });
 
-        // Store in memory (in production, use Redis/database)
-        guestSessions.set(sessionId, guestSession);
-
-        res.json({
+        res.status(201).json({
             success: true,
-            message: 'Guest session created successfully',
             data: {
-                sessionId: guestSession.sessionId,
-                expiresAt: guestSession.expiresAt
+                sessionId,
+                expiresAt
             }
         });
     } catch (error) {
-        console.error('Create guest session error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create guest session',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        if (error instanceof z.ZodError) {
+            res.status(400).json({ success: false, error: error.issues });
+        } else {
+            logger.error('Create guest session error:', error);
+            res.status(500).json({ success: false, error: 'Internal server error' });
+        }
     }
 };
 
@@ -88,26 +77,24 @@ export const validateGuestSession = async (req: Request, res: Response) => {
     try {
         const { sessionId } = req.params;
         if (!sessionId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Session ID is required'
-            });
+            return res.status(400).json({ success: false, message: 'Session ID is required' });
         }
 
-        const session = guestSessions.get(sessionId);
-        if (!session) {
-            return res.status(404).json({
-                success: false,
-                message: 'Session not found'
-            });
+        const sessionDoc = await db.collection('guest_sessions').doc(String(sessionId)).get();
+
+        if (!sessionDoc.exists) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
         }
 
-        if (session.expiresAt < new Date()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Session has expired'
-            });
+        const session = sessionDoc.data() as any;
+
+        if (new Date(session.expiresAt) < new Date()) {
+            return res.status(400).json({ success: false, message: 'Session has expired' });
         }
+
+        // Count orders for this session
+        const ordersSnapshot = await db.collection('orders').where('guestSessionId', '==', sessionId).count().get();
+        const orderCount = ordersSnapshot.data().count;
 
         res.json({
             success: true,
@@ -116,84 +103,77 @@ export const validateGuestSession = async (req: Request, res: Response) => {
                 sessionId: session.sessionId,
                 email: session.email,
                 phone: session.phone,
-                orderCount: session.orders.length
+                orderCount
             }
         });
     } catch (error) {
-        console.error('Validate guest session error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to validate session',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        logger.error('Validate guest session error:', error);
+        res.status(500).json({ success: false, message: 'Failed to validate session' });
     }
 };
 
-// Create guest order (using SQL queries to avoid Prisma relation issues)
+// Create guest order
 export const createGuestOrder = async (req: Request, res: Response) => {
     try {
-        const { customerInfo, items, total, shippingCharges, paymentMethod, sessionId } = req.body;
-
-        // Basic validation
-        if (!customerInfo?.name || !customerInfo?.email || !customerInfo?.phone) {
-            return res.status(400).json({
-                success: false,
-                message: 'Customer name, email, and phone are required'
-            });
-        }
-
-        if (!items || !Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'At least one item is required'
-            });
-        }
-
-        if (!total || total <= 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Total amount must be greater than 0'
-            });
-        }
-
-        if (!paymentMethod || !['razorpay', 'phonepe', 'cod'].includes(paymentMethod)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid payment method'
-            });
-        }
-
-        const orderId = uuidv4();
-
-        // Mock database insert (in production, use actual database)
-        const orderData = {
-            id: orderId,
-            customerName: customerInfo.name,
-            status: 'Processing',
-            total,
-            items: JSON.stringify(items),
-            shippingAddress: JSON.stringify(customerInfo.address),
-            paymentMethod,
-            paymentStatus: 'pending',
-            isNew: true,
-            // Guest checkout fields
-            guestEmail: customerInfo.email,
-            guestPhone: customerInfo.phone,
-            isGuestOrder: true,
-            guestSessionId: sessionId,
-            createdAt: new Date(),
-            updatedAt: new Date()
+        const inputData = {
+            guestSessionId: req.body.sessionId || req.body.guestSessionId,
+            items: req.body.items,
+            shippingAddress: req.body.shippingAddress || (req.body.customerInfo?.address ? { ...req.body.customerInfo.address, email: req.body.customerInfo.email, phone: req.body.customerInfo.phone, name: req.body.customerInfo.name } : undefined),
+            paymentMethod: req.body.paymentMethod,
+            total: req.body.total
         };
 
-        // In a real implementation, you would use:
-        // await db.query('INSERT INTO Order (...) VALUES (...)');
-        // For now, return success response
+        if (!inputData.shippingAddress && req.body.customerInfo) {
+            inputData.shippingAddress = {
+                name: req.body.customerInfo.name,
+                email: req.body.customerInfo.email,
+                phone: req.body.customerInfo.phone,
+                ...req.body.customerInfo.address
+            };
+        }
+
+        const { guestSessionId, items, shippingAddress, paymentMethod, total } = guestOrderSchema.parse(inputData);
+
+        // Validate Session
+        const sessionDoc = await db.collection('guest_sessions').doc(guestSessionId).get();
+        if (!sessionDoc.exists || new Date(sessionDoc.data()?.expiresAt) < new Date()) {
+            return res.status(401).json({ success: false, error: 'Guest session expired or invalid' });
+        }
+        const session = sessionDoc.data() as any;
+
+        // Create Order in Database
+        const orderData = {
+            isGuestOrder: true,
+            guestSessionId,
+            guestEmail: shippingAddress.email,
+            guestPhone: shippingAddress.phone,
+            customerName: shippingAddress.name,
+            total,
+            status: 'Processing',
+            paymentMethod,
+            paymentStatus: 'pending',
+            items: items, // Native array
+            shippingAddress: shippingAddress, // Native object
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const orderRef = await db.collection('orders').add(orderData);
+
+        // Update Session with contact info if provided
+        if ((shippingAddress.email || shippingAddress.phone) && (!session.email || !session.phone)) {
+            await db.collection('guest_sessions').doc(guestSessionId).update({
+                email: shippingAddress.email || session.email,
+                phone: shippingAddress.phone || session.phone,
+                updatedAt: new Date().toISOString()
+            });
+        }
 
         res.status(201).json({
             success: true,
             message: 'Guest order created successfully',
             data: {
-                orderId: orderData.id,
+                orderId: orderRef.id,
                 customerName: orderData.customerName,
                 status: orderData.status,
                 total: orderData.total,
@@ -202,55 +182,36 @@ export const createGuestOrder = async (req: Request, res: Response) => {
             }
         });
     } catch (error) {
-        console.error('Create guest order error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create guest order',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        if (error instanceof z.ZodError) {
+            res.status(400).json({ success: false, error: error.issues });
+        } else {
+            logger.error('Create guest order error:', error);
+            res.status(500).json({ success: false, error: 'Internal server error' });
+        }
     }
 };
 
-// Get guest order details
+// Get guest order
 export const getGuestOrder = async (req: Request, res: Response) => {
     try {
         const { orderId } = req.params;
-        if (!orderId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Order ID is required'
-            });
+        const { email } = req.query as { email?: string };
+
+        const orderDoc = await db.collection('orders').doc(String(orderId)).get();
+
+        if (!orderDoc.exists) {
+            return res.status(404).json({ success: false, error: 'Order not found' });
+        }
+        const order = { id: orderDoc.id, ...orderDoc.data() } as any;
+
+        if (email && order.guestEmail !== email) {
+            return res.status(403).json({ success: false, error: 'Unauthorized to view this order' });
         }
 
-        // Mock database query
-        const orderData = {
-            id: orderId,
-            customerName: 'Guest Customer',
-            status: 'Processing',
-            total: 2500,
-            items: '[{"productId": 1, "name": "Sample Product", "quantity": 2}]',
-            shippingAddress: '{"street": "123 Street", "city": "Delhi", "state": "Delhi", "pincode": "110001"}',
-            guestEmail: 'guest@example.com',
-            guestPhone: '9876543210',
-            isGuestOrder: true,
-            paymentMethod: 'cod',
-            paymentStatus: 'pending',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        res.json({
-            success: true,
-            message: 'Guest order retrieved successfully',
-            data: orderData
-        });
+        res.json({ success: true, data: order });
     } catch (error) {
-        console.error('Get guest order error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to retrieve guest order',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        logger.error('Get guest order error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
     }
 };
 
@@ -261,164 +222,110 @@ export const updateGuestOrder = async (req: Request, res: Response) => {
         const updateData = req.body;
 
         if (!orderId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Order ID is required'
-            });
+            return res.status(400).json({ success: false, message: 'Order ID is required' });
         }
 
-        // Only allow certain fields to be updated
-        const allowedUpdates: Record<string, any> = {};
         const allowedFields = ['status', 'paymentStatus', 'paymentId', 'transactionId'];
+        const dataToUpdate: any = { updatedAt: new Date().toISOString() };
 
-        for (const field of allowedFields) {
-            if (updateData[field] !== undefined) {
-                allowedUpdates[field] = updateData[field];
-            }
-        }
-
-        res.json({
-            success: true,
-            message: 'Guest order updated successfully',
-            data: {
-                orderId,
-                ...allowedUpdates
-            }
+        allowedFields.forEach(field => {
+            if (updateData[field] !== undefined) dataToUpdate[field] = updateData[field];
         });
+
+        await db.collection('orders').doc(String(orderId)).update(dataToUpdate);
+        const updatedDoc = await db.collection('orders').doc(String(orderId)).get();
+
+        res.json({ success: true, message: 'Guest order updated successfully', data: { id: updatedDoc.id, ...updatedDoc.data() } });
     } catch (error) {
-        console.error('Update guest order error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to update guest order',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, error: 'Failed to update order' });
     }
 };
 
-// Get guest order status with tracking
+// Get guest order status
 export const getGuestOrderStatus = async (req: Request, res: Response) => {
     try {
         const { orderId } = req.params;
-        if (!orderId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Order ID is required'
-            });
-        }
 
-        // Mock order data with tracking
-        const orderData = {
-            id: orderId,
-            status: 'Shipped',
-            paymentStatus: 'paid',
-            shippingTracking: {
-                carrier: 'Shiprocket',
-                trackingId: 'SR123456789',
-                serviceType: 'express',
-                status: 'in-transit',
-                estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-                checkpoints: [
-                    {
-                        id: 1,
-                        date: new Date().toISOString(),
-                        status: 'Package picked up',
-                        location: 'Delhi',
-                        description: 'Order picked up from warehouse'
-                    }
-                ]
-            },
-            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            updatedAt: new Date().toISOString()
-        };
+        const orderDoc = await db.collection('orders').doc(String(orderId)).get();
+
+        if (!orderDoc.exists) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+        const order = orderDoc.data() as any;
+
+        // Fetch tracking info
+        const trackingSnapshot = await db.collection('shipping_tracking').where('orderId', '==', orderId).get();
+        const tracking = trackingSnapshot.docs.map(t => t.data());
 
         res.json({
             success: true,
             message: 'Guest order status retrieved successfully',
-            data: orderData
+            data: {
+                id: orderDoc.id,
+                status: order.status,
+                paymentStatus: order.paymentStatus,
+                shippingTracking: tracking,
+                createdAt: order.createdAt,
+                updatedAt: order.updatedAt
+            }
         });
     } catch (error) {
-        console.error('Get guest order status error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to retrieve order status',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, error: 'Failed to retrieve order status' });
     }
 };
 
-// Convert guest order to registered user (after registration)
+// Convert guest order
 export const convertGuestOrder = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { orderId, accountData } = req.body;
+        const { orderId } = req.body;
 
         if (!orderId || !req.user?.id) {
-            return res.status(400).json({
-                success: false,
-                message: 'Order ID and User authentication required'
-            });
+            return res.status(400).json({ success: false, message: 'Order ID and User authentication required' });
         }
 
-        // Mock conversion
-        const updatedOrder = {
-            id: orderId,
+        await db.collection('orders').doc(String(orderId)).update({
             userId: req.user.id,
             isGuestOrder: false,
             guestSessionId: null,
             updatedAt: new Date().toISOString()
-        };
+        });
+
+        const updatedDoc = await db.collection('orders').doc(String(orderId)).get();
 
         res.json({
             success: true,
             message: 'Guest order converted to user order successfully',
-            data: updatedOrder
+            data: { id: updatedDoc.id, ...updatedDoc.data() }
         });
     } catch (error) {
-        console.error('Convert guest order error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to convert guest order',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, error: 'Failed to convert guest order' });
     }
 };
 
-// Get guest orders for session
+// Get guest orders
 export const getGuestOrders = async (req: Request, res: Response) => {
     try {
         const { sessionId } = req.params;
-        if (!sessionId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Session ID is required'
-            });
+
+        // Validate session first
+        const sessionDoc = await db.collection('guest_sessions').doc(String(sessionId)).get();
+        if (!sessionDoc.exists) {
+            return res.status(404).json({ success: false, message: 'Session not found' });
         }
 
-        const session = guestSessions.get(sessionId);
-        if (!session) {
-            return res.status(404).json({
-                success: false,
-                message: 'Session not found'
-            });
-        }
-
-        // Mock orders for session
-        const orders = session.orders || [];
+        const ordersSnapshot = await db.collection('orders').where('guestSessionId', '==', sessionId).get();
+        const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         res.json({
             success: true,
             message: 'Guest orders retrieved successfully',
             data: {
-                sessionId: session.sessionId,
-                orders,
+                sessionId: sessionId,
+                orders: orders,
                 orderCount: orders.length
             }
         });
     } catch (error) {
-        console.error('Get guest orders error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to retrieve guest orders',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, error: 'Failed to retrieve guest orders' });
     }
 };

@@ -1,5 +1,6 @@
 // WhatsApp Notification Service for Alpha Dentkart
 // Shared number approach using wa.me links
+import logger from '../utils/logger';
 
 export interface WhatsAppMessage {
     id: string;
@@ -9,6 +10,12 @@ export interface WhatsAppMessage {
     status: 'pending' | 'sent' | 'delivered' | 'failed';
     createdAt: Date;
     updatedAt: Date;
+    scheduledAt?: Date;
+    sentAt?: Date;
+    retryCount?: number;
+    error?: string;
+    templateName?: string;
+    variables?: Record<string, any>;
 }
 
 export interface NotificationPreferences {
@@ -34,39 +41,40 @@ class WhatsAppService {
     }
 
     // Send WhatsApp notification (simulated)
-    private async sendWhatsAppMessage(message: WhatsAppMessage): Promise<WhatsAppMessage> {
+    private async sendWhatsAppMessage(message: Partial<WhatsAppMessage> & { phoneNumber: string; messageType: any; content: string }): Promise<WhatsAppMessage> {
         try {
-            const notification = {
-                id: message.id,
+            const notification: WhatsAppMessage = {
+                id: message.id || `WHATSAPP_${Date.now()}`,
                 phoneNumber: message.phoneNumber,
                 messageType: message.messageType,
                 content: message.content,
                 status: 'sent',
                 scheduledAt: message.scheduledAt,
                 sentAt: new Date(),
-                createdAt: new Date(),
+                createdAt: message.createdAt || new Date(),
                 updatedAt: new Date(),
-                retryCount: message.retryCount || 0
+                retryCount: message.retryCount || 0,
+                templateName: message.templateName,
+                variables: message.variables
             };
 
             // Mock successful delivery
-            console.log(`WhatsApp Message Generated: ${message.messageType}`);
-            console.log(`Phone Number: ${message.phoneNumber}`);
-            console.log(`WhatsApp Link: ${this.generateWhatsAppLink(message.phoneNumber, message.content)}`);
-            console.log(`Content: ${message.content}`);
+            logger.info(`WhatsApp Message Generated: ${message.messageType}`);
+            logger.info(`Phone Number: ${message.phoneNumber}`);
+            logger.info(`WhatsApp Link: ${this.generateWhatsAppLink(message.phoneNumber, message.content)}`);
 
             return notification;
         } catch (error) {
-            console.error('WhatsApp send error:', error);
-            
+            logger.error('WhatsApp send error:', error);
+
             return {
-                id: message.id,
+                id: message.id || `WHATSAPP_${Date.now()}`,
                 phoneNumber: message.phoneNumber,
                 messageType: message.messageType,
                 content: message.content,
                 status: 'failed',
-                retryCount: message.retryCount ? message.retryCount + 1 : 1,
-                createdAt: message.createdAt,
+                retryCount: (message.retryCount || 0) + 1,
+                createdAt: message.createdAt || new Date(),
                 updatedAt: new Date(),
                 error: error instanceof Error ? error.message : 'Failed to send WhatsApp message'
             };
@@ -76,17 +84,11 @@ class WhatsAppService {
     // Send order confirmation
     async sendOrderConfirmation(orderData: any): Promise<WhatsAppMessage> {
         const message = {
-            id: `WHATSAPP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             phoneNumber: orderData.customerPhone,
-            messageType: 'order_confirmation',
-            content: `Hello ${orderData.customerName}! Your order #${orderData.orderId} has been confirmed and is being processed.\n\nEstimated delivery: ${orderData.estimatedDelivery}\n\nWe'll notify you via WhatsApp when your order ships.\n\nThank you for choosing Alpha Dentkart!`,
+            messageType: 'order_confirmation' as const,
+            content: `Hello ${orderData.customerName}! Your order #${orderData.orderId} has been confirmed.\n\nEstimated delivery: ${orderData.estimatedDelivery}`,
             templateName: 'Order Confirmed',
-            variables: {
-                customerName: orderData.customerName,
-                orderId: orderData.orderId,
-                orderTotal: orderData.total,
-                deliveryDate: orderData.estimatedDelivery
-            }
+            variables: { orderId: orderData.orderId }
         };
 
         return await this.sendWhatsAppMessage(message);
@@ -95,18 +97,10 @@ class WhatsAppService {
     // Send shipping update
     async sendShippingUpdate(orderData: any): Promise<WhatsAppMessage> {
         const message = {
-            id: `WHATSAPP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             phoneNumber: orderData.customerPhone,
-            messageType: 'shipping_update',
-            content: `Good news ${orderData.customerName}! Your order #${orderData.orderId} has been shipped via ${orderData.courierName}.\n\nTracking: ${orderData.trackingLink}\n\nExpected delivery by ${orderData.deliveryDate}.`,
-            templateName: 'Order Shipped',
-            variables: {
-                customerName: orderData.customerName,
-                orderId: orderData.orderId,
-                courierName: orderData.courierName,
-                trackingLink: orderData.trackingLink,
-                deliveryDate: orderData.deliveryDate
-            }
+            messageType: 'shipping_update' as const,
+            content: `Good news ${orderData.customerName}! Your order #${orderData.orderId} has been shipped.\n\nTracking: ${orderData.trackingLink}`,
+            templateName: 'Order Shipped'
         };
 
         return await this.sendWhatsAppMessage(message);
@@ -115,16 +109,10 @@ class WhatsAppService {
     // Send delivery confirmation
     async sendDeliveryConfirmation(orderData: any): Promise<WhatsAppMessage> {
         const message = {
-            id: `WHATSAPP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             phoneNumber: orderData.customerPhone,
-            messageType: 'delivery_confirmation',
-            content: `🎉 Congratulations ${orderData.customerName}! Your order #${orderData.orderId} has been successfully delivered!\n\nWe hope you love your dental supplies!\n\nRate your experience: https://alphadentkart.com/reviews/order/${orderData.orderId}`,
-            templateName: 'Order Delivered',
-            variables: {
-                customerName: orderData.customerName,
-                orderId: orderData.orderId,
-                reviewLink: `https://alphadentkart.com/reviews/order/${orderData.orderId}`
-            }
+            messageType: 'delivery_confirmation' as const,
+            content: `🎉 Your order #${orderData.orderId} has been delivered!`,
+            templateName: 'Order Delivered'
         };
 
         return await this.sendWhatsAppMessage(message);
@@ -133,17 +121,10 @@ class WhatsAppService {
     // Send order cancellation
     async sendOrderCancellation(orderData: any): Promise<WhatsAppMessage> {
         const message = {
-            id: `WHATSAPP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             phoneNumber: orderData.customerPhone,
-            messageType: 'order_cancelled',
-            content: `Your order #${orderData.orderId} has been cancelled as requested.\n\nReason: ${orderData.reason}\n\nWe apologize for any inconvenience.`,
-            templateName: 'Order Cancelled',
-            variables: {
-                customerName: orderData.customerName,
-                orderId: orderData.orderId,
-                reason: orderData.reason,
-                refundStatus: orderData.refundStatus
-            }
+            messageType: 'order_cancelled' as const,
+            content: `Your order #${orderData.orderId} has been cancelled.\n\nReason: ${orderData.reason}`,
+            templateName: 'Order Cancelled'
         };
 
         return await this.sendWhatsAppMessage(message);
@@ -152,18 +133,10 @@ class WhatsAppService {
     // Send payment reminder
     async sendPaymentReminder(orderData: any): Promise<WhatsAppMessage> {
         const message = {
-            id: `WHATSAPP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             phoneNumber: orderData.customerPhone,
-            messageType: 'payment_reminder',
-            content: `Hi ${orderData.customerName}! Your payment for order #${orderData.orderId} is due tomorrow.\n\nAmount: ₹${orderData.amount}\n\nPayment method: ${orderData.paymentMethod}.\n\nPlease ensure sufficient balance.`,
-            templateName: 'Payment Reminder',
-            variables: {
-                customerName: orderData.customerName,
-                orderId: orderData.orderId,
-                amount: orderData.amount,
-                dueDate: orderData.dueDate,
-                paymentMethod: orderData.paymentMethod
-            }
+            messageType: 'payment_reminder' as const,
+            content: `Hi ${orderData.customerName}! Your payment for order #${orderData.orderId} is due tomorrow.`,
+            templateName: 'Payment Reminder'
         };
 
         return await this.sendWhatsAppMessage(message);
@@ -172,17 +145,10 @@ class WhatsAppService {
     // Send promotional message
     async sendPromotionalOffer(customerData: any, couponData: any): Promise<WhatsAppMessage> {
         const message = {
-            id: `WHATSAPP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             phoneNumber: customerData.customerPhone,
-            messageType: 'promotion',
-            content: `🎉 Special offer just for you! Use code ${couponData.couponCode} at checkout for ${couponData.discount}% off.\n\nValid until ${couponData.expiryDate}.\n\nLimited time remaining!`,
-            templateName: 'Special Offer',
-            variables: {
-                customerName: customerData.customerName,
-                couponCode: couponData.couponCode,
-                discount: couponData.discount,
-                expiryDate: couponData.expiryDate
-            }
+            messageType: 'promotion' as const,
+            content: `🎉 Use code ${couponData.couponCode} for ${couponData.discount}% off!`,
+            templateName: 'Special Offer'
         };
 
         return await this.sendWhatsAppMessage(message);
@@ -190,49 +156,43 @@ class WhatsAppService {
 
     // Get notification status
     async getNotificationStatus(notificationId: string): Promise<WhatsAppMessage | null> {
-        // In production, query from database
-        const mockStatus = {
+        return {
             id: notificationId,
+            phoneNumber: '919876543210',
+            messageType: 'order_confirmation',
             status: 'sent',
             content: 'Notification sent',
-            createdAt: new Date(Date.now() - 5 * 60 * 1000)
+            createdAt: new Date(Date.now() - 5 * 60 * 1000),
+            updatedAt: new Date()
         };
-
-        return mockStatus;
     }
 
     // Retry failed notifications
     async getFailedNotifications(): Promise<WhatsAppMessage[]> {
-        // In production, query from database
         return [];
     }
 
     // Get message history
     async getMessageHistory(limit: number = 50): Promise<WhatsAppMessage[]> {
-        // In production, query from database
         return [];
     }
 
     // Customer support message
     async sendSupportMessage(customerData: any): Promise<WhatsAppMessage> {
         const message = {
-            id: `WHATSAPP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             phoneNumber: customerData.customerPhone,
-            messageType: 'support_message',
-            content: `Thank you for contacting Alpha Dentkart support.\n\nHow can we help you today, ${customerData.customerName}?\n\nOur team will get back to you within 24 hours.`,
-            templateName: 'Support Message',
-            variables: {
-                customerName: customerData.customerName
-            }
+            messageType: 'support_message' as const,
+            content: `Thank you for contacting Alpha Dentkart support, ${customerData.customerName}.`,
+            templateName: 'Support Message'
         };
 
         return await this.sendWhatsAppMessage(message);
     }
 
     // Format template with variables
-    private formatTemplate(templateName: string, variables?: Record<string, string>): string {
+    private formatTemplate(template: { template: string }, variables?: Record<string, string>): string {
         let formatted = template.template;
-        
+
         if (variables) {
             Object.entries(variables).forEach(([key, value]) => {
                 const regex = new RegExp(`\\b${key}\\b`, 'g');

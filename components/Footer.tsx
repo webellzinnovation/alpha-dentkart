@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Footer: React.FC = () => {
+const FooterComponent: React.FC = () => {
   return (
     <footer className="bg-gray-800 dark:bg-gray-900 text-white pt-12 pb-6">
       <div className="container mx-auto px-4">
@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
             </div>
           </div>
           <div className="flex w-full md:w-auto">
-            <input className="rounded-l-lg border-none text-gray-800 py-2 px-4 w-full md:w-64 focus:ring-0 outline-none" placeholder="Enter your email address..." type="email"/>
+            <input className="rounded-l-lg border-none text-gray-800 py-2 px-4 w-full md:w-64 focus:ring-0 outline-none" placeholder="Enter your email address..." type="email" />
             <button className="bg-gray-900 text-white px-6 py-2 rounded-r-lg font-medium hover:bg-gray-800 transition-colors">Subscribe</button>
           </div>
         </div>
@@ -32,8 +32,8 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2 text-gray-400 text-sm">
               <li><a className="hover:text-primary transition-colors cursor-pointer">About Alpha Dentkart</a></li>
               <li><a className="hover:text-primary transition-colors cursor-pointer">Shipping Policy</a></li>
-              <li><a className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</a></li>
-              <li><a className="hover:text-primary transition-colors cursor-pointer">Terms of Service</a></li>
+              <li><a href="/privacy-policy" className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</a></li>
+              <li><a href="/terms-of-service" className="hover:text-primary transition-colors cursor-pointer">Terms of Service</a></li>
               <li><a className="hover:text-primary transition-colors cursor-pointer">Contact Support</a></li>
             </ul>
           </div>
@@ -69,3 +69,6 @@ export const Footer: React.FC = () => {
     </footer>
   );
 };
+
+// Wrap with React.memo to prevent unnecessary re-renders
+export const Footer = React.memo(FooterComponent);

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
+import logger from '../utils/logger';
 
 export async function chatWithAI(req: Request, res: Response) {
     try {
@@ -27,7 +28,7 @@ export async function chatWithAI(req: Request, res: Response) {
 
         res.json({ response: result.text });
     } catch (error: any) {
-        console.error('AI Error:', error);
+        logger.error('AI Error:', error);
         res.status(500).json({ error: 'AI service error' });
     }
 }

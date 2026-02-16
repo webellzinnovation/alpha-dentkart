@@ -14,7 +14,7 @@ const sampleProducts: Product[] = [
         rating: 4.8,
         reviews: 45,
         stock: 15,
-        featured: true,
+
         description: 'High-quality dental scaler set',
         category: 'instruments',
     },
@@ -27,7 +27,7 @@ const sampleProducts: Product[] = [
         rating: 4.9,
         reviews: 32,
         stock: 8,
-        featured: false,
+
         description: 'Powerful LED curing light',
         category: 'equipment',
     },
@@ -41,7 +41,7 @@ const sampleProducts: Product[] = [
         rating: 4.7,
         reviews: 28,
         stock: 25,
-        featured: false,
+
         description: 'Complete composite restoration kit',
         category: 'supplies',
     },
@@ -54,7 +54,7 @@ const sampleProducts: Product[] = [
         rating: 5.0,
         reviews: 67,
         stock: 5,
-        featured: true,
+
         description: 'Professional ultrasonic scaler',
         category: 'equipment',
     },
@@ -67,7 +67,7 @@ const sampleProducts: Product[] = [
         rating: 4.5,
         reviews: 15,
         stock: 50,
-        featured: false,
+
         description: 'Set of 12 dental mirrors',
         category: 'instruments',
     },
@@ -80,7 +80,7 @@ const sampleProducts: Product[] = [
         rating: 4.6,
         reviews: 22,
         stock: 30,
-        featured: false,
+
         description: 'High-precision impression material',
         category: 'supplies',
     },
@@ -94,7 +94,7 @@ const sampleProducts: Product[] = [
         rating: 4.9,
         reviews: 89,
         stock: 3,
-        featured: true,
+
         description: 'Professional loupes with integrated LED',
         category: 'equipment',
     },
@@ -107,7 +107,7 @@ const sampleProducts: Product[] = [
         rating: 4.4,
         reviews: 12,
         stock: 40,
-        featured: false,
+
         description: 'Assorted dental burs pack',
         category: 'instruments',
     },
@@ -149,3 +149,5 @@ export const Theme2Demo: React.FC = () => {
         </div>
     );
 };
+
+export default Theme2Demo;

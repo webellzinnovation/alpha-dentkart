@@ -1,28 +1,34 @@
 
-import React, { useRef, useState, useMemo, useEffect } from 'react';
+import React, { useRef, useState, useMemo, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Loading } from './components/Loading';
 import { BrandScroll } from './components/BrandScroll';
 import { ProductCard } from './components/ProductCard';
-import { Shop } from './components/Shop';
+const Shop = lazy(() => import('./components/Shop').then(m => ({ default: m.Shop })));
 import { Brands } from './components/Brands';
 import { Categories } from './components/Categories';
 import { Footer } from './components/Footer';
-import { Wishlist } from './components/Wishlist';
+const Wishlist = lazy(() => import('./components/Wishlist').then(m => ({ default: m.Wishlist })));
 import { CartSidebar } from './components/CartSidebar';
-import { ProductDetail } from './components/ProductDetail';
 import { ProductModal } from './components/ProductModal';
-import { Login } from './components/Login';
-import { Dashboard } from './components/Dashboard';
-import { AIChat } from './components/AIChat';
-import { AdminDashboard } from './components/AdminDashboard';
-import { Theme2Demo } from './components/Theme2Demo';
-import { Theme3Demo } from './components/Theme3Demo';
+const Login = lazy(() => import('./components/Login').then(m => ({ default: m.Login })));
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+
+// Lazy load heavy components for code splitting
+const ProductDetail = lazy(() => import('./components/ProductDetail'));
+const AIChat = lazy(() => import('./components/AIChat'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const Theme2Demo = lazy(() => import('./components/Theme2Demo'));
+const Theme3Demo = lazy(() => import('./components/Theme3Demo'));
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { StickyCartButton } from './components/StickyCartButton';
-import { Checkout } from './components/Checkout';
+// Lazy load heavy components for code splitting
+const Checkout = lazy(() => import('./components/Checkout'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./components/TermsOfService'));
+import CookieConsent from './components/CookieConsent';
 import { PROMOS, HERO_SLIDES, ALL_PRODUCTS, CATEGORIES, BRAND_PROFILES } from './constants';
 import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile } from './types';
 import { adaptDemoData } from './utils/demoDataAdapter';
@@ -30,7 +36,7 @@ import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugi
 import { MOCK_USER } from './data/mockData';
 import { ordersAPI } from './utils/api';
 
-type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo' | 'checkout';
+type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewState>('home');
@@ -221,6 +227,10 @@ function App() {
       setCurrentView('theme2-demo');
     } else if (path === '/theme3-demo') {
       setCurrentView('theme3-demo');
+    } else if (path === '/privacy-policy') {
+      setCurrentView('privacy-policy');
+    } else if (path === '/terms-of-service') {
+      setCurrentView('terms-of-service');
     } else if (path === '/') {
       setCurrentView('home');
     }
@@ -275,6 +285,10 @@ function App() {
       newPath = '/';
     } else if (currentView === 'checkout') {
       newPath = '/checkout';
+    } else if (currentView === 'privacy-policy') {
+      newPath = '/privacy-policy';
+    } else if (currentView === 'terms-of-service') {
+      newPath = '/terms-of-service';
     }
 
     if (window.location.pathname !== newPath) {
@@ -1102,6 +1116,18 @@ function App() {
             <Dashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />
           )}
 
+          {currentView === 'privacy-policy' && (
+            <Suspense fallback={<Loading />}>
+              <PrivacyPolicy />
+            </Suspense>
+          )}
+
+          {currentView === 'terms-of-service' && (
+            <Suspense fallback={<Loading />}>
+              <TermsOfService />
+            </Suspense>
+          )}
+
           {currentView === 'checkout' && user && (
             <div className="bg-gray-50 dark:bg-background-dark min-h-[60vh]">
               <Checkout
@@ -1164,6 +1190,7 @@ function App() {
       )}
 
       {(currentView as string) !== 'admin-dashboard' && <Footer />}
+      <CookieConsent />
     </div>
   );
 }

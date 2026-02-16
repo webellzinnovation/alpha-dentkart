@@ -32,14 +32,14 @@ export const HERO_SLIDES: HeroSlide[] = [
 ];
 
 export const CATEGORIES: Category[] = [
-  { id: 1, name: "Endodontics", iconClass: "fas fa-teeth-open" },
-  { id: 2, name: "Restorative", iconClass: "fas fa-fill-drip" },
-  { id: 3, name: "Instruments", iconClass: "fas fa-tools" },
-  { id: 4, name: "Equipment", iconClass: "fas fa-chair" },
-  { id: 5, name: "Disposables", iconClass: "fas fa-box-open" },
-  { id: 6, name: "Orthodontics", iconClass: "fas fa-teeth" },
-  { id: 7, name: "Prosthetics", iconClass: "fas fa-crown" },
-  { id: 8, name: "Burs", iconClass: "fas fa-gem" },
+  { id: 1, name: "Endodontics", iconClass: "fas fa-teeth-open", image: "https://placehold.co/200x200/FF6B6B/white?text=ENDO" },
+  { id: 2, name: "Restorative", iconClass: "fas fa-fill-drip", image: "https://placehold.co/200x200/4ECDC4/white?text=REST" },
+  { id: 3, name: "Instruments", iconClass: "fas fa-tools", image: "https://placehold.co/200x200/45B7D1/white?text=INST" },
+  { id: 4, name: "Equipment", iconClass: "fas fa-chair", image: "https://placehold.co/200x200/96CEB4/white?text=EQUIP" },
+  { id: 5, name: "Disposables", iconClass: "fas fa-box-open", image: "https://placehold.co/200x200/FFEAA7/black?text=DISP" },
+  { id: 6, name: "Orthodontics", iconClass: "fas fa-teeth", image: "https://placehold.co/200x200/DDA0DD/white?text=ORTHO" },
+  { id: 7, name: "Prosthetics", iconClass: "fas fa-crown", image: "https://placehold.co/200x200/98D8C8/white?text=PROS" },
+  { id: 8, name: "Burs", iconClass: "fas fa-gem", image: "https://placehold.co/200x200/F7DC6F/black?text=BURS" },
 ];
 
 export const BRANDS = [

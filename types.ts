@@ -85,7 +85,9 @@ export interface CartItem extends Product {
 export interface Category {
   id: number;
   name: string;
-  iconClass: string;
+  iconClass?: string; // Optional - for backward compatibility
+  image?: string; // New - for uploaded category images
+  slug?: string;
 }
 
 export interface PromoBanner {

@@ -22,9 +22,13 @@ export const Categories: React.FC<CategoriesProps> = ({ onCategoryClick, categor
                 onClick={() => onCategoryClick(cat.name)}
                 className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center text-center cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all group"
            >
-             <div className="w-24 h-24 mb-6 flex items-center justify-center bg-primary/5 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-               <i className={`${cat.iconClass} text-4xl text-primary group-hover:text-white transition-colors`}></i>
-             </div>
+              <div className="w-24 h-24 mb-6 flex items-center justify-center bg-primary/5 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300 overflow-hidden">
+                {cat.image ? (
+                  <img src={cat.image} alt={cat.name} className="w-20 h-20 object-contain group-hover:scale-110 transition-transform duration-300" />
+                ) : (
+                  <i className={`${cat.iconClass || 'fas fa-tooth'} text-4xl text-primary group-hover:text-white transition-colors`}></i>
+                )}
+              </div>
              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{cat.name}</h3>
              <button className="text-sm font-semibold text-gray-500 group-hover:text-primary transition-colors mt-2 flex items-center gap-1">
                Explore Products <i className="fas fa-arrow-right text-xs"></i>

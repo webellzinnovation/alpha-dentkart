@@ -1,0 +1,31 @@
+{
+  "appId": "com.alphadentkart.app",
+  "appName": "Alpha Dentkart",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "scheme": "alphadentkart"
+  },
+  "plugins": {
+    "@capacitor/app": {
+      "launchShowDuration": 2000
+    },
+    "@capacitor/splash-screen": {},
+    "@capacitor/status-bar": {
+      "ios": "false",
+      "android": false
+    }
+  },
+  "android": {
+    "buildOptions": {
+      "webContentCompression": "true"
+    }
+  },
+  "ios": {
+    "buildOptions": {
+      "webContentCompression": "true"
+    }
+  }
+}

@@ -1,23 +1,27 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '../config/firebase'; // Firestore
+import logger from '../utils/logger';
 
 // Get all promotional tiles (active only for public, all for admin)
 export const getAllPromotionalTiles = async (req: Request, res: Response) => {
     try {
         const { active, limit } = req.query;
-        const where = active === 'true' ? { isActive: true } : {};
+        let query = db.collection('promotional_tiles').orderBy('order', 'asc');
 
-        const tiles = await prisma.promotionalTile.findMany({
-            where,
-            orderBy: { order: 'asc' },
-            ...(limit && { take: parseInt(limit as string) })
-        });
+        if (active === 'true') {
+            query = query.where('isActive', '==', true);
+        }
+
+        if (limit) {
+            query = query.limit(parseInt(limit as string));
+        }
+
+        const snapshot = await query.get();
+        const tiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         res.json(tiles);
     } catch (error) {
-        console.error('Error fetching promotional tiles:', error);
+        logger.error('Error fetching promotional tiles:', error);
         res.status(500).json({ error: 'Failed to fetch promotional tiles' });
     }
 };
@@ -27,24 +31,24 @@ export const createPromotionalTile = async (req: Request, res: Response) => {
     try {
         const { title, subtitle, category, price, image, link, badge, badgeColor, order, isActive } = req.body;
 
-        const tile = await prisma.promotionalTile.create({
-            data: {
-                title,
-                subtitle,
-                category,
-                price,
-                image,
-                link,
-                badge,
-                badgeColor,
-                order: order || 0,
-                isActive: isActive !== undefined ? isActive : true
-            }
-        });
+        const newTile = {
+            title,
+            subtitle,
+            category,
+            price,
+            image,
+            link,
+            badge,
+            badgeColor,
+            order: order || 0,
+            isActive: isActive !== undefined ? isActive : true,
+            createdAt: new Date().toISOString()
+        };
 
-        res.status(201).json(tile);
+        const docRef = await db.collection('promotional_tiles').add(newTile);
+        res.status(201).json({ id: docRef.id, ...newTile });
     } catch (error) {
-        console.error('Error creating promotional tile:', error);
+        logger.error('Error creating promotional tile:', error);
         res.status(500).json({ error: 'Failed to create promotional tile' });
     }
 };
@@ -53,27 +57,19 @@ export const createPromotionalTile = async (req: Request, res: Response) => {
 export const updatePromotionalTile = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { title, subtitle, category, price, image, link, badge, badgeColor, order, isActive } = req.body;
+        const updates = req.body;
 
-        const tile = await prisma.promotionalTile.update({
-            where: { id: parseInt(id) },
-            data: {
-                ...(title !== undefined && { title }),
-                ...(subtitle !== undefined && { subtitle }),
-                ...(category !== undefined && { category }),
-                ...(price !== undefined && { price }),
-                ...(image !== undefined && { image }),
-                ...(link !== undefined && { link }),
-                ...(badge !== undefined && { badge }),
-                ...(badgeColor !== undefined && { badgeColor }),
-                ...(order !== undefined && { order }),
-                ...(isActive !== undefined && { isActive })
-            }
-        });
+        // Strip undefined
+        const cleanUpdates = Object.fromEntries(
+            Object.entries(updates).filter(([_, v]) => v !== undefined)
+        );
 
-        res.json(tile);
+        await db.collection('promotional_tiles').doc(String(id)).update(cleanUpdates);
+        const updatedDoc = await db.collection('promotional_tiles').doc(String(id)).get();
+
+        res.json({ id: updatedDoc.id, ...updatedDoc.data() });
     } catch (error) {
-        console.error('Error updating promotional tile:', error);
+        logger.error('Error updating promotional tile:', error);
         res.status(500).json({ error: 'Failed to update promotional tile' });
     }
 };
@@ -83,13 +79,11 @@ export const deletePromotionalTile = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
-        await prisma.promotionalTile.delete({
-            where: { id: parseInt(id) }
-        });
+        await db.collection('promotional_tiles').doc(String(id)).delete();
 
         res.json({ message: 'Promotional tile deleted successfully' });
     } catch (error) {
-        console.error('Error deleting promotional tile:', error);
+        logger.error('Error deleting promotional tile:', error);
         res.status(500).json({ error: 'Failed to delete promotional tile' });
     }
 };
@@ -99,18 +93,18 @@ export const reorderPromotionalTiles = async (req: Request, res: Response) => {
     try {
         const { tiles } = req.body; // Array of { id, order }
 
-        const updates = tiles.map((tile: { id: number; order: number }) =>
-            prisma.promotionalTile.update({
-                where: { id: tile.id },
-                data: { order: tile.order }
-            })
-        );
+        const batch = db.batch();
 
-        await prisma.$transaction(updates);
+        tiles.forEach((tile: { id: string; order: number }) => {
+            const ref = db.collection('promotional_tiles').doc(tile.id);
+            batch.update(ref, { order: tile.order });
+        });
+
+        await batch.commit();
 
         res.json({ message: 'Promotional tiles reordered successfully' });
     } catch (error) {
-        console.error('Error reordering promotional tiles:', error);
+        logger.error('Error reordering promotional tiles:', error);
         res.status(500).json({ error: 'Failed to reorder promotional tiles' });
     }
 };

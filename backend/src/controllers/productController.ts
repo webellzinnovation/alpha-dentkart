@@ -1,90 +1,144 @@
 import { Request, Response } from 'express';
-import prisma from '../config/database';
+import { db } from '../config/firebase'; // Firestore
+import { cacheService } from '../services/cacheService';
+import { generateKeywords } from '../utils/generateKeywords';
+import logger from '../utils/logger';
 
 export async function getAllProducts(req: Request, res: Response) {
     try {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 20;
-        const skip = (page - 1) * limit;
-        const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
-        const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
+        const categoryId = req.query.categoryId ? String(req.query.categoryId) : undefined;
+        const brandId = req.query.brandId ? String(req.query.brandId) : undefined;
         const search = req.query.search as string;
 
-        const where: any = {};
-        if (categoryId) where.categoryId = categoryId;
-        if (brandId) where.brandId = brandId;
-        if (search) {
-            where.OR = [
-                { name: { contains: search } },
-                { description: { contains: search } }
-            ];
+        // Create cache key
+        const cacheKey = `products:page:${page}:limit:${limit}:category:${categoryId}:brand:${brandId}:search:${search || 'none'}`;
+
+        // Try to get from cache first
+        let cached = await cacheService.get(cacheKey);
+        if (cached) {
+            logger.info('Cache hit for products', { cacheKey });
+            return res.json(cached);
         }
 
-        const [products, total] = await Promise.all([
-            prisma.product.findMany({
-                where,
-                skip,
-                take: limit,
-                include: {
-                    category: true,
-                    brand: true,
-                },
-                orderBy: { createdAt: 'desc' },
-            }),
-            prisma.product.count({ where })
-        ]);
+        let productsRef: FirebaseFirestore.Query = db.collection('products');
 
-        // Parse JSON fields
-        const parsedProducts = products.map(p => ({
-            ...p,
-            images: p.images ? JSON.parse(p.images) : [],
-            features: p.features ? JSON.parse(p.features) : [],
-            specs: p.specs ? JSON.parse(p.specs) : {},
-            attributes: p.attributes ? JSON.parse(p.attributes) : [],
-            variations: p.variations ? JSON.parse(p.variations) : [],
+        // Apply filters
+        if (categoryId) productsRef = productsRef.where('categoryId', '==', categoryId);
+        if (brandId) productsRef = productsRef.where('brandId', '==', brandId);
+
+        // Keyword-based search using Firestore array-contains-any
+        if (search) {
+            const searchTokens = generateKeywords(search).slice(0, 10); // Firestore max 10
+            if (searchTokens.length > 0) {
+                productsRef = productsRef.where('keywords', 'array-contains-any', searchTokens);
+            }
+        }
+
+        // Get total count for current filters
+        const countSnapshot = await productsRef.get();
+        const total = countSnapshot.size;
+
+        // Calculate offset and apply pagination
+        const offset = (page - 1) * limit;
+        productsRef = productsRef.orderBy('createdAt', 'desc').offset(offset).limit(limit);
+
+        const snapshot = await productsRef.get();
+
+        // Fetch related data (Category & Brand)
+        const products = await Promise.all(snapshot.docs.map(async (doc) => {
+            const data = doc.data();
+
+            // Fetch Category
+            let category = null;
+            if (data.categoryId) {
+                const catDoc = await db.collection('categories').doc(String(data.categoryId)).get();
+                if (catDoc.exists) category = { id: catDoc.id, ...catDoc.data() };
+            }
+
+            // Fetch Brand
+            let brand = null;
+            if (data.brandId) {
+                const brandDoc = await db.collection('brands').doc(String(data.brandId)).get();
+                if (brandDoc.exists) brand = { id: brandDoc.id, ...brandDoc.data() };
+            }
+
+            return {
+                id: doc.id,
+                ...data,
+                category,
+                brand,
+                images: data.images || [],
+                features: data.features || [],
+                specs: data.specs || {},
+                attributes: data.attributes || [],
+                variations: data.variations || [],
+            };
         }));
 
-        res.json({
-            products: parsedProducts,
+        const response = {
+            products,
             pagination: {
                 total,
                 page,
                 limit,
-                totalPages: Math.ceil(total / limit)
+                pages: Math.ceil(total / limit)
             }
-        });
+        };
+
+        // Cache the response for 15 minutes
+        await cacheService.set(cacheKey, response, 900);
+        logger.info('Cached products', { cacheKey });
+
+        res.json(response);
     } catch (error) {
-        throw error;
+        logger.error('GetAllProducts error', { error });
+        res.status(500).json({ error: 'Internal server error' });
     }
 }
 
 export async function getProductById(req: Request, res: Response) {
     try {
         const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-        const product = await prisma.product.findUnique({
-            where: { id: parseInt(id) },
-            include: {
-                category: true,
-                brand: true,
-            },
-        });
+        const docRef = db.collection('products').doc(String(id));
+        const doc = await docRef.get();
 
-        if (!product) {
+        if (!doc.exists) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        // Parse JSON fields
-        const parsedProduct = {
-            ...product,
-            images: product.images ? JSON.parse(product.images) : [],
-            features: product.features ? JSON.parse(product.features) : [],
-            specs: product.specs ? JSON.parse(product.specs) : {},
-            attributes: product.attributes ? JSON.parse(product.attributes) : [],
-            variations: product.variations ? JSON.parse(product.variations) : [],
+        const data = doc.data()!;
+
+        // Fetch Category
+        let category = null;
+        if (data.categoryId) {
+            const catDoc = await db.collection('categories').doc(String(data.categoryId)).get();
+            if (catDoc.exists) category = { id: catDoc.id, ...catDoc.data() };
+        }
+
+        // Fetch Brand
+        let brand = null;
+        if (data.brandId) {
+            const brandDoc = await db.collection('brands').doc(String(data.brandId)).get();
+            if (brandDoc.exists) brand = { id: brandDoc.id, ...brandDoc.data() };
+        }
+
+        const product = {
+            id: doc.id,
+            ...data,
+            category,
+            brand,
+            images: data.images || [],
+            features: data.features || [],
+            specs: data.specs || {},
+            attributes: data.attributes || [],
+            variations: data.variations || [],
         };
 
-        res.json({ product: parsedProduct });
+        res.json({ product });
     } catch (error) {
-        throw error;
+        logger.error('GetProductById error', { error, productId: req.params.id });
+        res.status(500).json({ error: 'Internal server error' });
     }
 }

@@ -557,7 +557,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     // Category State
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-    const [categoryFormData, setCategoryFormData] = useState<Category>({ id: 0, name: '', iconClass: '' });
+    const [categoryFormData, setCategoryFormData] = useState<Category>({ id: 0, name: '', iconClass: '', image: '' });
 
     // Brand State
     const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
@@ -1084,7 +1084,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     // Category Handlers
     const handleAddNewCategory = () => {
         setEditingCategory(null);
-        setCategoryFormData({ id: 0, name: '', iconClass: '' });
+        setCategoryFormData({ id: 0, name: '', iconClass: '', image: '' });
         setIsCategoryModalOpen(true);
     };
 
@@ -1149,6 +1149,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             const reader = new FileReader();
             reader.onloadend = () => {
                 setBrandFormData({ ...brandFormData, logo: reader.result as string });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleCategoryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setCategoryFormData({ ...categoryFormData, image: reader.result as string });
             };
             reader.readAsDataURL(file);
         }
@@ -1907,8 +1918,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     <tr key={cat.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                                         <td className="px-6 py-4 text-gray-500">#{cat.id}</td>
                                                         <td className="px-6 py-4">
-                                                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                                                <i className={cat.iconClass}></i>
+                                                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
+                                                                {cat.image ? (
+                                                                    <img src={cat.image} alt={cat.name} className="w-full h-full object-contain" />
+                                                                ) : (
+                                                                    <i className={cat.iconClass || 'fas fa-tooth'}></i>
+                                                                )}
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{cat.name}</td>
@@ -2879,8 +2894,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <input type="text" required value={categoryFormData.name} onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Icon Class (FontAwesome)</label>
-                                    <input type="text" value={categoryFormData.iconClass} onChange={(e) => setCategoryFormData({ ...categoryFormData, iconClass: e.target.value })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="fas fa-tooth" />
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Category Image</label>
+                                    <div className="flex gap-4 items-center">
+                                        <div className="w-16 h-16 border rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
+                                            {categoryFormData.image ? (
+                                                <img src={categoryFormData.image} className="w-full h-full object-contain" />
+                                            ) : (
+                                                <i className={`${categoryFormData.iconClass || 'fas fa-tooth'} text-gray-400`}></i>
+                                            )}
+                                        </div>
+                                        <input type="file" onChange={handleCategoryImageUpload} className="text-xs text-gray-500" accept="image/*" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Icon Class (FontAwesome - Fallback)</label>
+                                    <input type="text" value={categoryFormData.iconClass || ''} onChange={(e) => setCategoryFormData({ ...categoryFormData, iconClass: e.target.value })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="fas fa-tooth" />
                                 </div>
                                 <div className="flex justify-end gap-3 pt-4">
                                     <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="px-4 py-2 text-gray-600 dark:text-gray-400 text-sm">Cancel</button>
@@ -3499,3 +3527,5 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     );
 };
+
+export default AdminDashboard;

@@ -192,8 +192,8 @@ export const AIChat: React.FC<AIChatProps> = ({
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                      ? 'bg-primary text-white rounded-tr-none'
-                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-tl-none shadow-sm'
+                    ? 'bg-primary text-white rounded-tr-none'
+                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-tl-none shadow-sm'
                     }`}>
                     {renderMessageText(msg.text)}
                   </div>
@@ -257,3 +257,5 @@ export const AIChat: React.FC<AIChatProps> = ({
     </>
   );
 };
+
+export default AIChat;

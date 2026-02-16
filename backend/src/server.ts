@@ -22,12 +22,17 @@ import verificationRoutes from './routes/verification';
 import savedPaymentRoutes from './routes/savedPayment';
 import quickReorderRoutes from './routes/quickReorder';
 import deliveryEstimationRoutes from './routes/deliveryEstimation';
-import { authLimiter } from '../middleware/rateLimiter';
+import returnRoutes from './routes/returns';
+// import { authLimiter } from '../middleware/rateLimiter'; // specific one
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
-import admin from 'firebase-admin';
+import { sanitizeInput } from './middleware/sanitize';
+import { requestLogger } from './middleware/requestLogger';
+import { auditLogger } from './middleware/auditLogger';
+import logger from './utils/logger';
+import { errorTracker } from './utils/errorTracker';
+import { db } from './config/firebase'; // Config
 import path from 'path';
-import fs from 'fs';
 
 // Load environment variables
 dotenv.config();
@@ -36,28 +41,26 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
-// Initialize Firebase Admin (only if service account exists)
-const serviceAccountPath = path.join(process.cwd(), 'firebase-service-account.json');
-if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-    console.log('Firebase Admin initialized');
-} else {
-    console.warn('Firebase Service Account not found. Push notifications will be disabled.');
-}
-
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: false, // Allow Tailwind CDN for now
 }));
 
-const ALLOWED_ORIGINS = [CLIENT_URL, 'capacitor://localhost', 'http://localhost:3000'];
+const ALLOWED_ORIGINS = [
+    CLIENT_URL,
+    'capacitor://localhost',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://alphadentkart.com',
+    'https://www.alphadentkart.com'
+];
 
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
@@ -70,98 +73,86 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(sanitizeInput);
+app.use(requestLogger);
 
-// Apply rate limiting to all routes
+// Initialize error tracker
+errorTracker.init();
+
+// Apply rate limiting to all API routes
 app.use('/api', apiLimiter);
+
+// Root route
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Welcome to Alpha Dentkart API',
+        version: 'v1',
+        health: '/health',
+        docs: '/api/docs'
+    });
+});
 
 // Health check
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Secure backend is running' });
+    res.json({
+        status: 'ok',
+        message: 'Secure backend is running',
+        environment: process.env.NODE_ENV,
+        database: 'Firebase Firestore',
+        apiVersion: 'v1',
+    });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/brands', brandRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/hero-slides', heroSlideRoutes);
-app.use('/api/promotional-tiles', promotionalTileRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/shipping', shippingRoutes);
-app.use('/api/shiprocket', shiprocketRoutes);
-app.use('/api/guest', guestCheckoutRoutes);
-app.use('/api/coupons', couponRoutes);
-app.use('/api/order-cancellation', orderCancellationRoutes);
-app.use('/api/verification', verificationRoutes);
-app.use('/api/saved-payments', savedPaymentRoutes);
-app.use('/api/quick-reorder', quickReorderRoutes);
-app.use('/api/delivery-estimation', deliveryEstimationRoutes);
+// Audit logger for all API write operations
+app.use('/api', auditLogger);
+
+// API v1 Routes
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/brands', brandRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/hero-slides', heroSlideRoutes);
+app.use('/api/v1/promotional-tiles', promotionalTileRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/shipping', shippingRoutes);
+app.use('/api/v1/shiprocket', shiprocketRoutes);
+app.use('/api/v1/guest', guestCheckoutRoutes);
+app.use('/api/v1/coupons', couponRoutes);
+app.use('/api/v1/order-cancellation', orderCancellationRoutes);
+app.use('/api/v1/verification', verificationRoutes);
+app.use('/api/v1/saved-payments', savedPaymentRoutes);
+app.use('/api/v1/quick-reorder', quickReorderRoutes);
+app.use('/api/v1/delivery-estimation', deliveryEstimationRoutes);
+app.use('/api/v1/returns', returnRoutes);
+
+// Backward-compatible redirect: /api/* → /api/v1/*
+// This ensures existing frontend code continues to work
+app.use('/api/:resource', (req, res, next) => {
+    // Only redirect if not already a v1 route and resource exists
+    const resource = req.params.resource;
+    if (resource !== 'v1') {
+        const newUrl = `/api/v1/${resource}${req.url === '/' ? '' : req.url}`;
+        return res.redirect(307, newUrl);
+    }
+    next();
+});
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`\n🔒 Secure Backend Server Running`);
-    console.log(`📍 Port: ${PORT}`);
-    console.log(`🌐 Client URL: ${CLIENT_URL}`);
-    console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`\n🛡️  Security Features Enabled:`);
-    console.log(`   ✓ JWT Authentication`);
-    console.log(`   ✓ Password Hashing (bcrypt)`);
-    console.log(`   ✓ Rate Limiting`);
-    console.log(`   ✓ CORS Protection`);
-    console.log(`   ✓ Helmet Security Headers`);
-    console.log(`   ✓ HTTP-only Cookies`);
-    console.log(`\n📚 API Endpoints:`);
-    console.log(`   POST   /api/auth/register`);
-    console.log(`   POST   /api/auth/login`);
-    console.log(`   POST   /api/auth/logout`);
-    console.log(`   GET    /api/auth/me`);
-    console.log(`   GET    /api/products`);
-    console.log(`   GET    /api/products/:id`);
-    console.log(`   POST   /api/orders`);
-    console.log(`   GET    /api/orders/me`);
-    console.log(`   POST   /api/ai/chat`);
-    console.log(`   GET    /api/reviews/products/:id`);
-    console.log(`   POST   /api/reviews`);
-    console.log(`   GET    /api/reviews/me`);
-    console.log(`   PUT    /api/reviews/:id`);
-    console.log(`   DELETE /api/reviews/:id`);
-    console.log(`   POST   /api/shipping/create`);
-    console.log(`   GET    /api/shipping/track/:trackingId`);
-    console.log(`   POST   /api/shipping/rates`);
-    console.log(`   GET    /api/shipping/pincode/:pincode`);
-    console.log(`   GET    /api/shipping/order/:orderId`);
-    console.log(`   POST   /api/shiprocket/check-pincode`);
-    console.log(`   POST   /api/shiprocket/get-rates`);
-    console.log(`   POST   /api/shiprocket/estimate-delivery`);
-    console.log(`   POST   /api/shiprocket/calculate-charges`);
-    console.log(`   POST   /api/shiprocket/create-order`);
-    console.log(`   POST   /api/shiprocket/track`);
-    console.log(`   POST   /api/shiprocket/track-order`);
-    console.log(`   POST   /api/shiprocket/cancel`);
-    console.log(`   POST   /api/shiprocket/available-couriers`);
-    console.log(`   POST   /api/coupons`);
-    console.log(`   GET    /api/coupons`);
-    console.log(`   GET    /api/coupons/analytics`);
-    console.log(`   GET    /api/coupons/:id`);
-    console.log(`   PUT    /api/coupons/:id`);
-    console.log(`   DELETE /api/coupons/:id`);
-    console.log(`   POST   /api/coupons/validate`);
-    console.log(`   POST   /api/coupons/apply`);
-    console.log(`   POST   /api/guest/session/create`);
-    console.log(`   GET    /api/guest/session/validate/:sessionId`);
-    console.log(`   POST   /api/guest/order/create`);
-    console.log(`   GET    /api/guest/order/:orderId`);
-    console.log(`   PUT    /api/guest/order/:orderId`);
-    console.log(`   GET    /api/guest/order/:orderId/status`);
-    console.log(`   GET    /api/guest/session/:sessionId/orders`);
-    console.log(`   POST   /api/guest/order/:orderId/convert`);
-    console.log(`\n`);
-});
+// Start server if not running in Vercel (Local Development)
+if (process.env.VERCEL !== '1') {
+    app.listen(PORT, () => {
+        logger.info('Server started', {
+            port: PORT,
+            clientUrl: CLIENT_URL,
+            environment: process.env.NODE_ENV || 'development',
+            database: 'Firebase Firestore',
+        });
+    });
+}
 
 export default app;

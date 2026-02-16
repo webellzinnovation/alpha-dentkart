@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { User, Address } from '../types';
+import { AlertCircle, Package, User as UserIcon, LogOut, MapPin, ChevronRight, Settings, Camera, ShieldCheck } from 'lucide-react';
+import VerificationManager from './VerificationManager';
 
 interface DashboardProps {
     user: User;
@@ -626,6 +628,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                         <button className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-pink-700 transition-colors shadow-lg shadow-primary/25">
                                             Save Changes
                                         </button>
+                                    </div>
+
+                                    {/* Verification Manager Integration */}
+                                    <div className="pt-8 border-t border-gray-100 dark:border-gray-700 mt-8">
+                                        <VerificationManager
+                                            userId={user.id}
+                                            isVerified={user.verificationStatus === 'approved'}
+                                            userType={selectedUserType}
+                                        />
                                     </div>
                                 </div>
                             </div>

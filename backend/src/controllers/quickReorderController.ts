@@ -1,15 +1,14 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
 import QuickReorderService, { QuickReorderData } from '../services/quickReorderService';
+import logger from '../utils/logger';
 
-const prisma = new PrismaClient();
-const quickReorderService = new QuickReorderService(prisma);
+const quickReorderService = new QuickReorderService();
 
 // Create quick reorder
 export const createQuickReorder = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
@@ -22,17 +21,14 @@ export const createQuickReorder = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     if (!orderId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Order ID is required'
-      });
+      return res.status(400).json({ success: false, error: 'OrderId is required' });
     }
 
     const reorderData: QuickReorderData = {
       userId,
       orderId,
       notes,
-      modifyQuantities: modifyQuantities || false,
+      modifyQuantities,
       quantityModifications
     };
 
@@ -51,7 +47,7 @@ export const createQuickReorder = async (req: AuthRequest, res: Response) => {
       });
     }
   } catch (error) {
-    console.error('Error in createQuickReorder:', error);
+    logger.error('Error in createQuickReorder:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -59,24 +55,20 @@ export const createQuickReorder = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Get user's reorders
+// Get user reorders
 export const getUserReorders = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const {
-      limit,
-      offset,
-      status
-    } = req.query;
+    const { limit = 20, offset = 0, status } = req.query;
 
     const result = await quickReorderService.getUserReorders(userId, {
-      limit: limit ? parseInt(limit as string) : undefined,
-      offset: offset ? parseInt(offset as string) : undefined,
-      status: status as string
+      limit: Number(limit),
+      offset: Number(offset),
+      status: status ? String(status) : undefined
     });
 
     return res.status(200).json({
@@ -85,7 +77,7 @@ export const getUserReorders = async (req: AuthRequest, res: Response) => {
       total: result.total
     });
   } catch (error) {
-    console.error('Error in getUserReorders:', error);
+    logger.error('Error in getUserReorders:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -93,27 +85,32 @@ export const getUserReorders = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Get reorder by ID
+// Get reorder details
 export const getReorderById = async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.user?.id;
     const { id } = req.params;
-    const userId = req.user?.userId;
+    const reorderId = String(id);
 
-    const reorder = await quickReorderService.getReorderById(id, userId);
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
 
-    if (!reorder) {
+    const reorder = await quickReorderService.getReorderById(reorderId, userId);
+
+    if (reorder) {
+      return res.status(200).json({
+        success: true,
+        reorder
+      });
+    } else {
       return res.status(404).json({
         success: false,
         error: 'Reorder not found'
       });
     }
-
-    return res.status(200).json({
-      success: true,
-      reorder
-    });
   } catch (error) {
-    console.error('Error in getReorderById:', error);
+    logger.error('Error in getReorderById:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -124,24 +121,24 @@ export const getReorderById = async (req: AuthRequest, res: Response) => {
 // Cancel reorder
 export const cancelReorder = async (req: AuthRequest, res: Response) => {
   try {
+    const userId = req.user?.id;
     const { id } = req.params;
     const { reason } = req.body;
-    const userId = req.user?.userId;
 
-    if (!reason) {
-      return res.status(400).json({
-        success: false,
-        error: 'Cancellation reason is required'
-      });
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const result = await quickReorderService.cancelReorder(id, userId, reason);
+    if (!reason) {
+      return res.status(400).json({ success: false, error: 'Cancellation reason is required' });
+    }
+
+    const result = await quickReorderService.cancelReorder(String(id), userId, reason);
 
     if (result.success) {
       return res.status(200).json({
         success: true,
-        message: 'Reorder cancelled successfully',
-        reorder: result.reorder
+        message: 'Reorder cancelled successfully'
       });
     } else {
       return res.status(400).json({
@@ -150,7 +147,7 @@ export const cancelReorder = async (req: AuthRequest, res: Response) => {
       });
     }
   } catch (error) {
-    console.error('Error in cancelReorder:', error);
+    logger.error('Error in cancelReorder:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -158,10 +155,10 @@ export const cancelReorder = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Get reorder statistics
+// Get stats
 export const getReorderStats = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
@@ -173,7 +170,7 @@ export const getReorderStats = async (req: AuthRequest, res: Response) => {
       stats
     });
   } catch (error) {
-    console.error('Error in getReorderStats:', error);
+    logger.error('Error in getReorderStats:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -184,24 +181,21 @@ export const getReorderStats = async (req: AuthRequest, res: Response) => {
 // Get recommended reorders
 export const getRecommendedReorders = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
     const { limit = 5 } = req.query;
 
-    const recommended = await quickReorderService.getRecommendedReorders(
-      userId,
-      parseInt(limit as string)
-    );
+    const recommendations = await quickReorderService.getRecommendedReorders(userId, Number(limit));
 
     return res.status(200).json({
       success: true,
-      recommended
+      recommendations
     });
   } catch (error) {
-    console.error('Error in getRecommendedReorders:', error);
+    logger.error('Error in getRecommendedReorders:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'

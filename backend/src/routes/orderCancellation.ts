@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { 
+import {
     cancelOrder,
     bulkCancelOrders,
     getCancellationReasons,
@@ -7,14 +7,15 @@ import {
     getOrderForCancellation
 } from '../controllers/orderCancellationController';
 import { authLimiter } from '../middleware/rateLimiter';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
 // Protected routes (authentication required)
-router.post('/cancel/:orderId', authLimiter, cancelOrder);
-router.post('/bulk-cancel', authLimiter, bulkCancelOrders);
-router.get('/reasons', authLimiter, getCancellationReasons);
-router.get('/history', authLimiter, getOrderCancellationHistory);
-router.get('/check/:orderId', authLimiter, getOrderForCancellation);
+router.post('/cancel/:orderId', authenticateToken, authLimiter, cancelOrder);
+router.post('/bulk-cancel', authenticateToken, authLimiter, bulkCancelOrders);
+router.get('/reasons', authenticateToken, authLimiter, getCancellationReasons);
+router.get('/history', authenticateToken, authLimiter, getOrderCancellationHistory);
+router.get('/check/:orderId', authenticateToken, authLimiter, getOrderForCancellation);
 
 export default router;

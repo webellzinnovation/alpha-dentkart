@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product, ProductBadge } from '../types';
 import { subscribeToProduct, unsubscribeFromProduct, isSubscribedToProduct } from '../utils/stockNotificationService';
+import OptimizedImageMemo from './OptimizedImage';
 
 interface ProductCardProps {
   product: Product;
@@ -154,12 +155,14 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
       </div>
 
       {/* Product Image Area */}
-      <div className="relative aspect-square flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl overflow-hidden mb-3">
-        <img
+<div className="relative aspect-square flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl overflow-hidden mb-3">
+        <OptimizedImageMemo
+          src={product.image || '/placeholder-product.png'}
           alt={product.name}
           className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500 mix-blend-multiply dark:mix-blend-normal"
-          src={product.image}
-          loading="lazy"
+          width={300}
+          height={300}
+          quality={75}
         />
       </div>
 

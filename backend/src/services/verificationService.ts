@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { db, admin } from '../config/firebase'; // Firestore
 import fs from 'fs';
 import path from 'path';
+import logger from '../utils/logger';
 
 export interface VerificationSubmissionData {
   userId: string;
@@ -37,20 +38,18 @@ export interface VerificationAuditData {
 }
 
 export class VerificationService {
-  private prisma: PrismaClient;
   private readonly uploadDir: string;
   private readonly maxFileSize: number = 10 * 1024 * 1024; // 10MB
   private readonly allowedFileTypes = [
     'image/jpeg',
-    'image/jpg', 
+    'image/jpg',
     'image/png',
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ];
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
+  constructor() {
     this.uploadDir = path.join(process.cwd(), 'uploads', 'verification');
     this.ensureUploadDirectory();
   }
@@ -85,9 +84,9 @@ export class VerificationService {
   }): Promise<{ fileName: string; fileUrl: string }> {
     const fileName = this.generateUniqueFileName(file.originalName);
     const filePath = path.join(this.uploadDir, fileName);
-    
+
     await fs.promises.writeFile(filePath, file.buffer);
-    
+
     return {
       fileName,
       fileUrl: `/uploads/verification/${fileName}`
@@ -103,7 +102,7 @@ export class VerificationService {
           error: `Invalid file type: ${data.file.mimeType}. Allowed types: ${this.allowedFileTypes.join(', ')}`
         };
       }
-      
+
       if (!this.validateFileSize(data.file.size)) {
         return {
           success: false,
@@ -111,18 +110,14 @@ export class VerificationService {
         };
       }
 
-      // Check if user already has a pending verification of this type
-      const existingVerification = await this.prisma.verificationDocument.findFirst({
-        where: {
-          userId: data.userId,
-          documentType: data.documentType,
-          status: {
-            in: ['pending']
-          }
-        }
-      });
+      // Check for pending verification
+      const existingSnapshot = await db.collection('verification_documents')
+        .where('userId', '==', data.userId)
+        .where('documentType', '==', data.documentType)
+        .where('status', '==', 'pending')
+        .get();
 
-      if (existingVerification) {
+      if (!existingSnapshot.empty) {
         return {
           success: false,
           error: `You already have a ${data.documentType.replace('_', ' ')} verification under review. Please wait for the current verification to be completed.`
@@ -132,21 +127,21 @@ export class VerificationService {
       // Save file
       const savedFile = await this.saveFile(data.file);
 
-      // Create verification document
-      const verificationDocument = await this.prisma.verificationDocument.create({
-        data: {
-          userId: data.userId,
-          documentType: data.documentType,
-          fileName: savedFile.fileName,
-          fileUrl: savedFile.fileUrl,
-          fileSize: data.file.size,
-          mimeType: data.file.mimeType,
-          status: 'pending',
-          createdAt: new Date()
-        }
-      });
+      // Create doc
+      const verificationData = {
+        userId: data.userId,
+        documentType: data.documentType,
+        fileName: savedFile.fileName,
+        fileUrl: savedFile.fileUrl,
+        fileSize: data.file.size,
+        mimeType: data.file.mimeType,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
 
-      // Update user's additional verification data
+      const docRef = await db.collection('verification_documents').add(verificationData);
+
+      // Update user with additional data
       const updateData: any = {};
       if (data.additionalData?.licenseId) updateData.licenseId = data.additionalData.licenseId;
       if (data.additionalData?.licenseState) updateData.licenseState = data.additionalData.licenseState;
@@ -157,13 +152,10 @@ export class VerificationService {
       if (data.additionalData?.businessName) updateData.businessName = data.additionalData.businessName;
 
       if (Object.keys(updateData).length > 0) {
-        await this.prisma.user.update({
-          where: { id: data.userId },
-          data: updateData
-        });
+        await db.collection('users').doc(data.userId).set(updateData, { merge: true });
       }
 
-      // Create audit log
+      // Audit log
       await this.createAuditLog({
         userId: data.userId,
         action: 'submitted',
@@ -173,10 +165,10 @@ export class VerificationService {
 
       return {
         success: true,
-        document: verificationDocument
+        document: { id: docRef.id, ...verificationData }
       };
     } catch (error) {
-      console.error('Error submitting verification:', error);
+      logger.error('Error submitting verification:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to submit verification'
@@ -186,51 +178,61 @@ export class VerificationService {
 
   async getVerificationDocuments(userId: string): Promise<any[]> {
     try {
-      return await this.prisma.verificationDocument.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true
-            }
-          }
+      const snapshot = await db.collection('verification_documents')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      // Mock join with user if needed, but here we just return docs usually
+      // For consistency with Prisma include:
+      const userDoc = await db.collection('users').doc(userId).get();
+      const userData = userDoc.exists ? userDoc.data() : {};
+
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        user: {
+          id: userId,
+          name: userData?.name,
+          email: userData?.email,
+          phone: userData?.phone
         }
-      });
+      }));
     } catch (error) {
-      console.error('Error fetching verification documents:', error);
+      logger.error('Error fetching verification documents:', error);
       return [];
     }
   }
 
   async getVerificationById(documentId: string): Promise<any | null> {
     try {
-      return await this.prisma.verificationDocument.findUnique({
-        where: { id: documentId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-              userType: true,
-              licenseId: true,
-              licenseState: true,
-              specialization: true,
-              institution: true,
-              studentId: true,
-              gstNumber: true,
-              businessName: true
-            }
-          }
+      const doc = await db.collection('verification_documents').doc(documentId).get();
+      if (!doc.exists) return null;
+
+      const data = doc.data() as any;
+      const userDoc = await db.collection('users').doc(data.userId).get();
+      const userData = userDoc.exists ? userDoc.data() : {};
+
+      return {
+        id: doc.id,
+        ...data,
+        user: {
+          id: data.userId,
+          name: userData?.name,
+          email: userData?.email,
+          phone: userData?.phone,
+          userType: userData?.userType,
+          licenseId: userData?.licenseId,
+          licenseState: userData?.licenseState,
+          specialization: userData?.specialization,
+          institution: userData?.institution,
+          studentId: userData?.studentId,
+          gstNumber: userData?.gstNumber,
+          businessName: userData?.businessName
         }
-      });
+      };
     } catch (error) {
-      console.error('Error fetching verification by ID:', error);
+      logger.error('Error fetching verification by ID:', error);
       return null;
     }
   }
@@ -242,44 +244,46 @@ export class VerificationService {
     offset?: number;
   }): Promise<{ documents: any[]; total: number }> {
     try {
-      const where: any = {};
-      
+      let query = db.collection('verification_documents').orderBy('createdAt', 'desc');
+
       if (filters?.status) {
-        where.status = filters.status;
+        query = query.where('status', '==', filters.status);
       }
-      
       if (filters?.documentType) {
-        where.documentType = filters.documentType;
+        query = query.where('documentType', '==', filters.documentType);
       }
 
-      const [documents, total] = await Promise.all([
-        this.prisma.verificationDocument.findMany({
-          where,
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                phone: true,
-                userType: true,
-                licenseId: true,
-                institution: true,
-                gstNumber: true,
-                businessName: true
-              }
-            }
-          },
-          orderBy: { createdAt: 'desc' },
-          take: filters?.limit || 50,
-          skip: filters?.offset || 0
-        }),
-        this.prisma.verificationDocument.count({ where })
-      ]);
+      const snapshot = await query.get();
+      // Manual pagination
+      const total = snapshot.size;
+      const start = filters?.offset || 0;
+      const limit = filters?.limit || 50;
+      const slicedDocs = snapshot.docs.slice(start, start + limit);
+
+      const documents = await Promise.all(slicedDocs.map(async doc => {
+        const data = doc.data();
+        const userDoc = await db.collection('users').doc(data.userId).get();
+        const userData = userDoc.exists ? userDoc.data() : {};
+        return {
+          id: doc.id,
+          ...data,
+          user: {
+            id: data.userId,
+            name: userData?.name,
+            email: userData?.email,
+            phone: userData?.phone,
+            userType: userData?.userType,
+            licenseId: userData?.licenseId,
+            institution: userData?.institution,
+            gstNumber: userData?.gstNumber,
+            businessName: userData?.businessName
+          }
+        };
+      }));
 
       return { documents, total };
     } catch (error) {
-      console.error('Error fetching all verifications:', error);
+      logger.error('Error fetching all verifications:', error);
       return { documents: [], total: 0 };
     }
   }
@@ -290,59 +294,40 @@ export class VerificationService {
     auditData: Omit<VerificationAuditData, 'action'>
   ): Promise<VerificationResponse> {
     try {
-      // Get current verification
-      const currentVerification = await this.prisma.verificationDocument.findUnique({
-        where: { id: documentId }
-      });
-
-      if (!currentVerification) {
-        return {
-          success: false,
-          error: 'Verification document not found'
-        };
+      const docRef = db.collection('verification_documents').doc(documentId);
+      const doc = await docRef.get();
+      if (!doc.exists) {
+        return { success: false, error: 'Verification document not found' };
       }
+      const data = doc.data() as any;
 
-      // Update verification status
-      const updatedVerification = await this.prisma.verificationDocument.update({
-        where: { id: documentId },
-        data: {
-          status,
-          reviewedBy: auditData.performedBy,
-          reviewedAt: new Date(),
-          rejectionReason: auditData.rejectionReason
-        }
+      await docRef.update({
+        status,
+        reviewedBy: auditData.performedBy,
+        reviewedAt: new Date().toISOString(),
+        rejectionReason: auditData.rejectionReason || null
       });
 
-      // Update user's verification status if approved
       if (status === 'approved') {
-        await this.prisma.user.update({
-          where: { id: currentVerification.userId },
-          data: {
-            isVerified: true,
-            verificationStatus: 'approved'
-          }
+        await db.collection('users').doc(data.userId).update({
+          isVerified: true,
+          verificationStatus: 'approved'
         });
       }
 
-      // Create audit log
       await this.createAuditLog({
-        userId: currentVerification.userId,
+        userId: data.userId,
         action: status,
         performedBy: auditData.performedBy,
         notes: auditData.notes,
         rejectionReason: auditData.rejectionReason
       });
 
-      return {
-        success: true,
-        document: updatedVerification
-      };
+      const updatedDoc = await docRef.get();
+      return { success: true, document: { id: updatedDoc.id, ...updatedDoc.data() } };
+
     } catch (error) {
-      console.error('Error updating verification status:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to update verification status'
-      };
+      return { success: false, error: error instanceof Error ? error.message : 'Failed' };
     }
   }
 
@@ -354,132 +339,69 @@ export class VerificationService {
     byType: Record<string, number>;
   }> {
     try {
-      const [stats, byType] = await Promise.all([
-        this.prisma.verificationDocument.groupBy({
-          by: ['status'],
-          _count: {
-            status: true
-          }
-        }),
-        this.prisma.verificationDocument.groupBy({
-          by: ['documentType'],
-          _count: {
-            documentType: true
-          }
-        })
-      ]);
+      const snapshot = await db.collection('verification_documents').get();
+      const docs = snapshot.docs.map(d => d.data());
 
-      const statusCounts = stats.reduce((acc, item) => {
-        acc[item.status] = (item._count.status as number) || 0;
-        return acc;
-      }, {} as Record<string, number>);
+      const total = docs.length;
+      const pending = docs.filter(d => d.status === 'pending').length;
+      const approved = docs.filter(d => d.status === 'approved').length;
+      const rejected = docs.filter(d => d.status === 'rejected').length;
 
-      const typeCounts = byType.reduce((acc, item) => {
-        acc[item.documentType] = (item._count.documentType as number) || 0;
-        return acc;
-      }, {} as Record<string, number>);
+      const byType: Record<string, number> = {};
+      docs.forEach(d => {
+        byType[d.documentType] = (byType[d.documentType] || 0) + 1;
+      });
 
-      const total = Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
-
-      return {
-        total,
-        pending: statusCounts['pending'] || 0,
-        approved: statusCounts['approved'] || 0,
-        rejected: statusCounts['rejected'] || 0,
-        byType: typeCounts
-      };
+      return { total, pending, approved, rejected, byType };
     } catch (error) {
-      console.error('Error fetching verification stats:', error);
-      return {
-        total: 0,
-        pending: 0,
-        approved: 0,
-        rejected: 0,
-        byType: {}
-      };
+      return { total: 0, pending: 0, approved: 0, rejected: 0, byType: {} };
     }
   }
 
   async deleteVerification(documentId: string, userId?: string): Promise<VerificationResponse> {
     try {
-      // Get verification document
-      const verification = await this.prisma.verificationDocument.findUnique({
-        where: { id: documentId }
-      });
+      const docRef = db.collection('verification_documents').doc(documentId);
+      const doc = await docRef.get();
 
-      if (!verification) {
-        return {
-          success: false,
-          error: 'Verification document not found'
-        };
+      if (!doc.exists) return { success: false, error: 'Not found' };
+      const data = doc.data() as any;
+
+      if (userId && data.userId !== userId) {
+        return { success: false, error: 'Not authorized' };
       }
 
-      // Check if user is authorized (admin or document owner)
-      if (userId && verification.userId !== userId) {
-        return {
-          success: false,
-          error: 'Not authorized to delete this verification'
-        };
-      }
-
-      // Delete associated file
+      // Delete file
       try {
-        const filePath = path.join(process.cwd(), verification.fileUrl);
+        const filePath = path.join(process.cwd(), data.fileUrl);
         if (fs.existsSync(filePath)) {
           await fs.promises.unlink(filePath);
         }
-      } catch (fileError) {
-        console.error('Error deleting file:', fileError);
+      } catch (e) {
+        logger.error(e);
       }
 
-      // Delete verification document
-      await this.prisma.verificationDocument.delete({
-        where: { id: documentId }
-      });
-
-      return {
-        success: true
-      };
+      await docRef.delete();
+      return { success: true };
     } catch (error) {
-      console.error('Error deleting verification:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to delete verification'
-      };
+      return { success: false, error: 'Failed' };
     }
   }
 
   private async createAuditLog(data: VerificationAuditData): Promise<any> {
-    return await this.prisma.verificationAudit.create({
-      data: {
-        userId: data.userId,
-        action: data.action,
-        performedBy: data.performedBy,
-        notes: data.notes,
-        createdAt: new Date()
-      }
-    });
+    const log = {
+      ...data,
+      createdAt: new Date().toISOString()
+    };
+    await db.collection('verification_audit_logs').add(log);
+    return log;
   }
 
   async getVerificationAuditLogs(userId: string): Promise<any[]> {
-    try {
-      return await this.prisma.verificationAudit.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching verification audit logs:', error);
-      return [];
-    }
+    const snapshot = await db.collection('verification_audit_logs')
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   }
 
   async getAllVerificationAuditLogs(filters?: {
@@ -487,38 +409,26 @@ export class VerificationService {
     limit?: number;
     offset?: number;
   }): Promise<{ logs: any[]; total: number }> {
-    try {
-      const where: any = {};
-      
-      if (filters?.action) {
-        where.action = filters.action;
-      }
+    let query = db.collection('verification_audit_logs').orderBy('createdAt', 'desc');
+    if (filters?.action) query = query.where('action', '==', filters.action);
 
-      const [logs, total] = await Promise.all([
-        this.prisma.verificationAudit.findMany({
-          where,
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                userType: true
-              }
-            }
-          },
-          orderBy: { createdAt: 'desc' },
-          take: filters?.limit || 100,
-          skip: filters?.offset || 0
-        }),
-        this.prisma.verificationAudit.count({ where })
-      ]);
+    const snapshot = await query.get();
+    const total = snapshot.size;
+    const start = filters?.offset || 0;
+    const limit = filters?.limit || 100;
 
-      return { logs, total };
-    } catch (error) {
-      console.error('Error fetching all verification audit logs:', error);
-      return { logs: [], total: 0 };
-    }
+    const docs = snapshot.docs.slice(start, start + limit).map(d => ({ id: d.id, ...d.data() }));
+
+    // Mock user join
+    const logs = await Promise.all(docs.map(async (log: any) => {
+      const userDoc = await db.collection('users').doc(log.userId).get();
+      return {
+        ...log,
+        user: userDoc.exists ? { id: userDoc.id, ...userDoc.data() } : null
+      };
+    }));
+
+    return { logs, total };
   }
 }
 

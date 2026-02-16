@@ -1,31 +1,7 @@
 import { Router } from 'express';
 import { authLimiter } from '../middleware/rateLimiter';
 
-// Import controller functions that don't depend on complex types
-const couponController = {
-    createCoupon: null,
-    getAllCoupons: null,
-    getCouponByCode: null,
-    updateCoupon: null,
-    deleteCoupon: null,
-    validateCoupon: null,
-    applyCoupon: null,
-    getCouponAnalytics: null
-};
-
-try {
-    const controllerModule = await import('../controllers/couponController');
-    couponController.createCoupon = controllerModule.createCoupon;
-    couponController.getAllCoupons = controllerModule.getAllCoupons;
-    couponController.getCouponByCode = controllerModule.getCouponByCode;
-    couponController.updateCoupon = controllerModule.updateCoupon;
-    couponController.deleteCoupon = controllerModule.deleteCoupon;
-    couponController.validateCoupon = controllerModule.validateCoupon;
-    couponController.applyCoupon = controllerModule.applyCoupon;
-    couponController.getCouponAnalytics = controllerModule.getCouponAnalytics;
-} catch (err) {
-    console.error('Failed to load coupon controller:', err);
-}
+import * as couponController from '../controllers/couponController';
 
 const router = Router();
 

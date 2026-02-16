@@ -1,508 +1,206 @@
-import { Request, Response } from 'express';
-import { z } from 'zod';
+import { Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
+import { db } from '../config/firebase';
 import { v4 as uuidv4 } from 'uuid';
-
-interface AuthenticatedRequest extends Request {
-    user?: {
-        id: string;
-        role: string;
-    };
-}
+import { z } from 'zod';
+import logger from '../utils/logger';
 
 // Validation schemas
 const cancelOrderSchema = z.object({
-    reason: z.string().min(5, 'Reason must be at least 5 characters').max(500, 'Reason must not exceed 500 characters'),
-    refundRequested: z.boolean().default(false),
-    refundMethod: z.enum(['razorpay', 'phonepe', 'bank_transfer']).default('razorpay')
+    reason: z.string().min(3).max(500),
+    comments: z.string().optional()
 });
 
-const bulkCancelOrdersSchema = z.object({
-    orderIds: z.array(z.string()).min(1, 'At least one order ID is required'),
-    reason: z.string().min(5, 'Reason must be at least 5 characters').max(500, 'Reason must not exceed 500 characters'),
-    refundMethod: z.enum(['razorpay', 'phonepe', 'bank_transfer']).default('razorpay')
+const bulkCancelSchema = z.object({
+    orderIds: z.array(z.string()),
+    reason: z.string().min(3).max(500)
 });
 
 // Cancel a single order
-export const cancelOrder = async (req: AuthenticatedRequest, res: Response) => {
+export const cancelOrder = async (req: AuthRequest, res: Response) => {
     try {
+        const userId = req.user?.id;
         const { orderId } = req.params;
-        if (!orderId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Order ID is required'
-            });
-        }
 
-        const { reason, refundRequested, refundMethod } = req.body;
+        if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
         const validation = cancelOrderSchema.safeParse(req.body);
         if (!validation.success) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid input data',
-                errors: validation.error.errors
-            });
+            return res.status(400).json({ success: false, error: validation.error });
+        }
+        const { reason, comments } = validation.data;
+
+        // Fetch order
+        const orderRef = db.collection('orders').doc(String(orderId));
+        const orderDoc = await orderRef.get();
+
+        if (!orderDoc.exists) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Check if user can cancel this order
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Authentication required'
-            });
+        const order = orderDoc.data() as any;
+        if (order.userId !== userId) {
+            return res.status(403).json({ success: false, message: 'Unauthorized access to order' });
         }
 
-        const userId = req.user.id;
-        const cancelData = validation.data;
-
-        // Mock database query - replace with actual database call
-        const order = await prisma.order.findFirst({
-            where: {
-                id: orderId,
-                userId
-            }
-        });
-
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: 'Order not found'
-            });
+        // Logic to allow cancellation only if not shipped (simplified)
+        if (order.status === 'shipped' || order.status === 'delivered') {
+            return res.status(400).json({ success: false, message: 'Cannot cancel shipped/delivered order' });
         }
 
-        // Check if order can be cancelled
-        const cancellableStatuses = ['Processing', 'Confirmed'];
-        if (!cancellableStatuses.includes(order.status as any)) {
-            return res.status(400).json({
-                success: false,
-                message: `Order cannot be cancelled. Current status: ${order.status}`,
-                data: {
-                    currentStatus: order.status,
-                    cancellableStatuses
-                }
-            });
-        }
-
-        // Update order status to cancelled
-        const cancelledOrder = await prisma.order.update({
-            where: { id: orderId },
-            data: {
-                status: 'Cancelled',
-                updatedAt: new Date()
-            }
-        });
-
-        // If refund requested, create refund record
-        let refundRecord = null;
-        if (refundRequested) {
-            refundRecord = await prisma.refundTransaction.create({
-                data: {
-                    id: uuidv4(),
-                    returnId: order.id,
-                    paymentId: order.paymentId,
-                    amount: order.total || 0,
-                    status: 'pending',
-                    gateway: refundMethod,
-                    createdAt: new Date()
-                }
-            });
-        }
-
-        // Create cancellation audit trail
-        await prisma.returnRequest.create({
-            data: {
-                id: uuidv4(),
-                orderId,
-                userId,
-                orderItemId: 'all', // For order-level cancellation
-                reason: cancelData.reason,
-                condition: 'new', // Assuming items are new
-                refundType: refundRequested ? 'refund' : 'none',
-                refundAmount: refundRequested ? (order.total || 0) : 0,
-                status: 'approved',
-                approvedBy: 'system', // Auto-approved for order cancellation
-                approvedAt: new Date(),
-                completedAt: null,
-                trackingId: null,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            }
-        });
-
-        // Link refund transaction to return request
-        if (refundRecord) {
-            await prisma.returnRequest.update({
-                where: { id: refundRecord.id },
-                data: {
-                    refundTransactionId: refundRecord.id
-                }
-            });
-        }
-
-        res.json({
-            success: true,
-            message: 'Order cancelled successfully',
-            data: {
-                orderId,
-                cancelledAt: new Date().toISOString(),
-                reason: cancelData.reason,
-                refundRequested,
-                refundMethod: refundRequested ? refundMethod : null,
-                refundId: refundRecord?.id,
-                refundStatus: refundRecord?.status || null
-            }
-        });
-    } catch (error) {
-        console.error('Cancel order error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to cancel order',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
-    }
-};
-
-// Bulk cancel multiple orders
-export const bulkCancelOrders = async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const validation = bulkCancelOrdersSchema.safeParse(req.body);
-        if (!validation.success) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid input data',
-                errors: validation.error.errors
-            });
-        }
-
-        // Check admin access
-        if (!req.user || req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Admin access required'
-            });
-        }
-
-        const { orderIds, reason, refundMethod } = validation.data;
-        const userId = req.user.id;
-        const cancelData = { reason, refundMethod };
-
-        // Find and cancel orders
-        const orders = await prisma.order.findMany({
-            where: {
-                id: { in: orderIds },
-                userId,
-                status: { in: ['Processing', 'Confirmed'] }
-            }
-        });
-
-        if (orders.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No eligible orders found to cancel'
-            });
-        }
-
-        const cancellableOrders = orders.filter(order => 
-            !['Shipped', 'Delivered', 'Cancelled'].includes(order.status as any)
-        );
-
-        if (cancellableOrders.length !== orders.length) {
-            return res.status(400).json({
-                success: false,
-                message: 'Some orders cannot be cancelled',
-                data: {
-                    nonCancellableOrders: orders.filter(order => 
-                        ['Shipped', 'Delivered', 'Cancelled'].includes(order.status as any)
-                    ).map(order => ({
-                        orderId: order.id,
-                        status: order.status
-                    }))
-                }
-            });
-        }
-
-        // Cancel eligible orders and create cancellation records
-        const cancellationPromises = cancellableOrders.map(async (order) => {
-            const cancelledOrder = await prisma.order.update({
-                where: { id: order.id },
-                data: {
-                    status: 'Cancelled',
-                    updatedAt: new Date()
-                }
-            });
-
-            let refundRecord = null;
-            if (cancelData.refundRequested) {
-                refundRecord = await prisma.refundTransaction.create({
-                    data: {
-                        id: uuidv4(),
-                        returnId: order.id,
-                        paymentId: order.paymentId,
-                        amount: order.total || 0,
-                        status: 'pending',
-                        gateway: cancelData.refundMethod,
-                        createdAt: new Date()
-                    }
-                });
-            }
-
-            const returnRequestId = await prisma.returnRequest.create({
-                data: {
-                    id: uuidv4(),
-                    orderId,
-                    userId,
-                    orderItemId: 'all', // Order-level cancellation
-                    reason: cancelData.reason,
-                    condition: 'new',
-                    refundType: cancelData.refundRequested ? 'refund' : 'none',
-                    refundAmount: cancelData.refundRequested ? (order.total || 0) : 0,
-                    status: 'approved',
-                    approvedBy: 'system',
-                    approvedAt: new Date(),
-                    completedAt: null,
-                    trackingId: null,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                }
-            });
-
-            if (refundRecord) {
-                await prisma.returnRequest.update({
-                    where: { id: returnRequestId },
-                    data: {
-                        refundTransactionId: refundRecord.id
-                    }
-                });
-            }
-
-            return {
-                orderId: order.id,
-                cancelledAt: new Date(),
-                refundRecord: refundRecord?.id
-            };
-        });
-
-        const results = await Promise.all(cancellationPromises);
-
-        // Send WhatsApp notification for cancellations
-        const cancellationDetails = {
-            orderIds: results.map(r => r.orderId),
-            cancelledCount: results.length,
-            reason: cancelData.reason,
-            refundMethod: cancelData.refundRequested ? cancelData.refundMethod : null,
+        // Update order status
+        await orderRef.update({
+            status: 'cancelled',
+            cancellationReason: reason,
+            cancellationComments: comments,
             cancelledAt: new Date().toISOString()
-        };
+        });
 
-        // WhatsApp notification logic (mock for now)
-        console.log('WhatsApp cancellation notification:', cancellationDetails);
+        // Add to return requests/transactions if refund needed?
+        // Basic implementation: just log it in return_requests as a cancellation type?
+        await db.collection('return_requests').add({
+            id: uuidv4(),
+            orderId,
+            userId,
+            reason,
+            comments,
+            type: 'cancellation',
+            status: 'approved', // Auto approved for simple cancellation
+            createdAt: new Date().toISOString()
+        });
 
-        res.json({
+        return res.status(200).json({
             success: true,
-            message: `${results.length} order(s) cancelled successfully`,
-            data: {
-                cancelledOrders: results.map((result, index) => ({
-                    orderId: result.orderId,
-                    cancelledAt: result.cancelledAt,
-                    refundId: result.refundRecord
-                })),
-                summary: {
-                    totalRequested: orderIds.length,
-                    successfulCancellations: results.length,
-                    failedCancellations: 0
-                },
-                cancellationDetails
-            }
+            message: 'Order cancelled successfully'
         });
+
     } catch (error) {
-        console.error('Bulk cancel orders error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to cancel orders',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        logger.error('Cancel order error:', error);
+        res.status(500).json({ success: false, message: 'Failed to cancel order' });
     }
 };
 
-// Get cancellation reasons for dropdown
-export const getCancellationReasons = async (req: Request, res: Response) => {
+// Bulk cancel orders
+export const bulkCancelOrders = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+        const validation = bulkCancelSchema.safeParse(req.body);
+        if (!validation.success) {
+            return res.status(400).json({ success: false, error: validation.error });
+        }
+
+        const { orderIds, reason } = validation.data;
+        const results = [];
+
+        for (const orderId of orderIds) {
+            try {
+                const orderRef = db.collection('orders').doc(String(orderId));
+                const orderDoc = await orderRef.get();
+
+                if (!orderDoc.exists || orderDoc.data()?.userId !== userId) {
+                    results.push({ orderId, success: false, error: 'Not found or unauthorized' });
+                    continue;
+                }
+
+                const order = orderDoc.data() as any;
+                if (['shipped', 'delivered', 'cancelled'].includes(order.status)) {
+                    results.push({ orderId, success: false, error: 'Cannot cancel order in current status' });
+                    continue;
+                }
+
+                await orderRef.update({
+                    status: 'cancelled',
+                    cancellationReason: reason,
+                    cancelledAt: new Date().toISOString()
+                });
+
+                results.push({ orderId, success: true });
+
+            } catch (err) {
+                results.push({ orderId, success: false, error: 'Internal error' });
+            }
+        }
+
+        return res.status(200).json({ success: true, results });
+
+    } catch (error) {
+        logger.error('Bulk cancel error:', error);
+        res.status(500).json({ success: false, message: 'Failed to process bulk cancellation' });
+    }
+};
+
+// Get cancellation reasons
+export const getCancellationReasons = async (req: AuthRequest, res: Response) => {
     try {
         const reasons = [
-            { value: 'duplicate_order', label: 'Duplicate Order' },
-            { value: 'wrong_item', label: 'Wrong Item Delivered' },
-            { value: 'damaged_item', label: 'Item Damaged During Delivery' },
-            { value: 'delivery_delay', label: 'Delivery Delay' },
-            { value: 'found_cheaper_alternative', label: 'Found Cheaper Alternative' },
-            { value: 'no_longer_needed', label: 'No Longer Needed' },
-            { value: 'quality_issue', label: 'Quality Issue' },
-            { value: 'shipping_damage', label: 'Shipping Damage' },
-            { value: 'customer_request', label: 'Customer Request' },
-            { value: 'payment_issue', label: 'Payment Issue' },
-            { value: 'refund_policy', label: 'Refund Policy' },
-            { value: 'other', label: 'Other' }
+            'Found a better price elsewhere',
+            'Order created by mistake',
+            'Need to change shipping address',
+            'Need to change payment method',
+            'Estimated delivery time is too long',
+            'Other'
         ];
-
-        res.json({
-            success: true,
-            data: reasons
-        });
+        res.json({ success: true, reasons });
     } catch (error) {
-        console.error('Get cancellation reasons error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to retrieve cancellation reasons',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, message: 'Failed to fetch reasons' });
     }
 };
 
 // Get order cancellation history
-export const getOrderCancellationHistory = async (req: AuthenticatedRequest, res: Response) => {
+export const getOrderCancellationHistory = async (req: AuthRequest, res: Response) => {
     try {
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Authentication required'
-            });
-        }
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
 
-        const userId = req.user.id;
-        const { page = 1, limit = 20, startDate, endDate, status = '' } = req.query;
+        const snapshot = await db.collection('return_requests')
+            .where('userId', '==', userId)
+            .where('type', '==', 'cancellation')
+            .orderBy('createdAt', 'desc')
+            .get();
 
-        const whereClause: any = {
-            userId,
-            include: {
-                ReturnRequest: {
-                    select: {
-                        orderId: true,
-                        reason: true,
-                        status: true,
-                        createdAt: true,
-                        approvedBy: true
-                    }
-                }
-            }
-        };
-
-        if (startDate) {
-            whereClause.createdAt = { gte: new Date(startDate as string) };
-        }
-
-        if (endDate) {
-            whereClause.createdAt = { ...whereClause.createdAt, lte: new Date(endDate as string) };
-        }
-
-        if (status) {
-            whereClause.ReturnRequest = { 
-                ...whereClause.ReturnRequest,
-                status
-            };
-        }
-
-        const [cancellations, totalCount] = await prisma.$transaction([
-            prisma.returnRequest.findMany({
-                where: whereClause,
-                orderBy: { createdAt: 'desc' },
-                skip: (Number(page) - 1) * Number(limit),
-                take: Number(limit)
-            }),
-            prisma.returnRequest.count({ where: whereClause })
-        ]);
-
-        res.json({
-            success: true,
-            data: {
-                cancellations: cancellations,
-                pagination: {
-                    currentPage: Number(page),
-                    totalPages: Math.ceil(totalCount / Number(limit)),
-                    totalCount,
-                    hasNext: Number(page) * Number(limit) < totalCount
-                }
-            }
-        });
+        const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        res.json({ success: true, history });
     } catch (error) {
-        console.error('Get cancellation history error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to retrieve cancellation history',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, message: 'Failed to fetch history' });
     }
 };
 
-// Get order details for cancellation eligibility check
-export const getOrderForCancellation = async (req: AuthenticatedRequest, res: Response) => {
+// Check order eligibility for cancellation
+export const getOrderForCancellation = async (req: AuthRequest, res: Response) => {
     try {
+        const userId = req.user?.id;
         const { orderId } = req.params;
-        if (!orderId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Order ID is required'
-            });
+
+        if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+        const orderDoc = await db.collection('orders').doc(String(orderId)).get();
+        if (!orderDoc.exists || orderDoc.data()?.userId !== userId) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Authentication required'
-            });
-        }
-
-        const userId = req.user.id;
-        
-        // Mock order data
-        const order = await prisma.order.findFirst({
-            where: {
-                id: orderId,
-                userId
-            },
-            include: {
-                ReturnRequest: true,
-                ShippingTracking: true
-            }
-        });
-
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: 'Order not found'
-            });
-        }
-
-        // Check if order can be cancelled
-        const cancellableStatuses = ['Processing', 'Confirmed'];
-        const canCancel = cancellableStatuses.includes(order.status as any);
-        
-        const timeElapsed = Date.now() - new Date(order.createdAt).getTime();
-        const hoursElapsed = timeElapsed / (1000 * 60 * 60);
-
-        // Business rules for cancellation
-        const cancellationPolicy = {
-            canCancel,
-            hoursElapsed,
-            timeLimit: 24, // Can cancel within 24 hours
-            cancellationFee: canCancel && hoursElapsed > 2 ? 0.05 : 0, // 5% fee after 2 hours
-            allowedStatuses: cancellableStatuses
-        };
+        const order = orderDoc.data() as any;
+        const isEligible = !['shipped', 'delivered', 'cancelled'].includes(order.status);
 
         res.json({
             success: true,
-            data: {
-                orderId,
+            eligible: isEligible,
+            order: {
+                id: orderDoc.id,
                 status: order.status,
-                createdAt: order.createdAt,
-                totalAmount: order.total,
-                cancellationPolicy,
-                hasReturns: order.ReturnRequest?.length > 0 || false,
-                shippingStatus: order.ShippingTracking?.status
+                total: order.total
             }
         });
     } catch (error) {
-        console.error('Get order for cancellation error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to retrieve order details',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, message: 'Failed to check eligibility' });
     }
+};
+
+export default {
+    cancelOrder,
+    bulkCancelOrders,
+    getCancellationReasons,
+    getOrderCancellationHistory,
+    getOrderForCancellation
 };

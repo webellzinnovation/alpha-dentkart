@@ -3,9 +3,10 @@ import { verifyToken } from '../utils/jwt';
 
 export interface AuthRequest extends Request {
     user?: {
-        userId: string;
+        id: string; // Firebase UID
         role: string;
         email: string;
+        userType?: string;
     };
 }
 

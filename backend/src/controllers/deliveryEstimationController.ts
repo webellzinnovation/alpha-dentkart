@@ -1,15 +1,15 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
 import DeliveryEstimationService, { DeliveryEstimationRequest } from '../services/deliveryEstimationService';
+import logger from '../utils/logger';
 
-const prisma = new PrismaClient();
-const deliveryEstimationService = new DeliveryEstimationService(prisma);
+// No Prisma Client
+const deliveryEstimationService = new DeliveryEstimationService();
 
 // Calculate delivery estimation
 export const calculateDeliveryEstimation = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const {
       pincode,
       items,
@@ -52,9 +52,9 @@ export const calculateDeliveryEstimation = async (req: AuthRequest, res: Respons
       // Validate dimensions if provided
       if (item.dimensions) {
         const { length, width, height } = item.dimensions;
-        if (!length || !width || !height || 
-            length <= 0 || width <= 0 || height <= 0 ||
-            length > 200 || width > 200 || height > 200) {
+        if (!length || !width || !height ||
+          length <= 0 || width <= 0 || height <= 0 ||
+          length > 200 || width > 200 || height > 200) {
           return res.status(400).json({
             success: false,
             error: `Invalid dimensions for item at index ${index}: All dimensions must be positive and not exceed 200cm`
@@ -95,7 +95,7 @@ export const calculateDeliveryEstimation = async (req: AuthRequest, res: Respons
       });
     }
   } catch (error) {
-    console.error('Error in calculateDeliveryEstimation:', error);
+    logger.error('Error in calculateDeliveryEstimation:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -106,7 +106,7 @@ export const calculateDeliveryEstimation = async (req: AuthRequest, res: Respons
 // Get delivery history for user
 export const getDeliveryHistory = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
@@ -123,7 +123,7 @@ export const getDeliveryHistory = async (req: AuthRequest, res: Response) => {
       history
     });
   } catch (error) {
-    console.error('Error in getDeliveryHistory:', error);
+    logger.error('Error in getDeliveryHistory:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -134,7 +134,7 @@ export const getDeliveryHistory = async (req: AuthRequest, res: Response) => {
 // Get delivery analytics
 export const getDeliveryAnalytics = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
@@ -146,7 +146,7 @@ export const getDeliveryAnalytics = async (req: AuthRequest, res: Response) => {
       analytics
     });
   } catch (error) {
-    console.error('Error in getDeliveryAnalytics:', error);
+    logger.error('Error in getDeliveryAnalytics:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -177,7 +177,7 @@ export const checkPincodeServiceability = async (req: AuthRequest, res: Response
 
     if (serviceabilityResult.success && serviceabilityResult.estimation) {
       const { pincode: pincodeData } = serviceabilityResult.estimation;
-      
+
       return res.status(200).json({
         success: true,
         serviceable: pincodeData.serviceable,
@@ -203,7 +203,7 @@ export const checkPincodeServiceability = async (req: AuthRequest, res: Response
       });
     }
   } catch (error) {
-    console.error('Error in checkPincodeServiceability:', error);
+    logger.error('Error in checkPincodeServiceability:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -238,7 +238,7 @@ export const getShippingCost = async (req: AuthRequest, res: Response) => {
         success: true,
         shippingOptions: result.estimation.shippingOptions,
         pincode: result.estimation.pincode,
-        totalWeight: result.estimation.shippingOptions.reduce((sum, opt) => 
+        totalWeight: result.estimation.shippingOptions.reduce((sum, opt) =>
           sum + (opt.cost / 20), 0 // Approximate weight from cost
         ),
         totalDimensions: {
@@ -255,7 +255,7 @@ export const getShippingCost = async (req: AuthRequest, res: Response) => {
       });
     }
   } catch (error) {
-    console.error('Error in getShippingCost:', error);
+    logger.error('Error in getShippingCost:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -266,7 +266,7 @@ export const getShippingCost = async (req: AuthRequest, res: Response) => {
 // Get estimated delivery date for cart (helper endpoint)
 export const getCartDeliveryEstimate = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
@@ -325,7 +325,7 @@ export const getCartDeliveryEstimate = async (req: AuthRequest, res: Response) =
       });
     }
   } catch (error) {
-    console.error('Error in getCartDeliveryEstimate:', error);
+    logger.error('Error in getCartDeliveryEstimate:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'

@@ -141,3 +141,5 @@ export const Theme3Demo: React.FC = () => {
         </div>
     );
 };
+
+export default Theme3Demo;

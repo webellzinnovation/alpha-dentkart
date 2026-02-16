@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
+import { db, admin } from '../config/firebase'; // Firestore
 import { z } from 'zod';
+import logger from '../utils/logger';
 
 interface AuthenticatedRequest extends Request {
     user?: {
@@ -7,118 +9,6 @@ interface AuthenticatedRequest extends Request {
         role: string;
     };
 }
-
-interface CreateCouponRequest {
-    code: string;
-    type: 'percentage' | 'fixed' | 'free_shipping';
-    value: number;
-    minimumAmount?: number;
-    maximumDiscount?: number;
-    usageLimit?: number;
-    userUsageLimit?: number;
-    startsAt: string;
-    expiresAt: string;
-    applicableProducts?: string;
-    applicableCategories?: string;
-    userType?: 'all' | 'regular' | 'dental-doctor' | 'student' | 'supplier';
-    isActive?: boolean;
-}
-
-interface ValidateCouponRequest {
-    code: string;
-    cartTotal: number;
-    userId?: string;
-}
-
-interface ApplyCouponRequest {
-    code: string;
-    cartTotal: number;
-    userId?: string;
-}
-
-interface Coupon {
-    id: string;
-    code: string;
-    type: string;
-    value: number;
-    minimumAmount?: number;
-    maximumDiscount?: number;
-    usageLimit?: number;
-    usageCount: number;
-    isActive: boolean;
-    startsAt: string;
-    expiresAt: string;
-    applicableProducts?: string;
-    applicableCategories?: string;
-    userType?: string;
-    createdAt: string;
-    updatedAt: string;
-}
-
-interface UsedCoupon {
-    id: string;
-    couponId: string;
-    userId?: string;
-    orderId?: string;
-    discountAmount: number;
-    createdAt: string;
-}
-
-interface CouponValidation {
-    success: boolean;
-    message: string;
-    coupon?: Coupon;
-    discountAmount?: number;
-    discountedTotal?: number;
-    minimumAmount?: number;
-    currentAmount?: number;
-    usageLimit?: number;
-    currentUsage?: number;
-    userUsageLimit?: number;
-}
-
-interface CouponApplication {
-    success: boolean;
-    message: string;
-    coupon?: Coupon;
-    discountAmount?: number;
-    discountedTotal?: number;
-    usedCouponId?: string;
-}
-
-// Simple mock database
-let coupons: Coupon[] = [
-    {
-        id: 'CPN_WELCOME10_001',
-        code: 'WELCOME10',
-        type: 'percentage',
-        value: 10,
-        minimumAmount: 500,
-        usageLimit: 1000,
-        userUsageLimit: 1,
-        isActive: true,
-        startsAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 6 * 30 * 24 * 60 * 1000).toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    },
-    {
-        id: 'CPN_FREESHIP_002',
-        code: 'FREESHIP',
-        type: 'free_shipping',
-        value: 0,
-        minimumAmount: 2000,
-        usageLimit: 5000,
-        userUsageLimit: 2,
-        isActive: true,
-        startsAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 3 * 30 * 24 * 60 * 1000).toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    }
-];
-
-let usedCoupons: UsedCoupon[] = [];
 
 // Validation schemas
 const createCouponSchema = z.object({
@@ -133,44 +23,23 @@ const createCouponSchema = z.object({
     expiresAt: z.string().datetime('Invalid expiry date format'),
     applicableProducts: z.string().optional(),
     applicableCategories: z.string().optional(),
-    userType: z.enum(['all', 'regular', 'dental-doctor', 'student', 'supplier']).optional(),
+    userType: z.string().optional(),
     isActive: z.boolean().default(true)
 });
 
 const validateCouponSchema = z.object({
     code: z.string().min(3, 'Coupon code is required'),
-    cartTotal: z.number().min(0, 'Cart total is required')
+    cartTotal: z.number().min(0, 'Cart total is required'),
+    userId: z.string().optional()
 });
-
-// Helper functions
-const findCouponByCode = (code: string): Coupon | null => {
-    return coupons.find(c => c.code.toUpperCase() === code.toUpperCase()) || null;
-};
-
-const canApplyCoupon = (coupon: Coupon, cartTotal: number, userId?: string): boolean => {
-    if (!coupon.isActive) return false;
-    if (new Date(coupon.expiresAt) < new Date()) return false;
-    if (coupon.minimumAmount && cartTotal < coupon.minimumAmount) return false;
-    if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) return false;
-    if (coupon.maximumDiscount) {
-        const discountAmount = coupon.type === 'percentage' ? cartTotal * (coupon.value / 100) : coupon.value;
-        return discountAmount <= coupon.maximumDiscount;
-    }
-    if (coupon.userType && userId) {
-        // For demo, allow all user types
-        return true;
-    }
-    return true;
-};
 
 // Create a new coupon
 export const createCoupon = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        if (!req.user || req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Admin access required'
-            });
+        // Auth check (middleware should handle, but double check role)
+        const user = (req as any).user;
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Admin access required' });
         }
 
         const validation = createCouponSchema.safeParse(req.body);
@@ -178,42 +47,37 @@ export const createCoupon = async (req: AuthenticatedRequest, res: Response) => 
             return res.status(400).json({
                 success: false,
                 message: 'Invalid input data',
-                errors: validation.error.errors
+                errors: validation.error.issues
             });
         }
 
         const couponData = validation.data;
-        const couponId = `CPN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-        const coupon: Coupon = {
-            id: couponId,
-            code: couponData.code!,
-            type: couponData.type!,
-            value: couponData.value!,
-            minimumAmount: couponData.minimumAmount,
-            maximumDiscount: couponData.maximumDiscount,
-            usageLimit: couponData.usageLimit,
-            userUsageLimit: couponData.userUsageLimit,
+        // Check if code exists
+        const couponsRef = db.collection('coupons');
+        const snapshot = await couponsRef.where('code', '==', couponData.code).limit(1).get();
+
+        if (!snapshot.empty) {
+            return res.status(400).json({ success: false, message: 'Coupon code already exists' });
+        }
+
+        // Create
+        const newCoupon = {
+            ...couponData,
             usageCount: 0,
-            isActive: couponData.isActive !== undefined ? couponData.isActive : true,
-            startsAt: couponData.startsAt!,
-            expiresAt: couponData.expiresAt!,
-            applicableProducts: couponData.applicableProducts,
-            applicableCategories: couponData.applicableCategories,
-            userType: couponData.userType,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
-        coupons.push(coupon);
+        const docRef = await couponsRef.add(newCoupon);
 
         res.status(201).json({
             success: true,
             message: 'Coupon created successfully',
-            data: coupon
+            data: { id: docRef.id, ...newCoupon }
         });
     } catch (error) {
-        console.error('Create coupon error:', error);
+        logger.error('Create coupon error:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to create coupon',
@@ -225,24 +89,20 @@ export const createCoupon = async (req: AuthenticatedRequest, res: Response) => 
 // Get all coupons
 export const getAllCoupons = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        if (!req.user || req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Admin access required'
-            });
+        const user = (req as any).user;
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Admin access required' });
         }
+
+        const snapshot = await db.collection('coupons').orderBy('createdAt', 'desc').get();
+        const coupons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         res.json({
             success: true,
             data: coupons
         });
     } catch (error) {
-        console.error('Get coupons error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to retrieve coupons',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, message: 'Failed to retrieve coupons' });
     }
 };
 
@@ -250,268 +110,178 @@ export const getAllCoupons = async (req: AuthenticatedRequest, res: Response) =>
 export const getCouponByCode = async (req: Request, res: Response) => {
     try {
         const { code } = req.params;
-        if (!code) {
-            return res.status(400).json({
-                success: false,
-                message: 'Coupon code is required'
-            });
+        if (!code) return res.status(400).json({ success: false, message: 'Code required' });
+
+        const snapshot = await db.collection('coupons').where('code', '==', code).limit(1).get();
+
+        if (snapshot.empty) {
+            return res.status(404).json({ success: false, message: 'Coupon not found' });
         }
 
-        const coupon = findCouponByCode(code);
-        if (!coupon) {
-            return res.status(404).json({
-                success: false,
-                message: 'Coupon not found'
-            });
-        }
+        const coupon = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
 
-        res.json({
-            success: true,
-            data: coupon
-        });
+        res.json({ success: true, data: coupon });
     } catch (error) {
-        console.error('Get coupon by code error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to retrieve coupon',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, message: 'Failed to retrieve coupon' });
     }
 };
 
 // Update coupon
 export const updateCoupon = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        if (!req.user || req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Admin access required'
-            });
+        const user = (req as any).user;
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Admin access required' });
         }
 
         const { id } = req.params;
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                message: 'Coupon ID is required'
-            });
-        }
+        const validation = createCouponSchema.partial().safeParse(req.body);
 
-        const validation = createCouponSchema.safeParse(req.body);
         if (!validation.success) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid input data',
-                errors: validation.error.errors
-            });
+            return res.status(400).json({ success: false, errors: validation.error.issues });
         }
 
-        const index = coupons.findIndex(c => c.id === id);
-        if (index === -1) {
-            return res.status(404).json({
-                success: false,
-                message: 'Coupon not found'
-            });
-        }
-
-        coupons[index] = { ...coupons[index], ...validation.data, updatedAt: new Date().toISOString() };
-
-        res.json({
-            success: true,
-            message: 'Coupon updated successfully',
-            data: coupons[index]
+        await db.collection('coupons').doc(String(id)).update({
+            ...validation.data,
+            updatedAt: new Date().toISOString()
         });
+
+        // Fetch updated
+        const doc = await db.collection('coupons').doc(String(id)).get();
+
+        res.json({ success: true, message: 'Coupon updated', data: { id: doc.id, ...doc.data() } });
     } catch (error) {
-        console.error('Update coupon error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to update coupon',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, message: 'Failed to update coupon' });
     }
 };
 
 // Delete coupon
 export const deleteCoupon = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        if (!req.user || req.user.role !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Admin access required'
-            });
+        const user = (req as any).user;
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Admin access required' });
         }
 
         const { id } = req.params;
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                message: 'Coupon ID is required'
-            });
-        }
+        await db.collection('coupons').doc(String(id)).delete();
 
-        const index = coupons.findIndex(c => c.id === id);
-        if (index === -1) {
-            return res.status(404).json({
-                success: false,
-                message: 'Coupon not found'
-            });
-        }
-
-        coupons.splice(index, 1);
-
-        res.json({
-            success: true,
-            message: 'Coupon deleted successfully'
-        });
+        res.json({ success: true, message: 'Coupon deleted successfully' });
     } catch (error) {
-        console.error('Delete coupon error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to delete coupon',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, message: 'Failed to delete coupon' });
     }
 };
 
-// Validate coupon for cart
+// Validate coupon logic
+const validateCouponLogic = async (code: string, cartTotal: number, userId?: string) => {
+    const snapshot = await db.collection('coupons').where('code', '==', code).limit(1).get();
+
+    if (snapshot.empty) {
+        return { valid: false, message: 'Coupon not found' };
+    }
+
+    const doc = snapshot.docs[0];
+    const foundCoupon = { id: doc.id, ...doc.data() } as any;
+
+    // Checks
+    if (!foundCoupon.isActive) return { valid: false, message: 'Coupon is inactive' };
+    if (new Date() > new Date(foundCoupon.expiresAt)) return { valid: false, message: 'Coupon expired' };
+    if (new Date() < new Date(foundCoupon.startsAt)) return { valid: false, message: 'Coupon not started yet' };
+    if (foundCoupon.minimumAmount && cartTotal < foundCoupon.minimumAmount) {
+        return { valid: false, message: `Minimum order amount of ${foundCoupon.minimumAmount} required` };
+    }
+    if (foundCoupon.usageLimit && (foundCoupon.usageCount || 0) >= foundCoupon.usageLimit) {
+        return { valid: false, message: 'Coupon usage limit reached' };
+    }
+
+    // Check user usage limit if userId provided
+    if (userId && foundCoupon.userUsageLimit) {
+        const usedSnapshot = await db.collection('used_coupons')
+            .where('couponId', '==', foundCoupon.id)
+            .where('userId', '==', userId)
+            .get();
+
+        if (usedSnapshot.size >= foundCoupon.userUsageLimit) {
+            return { valid: false, message: 'You have exceeded the usage limit for this coupon' };
+        }
+    }
+
+    // Calculate discount
+    let discount = 0;
+    if (foundCoupon.type === 'percentage') {
+        discount = (cartTotal * foundCoupon.value) / 100;
+        if (foundCoupon.maximumDiscount && discount > foundCoupon.maximumDiscount) {
+            discount = foundCoupon.maximumDiscount;
+        }
+    } else if (foundCoupon.type === 'fixed') {
+        discount = foundCoupon.value;
+    } else if (foundCoupon.type === 'free_shipping') {
+        discount = 0;
+    }
+
+    return {
+        valid: true,
+        coupon: foundCoupon,
+        discountAmount: discount
+    };
+};
+
 export const validateCoupon = async (req: Request, res: Response) => {
     try {
-        const validation = validateCouponSchema.safeParse(req.body);
-        if (!validation.success) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid input data',
-                errors: validation.error.errors
-            });
-        }
+        const { code, cartTotal, userId } = validateCouponSchema.parse(req.body);
 
-        const { code, cartTotal, userId } = validation.data;
+        const result = await validateCouponLogic(code, cartTotal, userId);
 
-        const coupon = findCouponByCode(code);
-        let validationResponse: CouponValidation = {
-            success: true,
-            coupon,
-            discountAmount: 0,
-            discountedTotal: cartTotal
-        };
-
-        if (!coupon) {
-            validationResponse = {
-                success: false,
-                message: 'Coupon not found or expired'
-            };
-        } else if (!canApplyCoupon(coupon, cartTotal, userId)) {
-            validationResponse = {
-                success: false,
-                message: coupon.minimumAmount 
-                    ? `Minimum order amount of ₹${coupon.minimumAmount} required`
-                    : coupon.usageLimit 
-                    ? 'Coupon usage limit reached'
-                    : coupon.maximumDiscount
-                    ? 'Maximum discount amount exceeded'
-                    : 'User type restriction',
-                minimumAmount: coupon.minimumAmount,
-                currentAmount: cartTotal,
-                usageLimit: coupon.usageLimit,
-                currentUsage: coupon.usageCount,
-                userUsageLimit: coupon.userUsageLimit
-            };
-        }
-
-        if (coupon && canApplyCoupon(coupon, cartTotal, userId)) {
-            validationResponse.discountAmount = coupon.type === 'percentage' 
-                ? cartTotal * (coupon.value / 100)
-                : coupon.type === 'fixed' 
-                    ? coupon.value
-                    : coupon.type === 'free_shipping' 
-                        ? 150 // Example shipping charge
-                        : 0;
-        }
-
-        validationResponse.discountedTotal = cartTotal - validationResponse.discountAmount;
-
-        res.json(validationResponse);
-    } catch (error) {
-        console.error('Validate coupon error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to validate coupon',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
-    }
-};
-
-// Apply coupon to cart
-export const applyCoupon = async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const validation = validateCouponSchema.safeParse(req.body);
-        if (!validation.success) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid input data',
-                errors: validation.error.errors
-            });
-        }
-
-        const { code, cartTotal, userId } = validation.data;
-
-        const coupon = findCouponByCode(code);
-        if (!coupon) {
-            return res.status(404).json({
-                success: false,
-                message: 'Coupon not found or expired'
-            });
-        }
-
-        const discountAmount = coupon.type === 'percentage' 
-            ? cartTotal * (coupon.value / 100)
-            : coupon.type === 'fixed' 
-                ? coupon.value
-                : coupon.type === 'free_shipping' 
-                    ? 150 // Example shipping charge
-                    : 0;
-
-        const usedCoupon: UsedCoupon = userId ? {
-            id: `UC_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            couponId: coupon.id,
-            userId,
-            orderId: null, // Will be set when order is created
-            discountAmount,
-            createdAt: new Date().toISOString()
-        } : null;
-
-        if (userId) {
-            usedCoupons.push(usedCoupon);
+        if (!result.valid) {
+            return res.status(400).json({ success: false, message: result.message });
         }
 
         res.json({
             success: true,
-            message: 'Coupon applied successfully',
-            data: {
-                coupon: {
-                    id: coupon.id,
-                    code: coupon.code,
-                    type: coupon.type,
-                    value: coupon.value,
-                    description: coupon.type === 'percentage' 
-                        ? `${coupon.value}% discount` 
-                        : coupon.type === 'fixed' 
-                            ? `₹${coupon.value} off` 
-                            : coupon.type === 'free_shipping' 
-                                ? 'Free shipping' 
-                                : `${coupon.value} discount`
-                },
-                discountAmount,
-                discountedTotal: cartTotal - discountAmount,
-                usedCouponId: usedCoupon?.id
+            coupon: result.coupon,
+            discountAmount: result.discountAmount,
+            discountedTotal: cartTotal - (result.discountAmount || 0)
+        });
+    } catch (error) {
+        if (error instanceof z.ZodError) return res.status(400).json({ success: false, errors: error.issues });
+        res.status(500).json({ success: false, message: 'Validation failed' });
+    }
+};
+
+export const applyCoupon = async (req: AuthenticatedRequest, res: Response) => {
+    return validateCoupon(req, res);
+};
+
+// Get coupon analytics (admin only)
+export const getCouponAnalytics = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const user = req.user;
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Admin access required' });
+        }
+
+        const snapshot = await db.collection('coupons').get();
+        const coupons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+
+        const totalCoupons = coupons.length;
+        const activeCoupons = coupons.filter(c => c.isActive).length;
+        const totalUsage = coupons.reduce((acc, c) => acc + (c.usageCount || 0), 0);
+
+        // Mock trends
+        const usageTrends = [
+            { date: new Date().toISOString().split('T')[0], count: totalUsage }
+        ];
+
+        res.json({
+            success: true,
+            analytics: {
+                totalCoupons,
+                activeCoupons,
+                totalUsage,
+                usageTrends
             }
         });
     } catch (error) {
-        console.error('Apply coupon error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to apply coupon',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        res.status(500).json({ success: false, message: 'Failed to fetch analytics' });
     }
 };

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import shiprocketService from '../../../utils/shiprocketService';
+import shiprocketService from '../services/shiprocketService';
+import logger from '../utils/logger';
 
 // Check if a pincode is serviceable
 export const checkPincodeServiceability = async (req: Request, res: Response) => {
@@ -43,7 +44,7 @@ export const checkPincodeServiceability = async (req: Request, res: Response) =>
       }
     });
   } catch (error) {
-    console.error('Pincode serviceability check error:', error);
+    logger.error('Pincode serviceability check error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to check pincode serviceability',
@@ -99,7 +100,7 @@ export const getShippingRates = async (req: Request, res: Response) => {
       }))
     });
   } catch (error) {
-    console.error('Shipping rates error:', error);
+    logger.error('Shipping rates error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch shipping rates',
@@ -140,7 +141,7 @@ export const getEstimatedDelivery = async (req: Request, res: Response) => {
       data: estimation
     });
   } catch (error) {
-    console.error('Delivery estimation error:', error);
+    logger.error('Delivery estimation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to estimate delivery date',
@@ -188,7 +189,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Shiprocket order creation error:', error);
+    logger.error('Shiprocket order creation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create order in Shiprocket',
@@ -235,7 +236,7 @@ export const trackShipment = async (req: Request, res: Response) => {
         deliveredDate: tracking.delivered_date,
         estimatedDelivery: tracking.estimated_delivery,
         trackUrl: tracking.track_url,
-        shipmentTrack: tracking.shipment_track.map(track => ({
+        shipmentTrack: tracking.shipment_track.map((track: any) => ({
           id: track.id,
           date: track.date,
           status: track.status,
@@ -245,7 +246,7 @@ export const trackShipment = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Shipment tracking error:', error);
+    logger.error('Shipment tracking error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to track shipment',
@@ -282,7 +283,7 @@ export const cancelShiprocketOrder = async (req: Request, res: Response) => {
       data: response
     });
   } catch (error) {
-    console.error('Order cancellation error:', error);
+    logger.error('Order cancellation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to cancel order',
@@ -315,7 +316,7 @@ export const getAvailableCouriers = async (req: Request, res: Response) => {
       data: couriers
     });
   } catch (error) {
-    console.error('Available couriers error:', error);
+    logger.error('Available couriers error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch available couriers',
@@ -378,7 +379,7 @@ export const calculateShippingCharges = async (req: Request, res: Response) => {
     if (!cheapestRate) {
       // Fallback to any available rate
       const anyRate = rates.sort((a, b) => a.total - b.total)[0];
-      
+
       return res.json({
         success: true,
         message: 'Shipping charges calculated',
@@ -408,7 +409,7 @@ export const calculateShippingCharges = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    console.error('Shipping calculation error:', error);
+    logger.error('Shipping calculation error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to calculate shipping charges',

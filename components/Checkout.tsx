@@ -420,3 +420,5 @@ export const Checkout: React.FC<CheckoutProps> = ({
         </div>
     );
 };
+
+export default Checkout;

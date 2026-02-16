@@ -21,7 +21,7 @@ interface HeaderProps {
   setIsMobileMenuOpen: (isOpen: boolean) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+const HeaderComponent: React.FC<HeaderProps> = ({
   onNavigate,
   cartCount,
   cartTotal,
@@ -55,7 +55,8 @@ export const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
-    };
+};
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -484,6 +485,9 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
       </div>
-    </>
+</>
   );
 };
+
+// Wrap with React.memo to prevent unnecessary re-renders
+export const Header = React.memo(HeaderComponent);

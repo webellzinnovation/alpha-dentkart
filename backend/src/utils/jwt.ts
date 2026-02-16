@@ -4,9 +4,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_in_producti
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export interface JWTPayload {
-    userId: string;
+    id: string;
     role: string;
     email: string;
+    userType?: string;
 }
 
 export function generateToken(payload: JWTPayload): string {

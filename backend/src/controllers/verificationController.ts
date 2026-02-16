@@ -1,12 +1,11 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import multer from 'multer';
-import path from 'path';
-import { PrismaClient } from '@prisma/client';
-import VerificationService, { VerificationSubmissionData, VerificationAuditData } from '../services/verificationService';
+import VerificationService, { VerificationSubmissionData } from '../services/verificationService';
+import logger from '../utils/logger';
 
-const prisma = new PrismaClient();
-const verificationService = new VerificationService(prisma);
+// No longer need Prisma Client here, as Service handles DB and is migrated
+const verificationService = new VerificationService(); // Removed prisma arg
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
@@ -24,7 +23,7 @@ const upload = multer({
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
-    
+
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
@@ -36,7 +35,10 @@ const upload = multer({
 // Submit verification document
 export const submitVerification = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id; // Check check auth middleware if it sets userId or id
+    // Auth middleware sets req.user = { userId: string ... } usually?
+    // Let's assume standard. If previous code used userId, we stick to it.
+
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
@@ -82,7 +84,7 @@ export const submitVerification = async (req: AuthRequest, res: Response) => {
       });
     }
   } catch (error) {
-    console.error('Error in submitVerification:', error);
+    logger.error('Error in submitVerification:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -93,7 +95,7 @@ export const submitVerification = async (req: AuthRequest, res: Response) => {
 // Get user's verification documents
 export const getUserVerifications = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
@@ -105,7 +107,7 @@ export const getUserVerifications = async (req: AuthRequest, res: Response) => {
       documents
     });
   } catch (error) {
-    console.error('Error in getUserVerifications:', error);
+    logger.error('Error in getUserVerifications:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -117,7 +119,7 @@ export const getUserVerifications = async (req: AuthRequest, res: Response) => {
 export const getVerificationById = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const userRole = req.user?.role;
     const verificationId = Array.isArray(id) ? id[0] : id;
 
@@ -143,7 +145,7 @@ export const getVerificationById = async (req: AuthRequest, res: Response) => {
       document
     });
   } catch (error) {
-    console.error('Error in getVerificationById:', error);
+    logger.error('Error in getVerificationById:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -179,7 +181,7 @@ export const getAllVerifications = async (req: AuthRequest, res: Response) => {
       total: result.total
     });
   } catch (error) {
-    console.error('Error in getAllVerifications:', error);
+    logger.error('Error in getAllVerifications:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -193,7 +195,7 @@ export const updateVerificationStatus = async (req: AuthRequest, res: Response) 
     const { id } = req.params;
     const verificationId = Array.isArray(id) ? id[0] : id;
     const { status, notes, rejectionReason } = req.body;
-    const reviewerId = req.user?.userId;
+    const reviewerId = req.user?.id;
 
     if (!reviewerId || req.user?.role !== 'admin') {
       return res.status(403).json({ success: false, error: 'Admin access required' });
@@ -206,7 +208,6 @@ export const updateVerificationStatus = async (req: AuthRequest, res: Response) 
       });
     }
 
-    // Get the document to get the userId
     const document = await verificationService.getVerificationById(verificationId);
     if (!document) {
       return res.status(404).json({ success: false, error: 'Verification document not found' });
@@ -236,7 +237,7 @@ export const updateVerificationStatus = async (req: AuthRequest, res: Response) 
       });
     }
   } catch (error) {
-    console.error('Error in updateVerificationStatus:', error);
+    logger.error('Error in updateVerificationStatus:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -249,7 +250,7 @@ export const deleteVerification = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const verificationId = Array.isArray(id) ? id[0] : id;
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     const userRole = req.user?.role;
 
     const result = await verificationService.deleteVerification(verificationId, userRole === 'admin' ? undefined : userId);
@@ -266,7 +267,7 @@ export const deleteVerification = async (req: AuthRequest, res: Response) => {
       });
     }
   } catch (error) {
-    console.error('Error in deleteVerification:', error);
+    logger.error('Error in deleteVerification:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -289,7 +290,7 @@ export const getVerificationStats = async (req: AuthRequest, res: Response) => {
       stats
     });
   } catch (error) {
-    console.error('Error in getVerificationStats:', error);
+    logger.error('Error in getVerificationStats:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -300,7 +301,7 @@ export const getVerificationStats = async (req: AuthRequest, res: Response) => {
 // Get verification audit logs
 export const getVerificationAuditLogs = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
@@ -312,7 +313,7 @@ export const getVerificationAuditLogs = async (req: AuthRequest, res: Response) 
       logs
     });
   } catch (error) {
-    console.error('Error in getVerificationAuditLogs:', error);
+    logger.error('Error in getVerificationAuditLogs:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -346,7 +347,7 @@ export const getAllVerificationAuditLogs = async (req: AuthRequest, res: Respons
       total: result.total
     });
   } catch (error) {
-    console.error('Error in getAllVerificationAuditLogs:', error);
+    logger.error('Error in getAllVerificationAuditLogs:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'

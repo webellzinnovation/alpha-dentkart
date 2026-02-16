@@ -29,3 +29,4 @@ inventory_tab_content.txt
 # OS files
 desktop.ini
 .DS_Store
+firebase-service-account.json

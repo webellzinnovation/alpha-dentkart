@@ -131,6 +131,115 @@
 <body
     class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-200 antialiased">
     <div id="root"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registered:', registration);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // New content is available
+                                        if (confirm('New version available! Reload to update?')) {
+                                            window.location.reload();
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('❌ Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+    
+    <!-- Performance Monitoring -->
+    <script>
+        // Core Web Vitals monitoring
+        function measureWebVitals() {
+            if ('PerformanceObserver' in window) {
+                // Largest Contentful Paint
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach((entry) => {
+                        if (entry.name === 'largest-contentful-paint') {
+                            console.log('🎯 LCP:', entry.startTime);
+                        }
+                    });
+                }).observe({ entryTypes: ['largest-contentful-paint'] });
+
+                // First Input Delay
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach((entry) => {
+                        if (entry.name === 'first-input') {
+                            console.log('⚡ FID:', entry.processingStart - entry.startTime);
+                        }
+                    });
+                }).observe({ entryTypes: ['first-input'] });
+
+                // Cumulative Layout Shift
+                let clsScore = 0;
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach((entry) => {
+                        if (!entry.hadRecentInput) {
+                            clsScore += entry.value;
+                            console.log('📊 CLS:', clsScore);
+                        }
+                    });
+                }).observe({ entryTypes: ['layout-shift'] });
+            }
+        }
+
+        // Mobile performance optimizations
+        function optimizeForMobile() {
+            // Reduce motion on low-end devices
+            const isLowEndDevice = navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4;
+            if (isLowEndDevice) {
+                document.documentElement.style.setProperty('--animation-duration', '0s');
+                document.body.classList.add('reduce-motion');
+            }
+
+            // Detect slow network
+            if ('connection' in navigator) {
+                const connection = navigator.connection;
+                if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
+                    document.body.classList.add('slow-network');
+                    console.log('🐌 Slow network detected, reducing animations');
+                }
+            }
+
+            // Touch optimization
+            if ('ontouchstart' in window) {
+                document.body.classList.add('touch-device');
+            }
+        }
+
+        // Initialize optimizations
+        document.addEventListener('DOMContentLoaded', () => {
+            measureWebVitals();
+            optimizeForMobile();
+        });
+
+        // Memory management
+        window.addEventListener('beforeunload', () => {
+            // Clean up any resources
+            if (window.gc) {
+                window.gc();
+            }
+        });
+    </script>
+    
     <script type="module" src="/index.tsx"></script>
 </body>
 

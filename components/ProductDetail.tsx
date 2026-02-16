@@ -30,7 +30,17 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
   if (!product) {
     console.error("ProductDetail rendered without product!");
-    return <div className="p-8 text-center">Product not found.</div>;
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <div className="max-w-md mx-auto">
+          <i className="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-4"></i>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Product Not Available</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            This product is currently unavailable or has been removed.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const [quantity, setQuantity] = useState(1);
@@ -465,7 +475,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
                 onAddToCart={onAddToCart}
                 onToggleWishlist={onToggleWishlist}
                 onQuickView={onQuickView}
-                isInWishlist={false}
+                isInWishlist={p.id === product.id ? isInWishlist : false}
               />
             ))}
           </div>
@@ -529,3 +539,5 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     </div>
   );
 };
+
+export default ProductDetail;

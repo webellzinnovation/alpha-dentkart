@@ -1,22 +1,23 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '../config/firebase'; // Firestore
+import logger from '../utils/logger';
 
 // Get all hero slides (active only for public, all for admin)
 export const getAllHeroSlides = async (req: Request, res: Response) => {
     try {
         const { active } = req.query;
-        const where = active === 'true' ? { isActive: true } : {};
+        let query: FirebaseFirestore.Query = db.collection('hero_slides').orderBy('order', 'asc');
 
-        const slides = await prisma.heroSlide.findMany({
-            where,
-            orderBy: { order: 'asc' }
-        });
+        if (active === 'true') {
+            query = query.where('isActive', '==', true);
+        }
+
+        const snapshot = await query.get();
+        const slides = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         res.json(slides);
     } catch (error) {
-        console.error('Error fetching hero slides:', error);
+        logger.error('Error fetching hero slides:', error);
         res.status(500).json({ error: 'Failed to fetch hero slides' });
     }
 };
@@ -26,20 +27,20 @@ export const createHeroSlide = async (req: Request, res: Response) => {
     try {
         const { title, subtitle, image, link, order, isActive } = req.body;
 
-        const slide = await prisma.heroSlide.create({
-            data: {
-                title,
-                subtitle,
-                image,
-                link,
-                order: order || 0,
-                isActive: isActive !== undefined ? isActive : true
-            }
-        });
+        const newSlide = {
+            title,
+            subtitle,
+            image,
+            link,
+            order: order || 0,
+            isActive: isActive !== undefined ? isActive : true,
+            createdAt: new Date().toISOString()
+        };
 
-        res.status(201).json(slide);
+        const docRef = await db.collection('hero_slides').add(newSlide);
+        res.status(201).json({ id: docRef.id, ...newSlide });
     } catch (error) {
-        console.error('Error creating hero slide:', error);
+        logger.error('Error creating hero slide:', error);
         res.status(500).json({ error: 'Failed to create hero slide' });
     }
 };
@@ -48,23 +49,18 @@ export const createHeroSlide = async (req: Request, res: Response) => {
 export const updateHeroSlide = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { title, subtitle, image, link, order, isActive } = req.body;
+        const updates = req.body;
 
-        const slide = await prisma.heroSlide.update({
-            where: { id: parseInt(id) },
-            data: {
-                ...(title !== undefined && { title }),
-                ...(subtitle !== undefined && { subtitle }),
-                ...(image !== undefined && { image }),
-                ...(link !== undefined && { link }),
-                ...(order !== undefined && { order }),
-                ...(isActive !== undefined && { isActive })
-            }
-        });
+        const cleanUpdates = Object.fromEntries(
+            Object.entries(updates).filter(([_, v]) => v !== undefined)
+        );
 
-        res.json(slide);
+        await db.collection('hero_slides').doc(String(id)).update(cleanUpdates);
+        const updatedDoc = await db.collection('hero_slides').doc(String(id)).get();
+
+        res.json({ id: updatedDoc.id, ...updatedDoc.data() });
     } catch (error) {
-        console.error('Error updating hero slide:', error);
+        logger.error('Error updating hero slide:', error);
         res.status(500).json({ error: 'Failed to update hero slide' });
     }
 };
@@ -73,14 +69,10 @@ export const updateHeroSlide = async (req: Request, res: Response) => {
 export const deleteHeroSlide = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-
-        await prisma.heroSlide.delete({
-            where: { id: parseInt(id) }
-        });
-
+        await db.collection('hero_slides').doc(String(id)).delete();
         res.json({ message: 'Hero slide deleted successfully' });
     } catch (error) {
-        console.error('Error deleting hero slide:', error);
+        logger.error('Error deleting hero slide:', error);
         res.status(500).json({ error: 'Failed to delete hero slide' });
     }
 };
@@ -90,18 +82,16 @@ export const reorderHeroSlides = async (req: Request, res: Response) => {
     try {
         const { slides } = req.body; // Array of { id, order }
 
-        const updates = slides.map((slide: { id: number; order: number }) =>
-            prisma.heroSlide.update({
-                where: { id: slide.id },
-                data: { order: slide.order }
-            })
-        );
-
-        await prisma.$transaction(updates);
+        const batch = db.batch();
+        slides.forEach((slide: { id: string; order: number }) => {
+            const ref = db.collection('hero_slides').doc(String(slide.id));
+            batch.update(ref, { order: slide.order });
+        });
+        await batch.commit();
 
         res.json({ message: 'Hero slides reordered successfully' });
     } catch (error) {
-        console.error('Error reordering hero slides:', error);
+        logger.error('Error reordering hero slides:', error);
         res.status(500).json({ error: 'Failed to reorder hero slides' });
     }
 };

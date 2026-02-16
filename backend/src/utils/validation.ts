@@ -32,4 +32,8 @@ export const createOrderSchema = z.object({
     paymentId: z.string().optional(),
     transactionId: z.string().optional(),
     signature: z.string().optional(),
+    // New fields
+    couponId: z.string().optional(),
+    couponDiscount: z.number().optional(),
+    whatsappOptIn: z.boolean().optional(),
 });

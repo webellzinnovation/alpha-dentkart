@@ -1,7 +1,6 @@
 import admin from 'firebase-admin';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '../config/firebase'; // Firestore
+import logger from '../utils/logger';
 
 export const NotificationService = {
     /**
@@ -9,13 +8,18 @@ export const NotificationService = {
      */
     async sendToUser(userId: string, title: string, body: string, data: any = {}) {
         try {
-            const user = await prisma.user.findUnique({
-                where: { id: userId },
-                select: { fcmToken: true }
-            });
+            const userDoc = await db.collection('users').doc(userId).get();
 
-            if (!user || !user.fcmToken) {
-                console.warn(`User ${userId} does not have an FCM token.`);
+            if (!userDoc.exists) {
+                logger.warn(`User ${userId} not found.`);
+                return false;
+            }
+
+            const user = userDoc.data();
+            const fcmToken = user?.fcmToken;
+
+            if (!fcmToken) {
+                logger.warn(`User ${userId} does not have an FCM token.`);
                 return false;
             }
 
@@ -28,14 +32,14 @@ export const NotificationService = {
                     ...data,
                     click_action: 'FLUTTER_NOTIFICATION_CLICK' // For backward compatibility if needed
                 },
-                token: user.fcmToken
+                token: fcmToken
             };
 
             const response = await admin.messaging().send(message);
-            console.log('Successfully sent message:', response);
+            logger.info('Successfully sent message:', response);
             return true;
         } catch (error) {
-            console.error('Error sending push notification:', error);
+            logger.error('Error sending push notification:', error);
             return false;
         }
     },
@@ -46,7 +50,7 @@ export const NotificationService = {
     async broadcast(title: string, body: string, data: any = {}) {
         try {
             // For broadcasting, you can use Topics in Firebase for better performance
-            // Here we simulate it by sending to 'all_users' topic
+            // Here we simulate it by sending to 'all_users' topic or similar strategy
             const message = {
                 notification: {
                     title,
@@ -57,10 +61,10 @@ export const NotificationService = {
             };
 
             const response = await admin.messaging().send(message);
-            console.log('Successfully sent broadcast:', response);
+            logger.info('Successfully sent broadcast:', response);
             return true;
         } catch (error) {
-            console.error('Error sending broadcast:', error);
+            logger.error('Error sending broadcast:', error);
             return false;
         }
     }

@@ -1,8 +1,7 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { db } from '../config/firebase'; // Firestore
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Save or update FCM token for a user
 router.post('/save-token', async (req, res) => {
@@ -13,10 +12,10 @@ router.post('/save-token', async (req, res) => {
     }
 
     try {
-        await prisma.user.update({
-            where: { id: userId },
-            data: { fcmToken: token }
-        });
+        await db.collection('users').doc(userId).set({
+            fcmToken: token,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
 
         res.json({ success: true, message: 'Token saved successfully' });
     } catch (error) {
