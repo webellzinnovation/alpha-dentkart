@@ -299,6 +299,7 @@ export const Shop: React.FC<ShopProps> = ({
                     { value: 'rating', label: 'Top Rated' }
                   ]}
                   className="w-full"
+                  align="right"
                 />
               </div>
             </div>

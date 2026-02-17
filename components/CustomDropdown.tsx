@@ -13,6 +13,7 @@ interface CustomDropdownProps {
   placeholder?: string;
   className?: string; // Classes for the trigger button
   bgColor?: string;
+  align?: 'left' | 'right';
 }
 
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -20,7 +21,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onChange,
   options,
   className = "",
-  bgColor = "bg-white dark:bg-gray-800"
+  bgColor = "bg-white dark:bg-gray-800",
+  align = 'left'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -28,7 +30,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   // Normalize options to Option[]
   const normalizedOptions: Option[] = options.map(opt => {
     if (typeof opt === 'object' && opt !== null && 'value' in opt) {
-        return opt as Option;
+      return opt as Option;
     }
     // Explicitly cast opt to string | number to satisfy TypeScript
     return { value: opt as string | number, label: String(opt) };
@@ -59,7 +61,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 min-w-full w-max mt-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto animate-fade-in whitespace-nowrap">
+        <div className={`absolute z-50 min-w-full w-max mt-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto animate-fade-in whitespace-nowrap ${align === 'right' ? 'right-0' : 'left-0'}`}>
           {normalizedOptions.map((opt) => (
             <button
               key={opt.value}
@@ -68,9 +70,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 onChange(opt.value);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                String(value) === String(opt.value) ? 'text-primary font-bold bg-primary/5' : 'text-gray-700 dark:text-gray-300'
-              }`}
+              className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${String(value) === String(opt.value) ? 'text-primary font-bold bg-primary/5' : 'text-gray-700 dark:text-gray-300'
+                }`}
             >
               {opt.label}
             </button>
