@@ -39,7 +39,28 @@ import { ordersAPI } from './utils/api';
 type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
 
 function App() {
-  const [currentView, setCurrentView] = useState<ViewState>('home');
+  // Initialize view from URL
+  const [currentView, setCurrentView] = useState<ViewState>(() => {
+    const path = window.location.pathname.substring(1); // remove leading slash
+    if (path === '' || path === 'home') return 'home';
+    if (path === 'shop') return 'shop';
+    if (path === 'categories') return 'categories';
+    if (path === 'wishlist') return 'wishlist';
+    if (path === 'login') return 'login';
+    if (path === 'dashboard') return 'dashboard';
+    if (path === 'checkout') return 'checkout';
+    if (path === 'privacy-policy') return 'privacy-policy';
+    if (path === 'terms-of-service') return 'terms-of-service';
+    return 'home';
+  });
+
+  // Sync URL with View State
+  useEffect(() => {
+    const path = currentView === 'home' ? '/' : `/${currentView}`;
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+  }, [currentView]);
   const [shopCategory, setShopCategory] = useState<string | null>(null);
   const [shopBrand, setShopBrand] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
