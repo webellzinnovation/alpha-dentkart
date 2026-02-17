@@ -31,9 +31,9 @@ const TermsOfService = lazy(() => import('./components/TermsOfService'));
 import CookieConsent from './components/CookieConsent';
 import { PROMOS, HERO_SLIDES, ALL_PRODUCTS, CATEGORIES, BRAND_PROFILES } from './constants';
 import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile } from './types';
-import { adaptDemoData } from './utils/demoDataAdapter';
+// import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
-import { MOCK_USER } from './data/mockData';
+// import { MOCK_USER } from './data/mockData';
 import { ordersAPI } from './utils/api';
 
 type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
@@ -384,17 +384,7 @@ function App() {
     localStorage.setItem('alpha_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
-  // Auto-login for development and hydrate orders
-  useEffect(() => {
-    if (!user) {
-      // Filter orders for this user from the persisted global orders
-      const userOrders = orders.filter(order => order.userId === MOCK_USER.email);
-      const userWithOrders = { ...MOCK_USER, orders: userOrders };
 
-      setUser(userWithOrders);
-      setIsLoggedIn(true);
-    }
-  }, [orders]); // Re-run if orders change (e.g. initial load)
 
   // Persistence Sync (Only for user data, not migrated data)
   useEffect(() => { localStorage.setItem('alpha_settings', JSON.stringify(settings)); }, [settings]);
@@ -622,9 +612,6 @@ function App() {
       } else {
         newWishlist = [...prev, product];
       }
-      if (isLoggedIn && !isAdmin) {
-        MOCK_USER.wishlist = newWishlist;
-      }
       return newWishlist;
     });
   };
@@ -649,9 +636,7 @@ function App() {
           cartItemId
         }];
       }
-      if (isLoggedIn && !isAdmin) {
-        MOCK_USER.cart = newCart;
-      }
+
       return newCart;
     });
     setIsCartOpen(true);
@@ -666,9 +651,7 @@ function App() {
         }
         return item;
       });
-      if (isLoggedIn && !isAdmin) {
-        MOCK_USER.cart = newCart;
-      }
+
       return newCart;
     });
   };
@@ -676,9 +659,7 @@ function App() {
   const removeFromCart = (cartItemId: string) => {
     setCart(prev => {
       const newCart = prev.filter(item => item.cartItemId !== cartItemId);
-      if (isLoggedIn && !isAdmin) {
-        MOCK_USER.cart = newCart;
-      }
+
       return newCart;
     });
   };
@@ -738,11 +719,7 @@ function App() {
       // 3. Clear Cart
       setCart([]);
 
-      // Update MOCK if needed (optional)
-      if (typeof MOCK_USER !== 'undefined' && isLoggedIn && !isAdmin) {
-        MOCK_USER.cart = [];
-        MOCK_USER.orders = [...MOCK_USER.orders, newOrder];
-      }
+
 
       alert('Order placed successfully! Order ID: ' + newOrder.id);
       setCurrentView('dashboard');
