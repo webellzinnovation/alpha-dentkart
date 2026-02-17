@@ -82,7 +82,8 @@ function App() {
         if (productsRes.products && productsRes.products.length > 0) {
           setProducts(productsRes.products);
         } else {
-          setProducts(ALL_PRODUCTS);
+          // setProducts(ALL_PRODUCTS);
+          setProducts([]);
         }
 
         if (categoriesRes.categories && categoriesRes.categories.length > 0) {
@@ -140,7 +141,8 @@ function App() {
         setIsDataLoading(false);
       } catch (err) {
         console.warn("SECURE BACKEND UNREACHABLE - Using fallback constants", err);
-        setProducts(ALL_PRODUCTS);
+        // setProducts(ALL_PRODUCTS);
+        setProducts([]);
         setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
         setBrands(BRAND_PROFILES);
         setHeroSlides(HERO_SLIDES);
