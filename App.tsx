@@ -44,6 +44,7 @@ function App() {
     const path = window.location.pathname.substring(1); // remove leading slash
     if (path === '' || path === 'home') return 'home';
     if (path === 'shop') return 'shop';
+    if (path === 'brands') return 'brands';
     if (path === 'categories') return 'categories';
     if (path === 'wishlist') return 'wishlist';
     if (path === 'login') return 'login';
@@ -115,7 +116,8 @@ function App() {
             iconClass: cat.iconClass || 'fas fa-teeth'
           })));
         } else {
-          setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
+          // setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
+          setCategories([]);
         }
 
         if (brandsRes.brands && brandsRes.brands.length > 0) {
@@ -125,32 +127,22 @@ function App() {
             productCount: brand.productCount || 0
           })));
         } else {
-          setBrands(BRAND_PROFILES);
+          // setBrands(BRAND_PROFILES);
+          setBrands([]);
         }
 
         if (heroRes.slides && heroRes.slides.length > 0) {
           setHeroSlides(heroRes.slides);
         } else {
-          setHeroSlides(HERO_SLIDES);
+          // setHeroSlides(HERO_SLIDES);
+          setHeroSlides([]);
         }
 
         if (promoRes.tiles && promoRes.tiles.length > 0) {
           setPromotionalTiles(promoRes.tiles);
         } else {
           // Fallback map PROMOS to PromotionalTiles
-          setPromotionalTiles(PROMOS.map((p, i) => ({
-            id: p.id,
-            title: p.title,
-            subtitle: p.subtitle,
-            category: p.tag,
-            price: p.price,
-            image: p.image,
-            link: '',
-            badge: p.tag,
-            badgeColor: p.tagColorClass,
-            order: i,
-            isActive: true
-          })));
+          setPromotionalTiles([]);
         }
 
         if (meData?.user) {
@@ -164,9 +156,12 @@ function App() {
         console.warn("SECURE BACKEND UNREACHABLE - Using fallback constants", err);
         // setProducts(ALL_PRODUCTS);
         setProducts([]);
-        setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
-        setBrands(BRAND_PROFILES);
-        setHeroSlides(HERO_SLIDES);
+        // setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
+        setCategories([]);
+        // setBrands(BRAND_PROFILES);
+        setBrands([]);
+        // setHeroSlides(HERO_SLIDES);
+        setHeroSlides([]);
         setIsDataLoading(false);
       }
     };

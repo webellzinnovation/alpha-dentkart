@@ -12,6 +12,7 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCategoryClick, onBrandClick, products = [], slides }) => {
+  if (!slides || slides.length === 0) return null;
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   useEffect(() => {
