@@ -61,7 +61,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       </button>
 
       {isOpen && (
-        <div className={`absolute z-50 min-w-full w-max mt-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto overflow-x-hidden animate-fade-in whitespace-nowrap ${align === 'right' ? 'right-0' : 'left-0'}`}>
+        <div className={`absolute z-50 min-w-full w-56 mt-1 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto animate-fade-in whitespace-nowrap ${align === 'right' ? 'right-0' : 'left-0'}`}>
           {normalizedOptions.map((opt) => (
             <button
               key={opt.value}
