@@ -333,10 +333,11 @@ function App() {
         orderConfirmation: true,
         orderConfirmationMessage: 'Thank you for your order! We have received it and will process it shortly.',
         orderShipped: true,
-        orderShippedMessage: 'Great news! Your order has been shipped and is on its way to you.'
       }
     };
   });
+
+
 
   // Apply Site Settings (Favicon & Title)
   useEffect(() => {
@@ -358,6 +359,18 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // Cleanup lingering demo user from localStorage
+  useEffect(() => {
+    // Check for demo user emails or names
+    if (user && (user.email === 'rajesh@dentkart.com' || user.name === 'Dr. Rajesh Koothrappali')) {
+      console.log("Cleaning up demo user");
+      setUser(null);
+      setIsLoggedIn(false);
+      localStorage.removeItem('alpha_user');
+      window.location.reload();
+    }
+  }, [user]);
 
   // Cart & Wishlist State
   const [cart, setCart] = useState<CartItem[]>(() => {
