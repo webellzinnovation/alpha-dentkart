@@ -28,6 +28,7 @@ import { StickyCartButton } from './components/StickyCartButton';
 const Checkout = lazy(() => import('./components/Checkout'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./components/TermsOfService'));
+const AdminLogin = lazy(() => import('./components/AdminLogin').then(m => ({ default: m.AdminLogin })));
 import CookieConsent from './components/CookieConsent';
 import { PROMOS, HERO_SLIDES, ALL_PRODUCTS, CATEGORIES, BRAND_PROFILES } from './constants';
 import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile } from './types';
@@ -36,7 +37,7 @@ import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugi
 // import { MOCK_USER } from './data/mockData';
 import { ordersAPI } from './utils/api';
 
-type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
+type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'admin-login' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
 
 function App() {
   // Initialize view from URL
@@ -49,6 +50,8 @@ function App() {
     if (path === 'wishlist') return 'wishlist';
     if (path === 'login') return 'login';
     if (path === 'dashboard') return 'dashboard';
+    if (path === 'admin') return 'admin-dashboard';
+    if (path === 'admin-login') return 'admin-login';
     if (path === 'checkout') return 'checkout';
     if (path === 'privacy-policy') return 'privacy-policy';
     if (path === 'terms-of-service') return 'terms-of-service';
@@ -79,6 +82,7 @@ function App() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<BrandProfile[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
 
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [promotionalTiles, setPromotionalTiles] = useState<PromotionalTile[]>([]);
@@ -87,69 +91,141 @@ function App() {
   useEffect(() => {
     const loadAppData = async () => {
       try {
-        const { productsAPI, categoriesAPI, brandsAPI, authAPI, heroSlidesAPI, promotionalTilesAPI } = await import('./utils/api');
+        const { productsAPI, categoriesAPI, brandsAPI, authAPI, heroSlidesAPI, promotionalTilesAPI, usersAPI, ordersAPI, settingsAPI, reviewsAPI } = await import('./utils/api');
 
-        // Fetch all data independently for scale
-        const [productsRes, categoriesRes, brandsRes, meData, heroRes, promoRes] = await Promise.all([
-          productsAPI.getAll({ limit: 20 }).catch(() => ({ products: [] })),
-          categoriesAPI.getAll().catch(() => ({ categories: [] })),
-          brandsAPI.getAll().catch(() => ({ brands: [] })),
-          authAPI.me().catch(() => ({ user: null })),
-          heroSlidesAPI.getAll().catch(() => ({ slides: [] })),
-          promotionalTilesAPI.getAll().catch(() => ({ tiles: [] }))
+        // Fetch critical data first (products, categories, settings) - stagger to avoid cold start overload
+        const criticalData = await Promise.allSettled([
+          productsAPI.getAll({ limit: 5000 }),
+          categoriesAPI.getAll(),
+          settingsAPI.get(),
+        ]);
+
+        // Then load secondary data
+        const secondaryData = await Promise.allSettled([
+          brandsAPI.getAll(),
+          authAPI.me(),
+          heroSlidesAPI.getAll(),
+          promotionalTilesAPI.getAll(),
+        ]);
+
+        // Load admin data (orders, users, reviews) - lower priority
+        const adminData = await Promise.allSettled([
+          usersAPI.getAll({ limit: 500 }),
+          ordersAPI.getAllAdmin({ limit: 500 }),
+          reviewsAPI.getAllAdmin()
         ]);
 
         console.log("Loading secure backend data...");
 
-        if (productsRes.products && productsRes.products.length > 0) {
-          setProducts(productsRes.products);
+        // Helper to extract data from PromiseSettledResult
+        const getData = (result: PromiseSettledResult<any>, key: string): any[] => {
+          if (result.status === 'fulfilled' && result.value) {
+            return result.value[key] || result.value.data || [];
+          }
+          return [];
+        };
+
+        const getUserData = (result: PromiseSettledResult<any>) => {
+          if (result.status === 'fulfilled' && result.value) {
+            return result.value.user || null;
+          }
+          return null;
+        };
+
+        const products = getData(criticalData[0], 'products');
+        const categories = getData(criticalData[1], 'categories');
+        const settingsData = criticalData[2].status === 'fulfilled' ? criticalData[2].value : null;
+        
+        const brands = getData(secondaryData[0], 'brands');
+        const meUser = getUserData(secondaryData[1]);
+        const heroSlides = getData(secondaryData[2], 'slides');
+        const promoTiles = getData(secondaryData[3], 'tiles');
+        
+        const users = getData(adminData[0], 'users');
+        const orders = getData(adminData[1], 'orders');
+        const reviews = getData(adminData[2], 'reviews');
+
+        if (products && products.length > 0) {
+          setProducts(products);
         } else {
-          // setProducts(ALL_PRODUCTS);
           setProducts([]);
         }
 
-        if (categoriesRes.categories && categoriesRes.categories.length > 0) {
+        if (categories && categories.length > 0) {
           // Add slug and default icons for UI
-          setCategories(categoriesRes.categories.map((cat: any) => ({
+          setCategories(categories.map((cat: any) => ({
             ...cat,
             slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
             iconClass: cat.iconClass || 'fas fa-teeth'
           })));
         } else {
-          // setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
           setCategories([]);
         }
 
-        if (brandsRes.brands && brandsRes.brands.length > 0) {
-          setBrands(brandsRes.brands.map((brand: any) => ({
+        if (brands && brands.length > 0) {
+          setBrands(brands.map((brand: any) => ({
             ...brand,
             logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
             productCount: brand.productCount || 0
           })));
         } else {
-          // setBrands(BRAND_PROFILES);
           setBrands([]);
         }
 
-        if (heroRes.slides && heroRes.slides.length > 0) {
-          setHeroSlides(heroRes.slides);
+        if (heroSlides && heroSlides.length > 0) {
+          setHeroSlides(heroSlides);
         } else {
-          // setHeroSlides(HERO_SLIDES);
           setHeroSlides([]);
         }
 
-        if (promoRes.tiles && promoRes.tiles.length > 0) {
-          setPromotionalTiles(promoRes.tiles);
+        if (promoTiles && promoTiles.length > 0) {
+          setPromotionalTiles(promoTiles);
         } else {
-          // Fallback map PROMOS to PromotionalTiles
           setPromotionalTiles([]);
         }
 
-        if (meData?.user) {
-          setUser(meData.user);
-          setIsLoggedIn(true);
-          setIsAdmin(meData.user.role === 'admin');
+        if (users && users.length > 0) {
+          setUsers(users);
+        } else {
+          setUsers([]);
         }
+
+        if (orders && orders.length > 0) {
+          setOrders(orders);
+        } else {
+          // Check localStorage as fallback for orders
+          const savedOrders = localStorage.getItem('alpha_orders');
+          if (savedOrders) {
+            setOrders(JSON.parse(savedOrders));
+          }
+        }
+
+        if (reviews && reviews.length > 0) {
+          setReviews(reviews);
+        } else {
+          setReviews([]);
+        }
+
+        // Apply settings from API if available
+        if (settingsData && typeof settingsData === 'object') {
+          setSettings((prev: any) => ({
+            ...prev,
+            ...settingsData,
+            // Preserve WhatsApp settings if not in API response
+            whatsapp: settingsData.whatsapp || prev.whatsapp
+          }));
+        }
+
+        if (meUser && !localStorage.getItem('alpha_user')) {
+          // Only set user from API if not already restored from localStorage
+          setUser(meUser);
+          setIsAdmin(meUser.role === 'admin');
+          localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
+          setIsLoggedIn(true);
+        }
+        // This line was duplicated and should be part of the above if block or handled differently
+        // setIsAdmin(meData.user.role === 'admin');
+
 
         setIsDataLoading(false);
       } catch (err) {
@@ -331,8 +407,8 @@ function App() {
         address: '123 Dental Park, New Delhi'
       },
       payment: {
-        phonepe: { enabled: true, merchantId: 'MERC123456', saltKey: 'sk_test_123456', saltIndex: '1' },
-        razorpay: { enabled: false, keyId: 'rzp_test_123456', keySecret: 'secret_123456' },
+        phonepe: { enabled: false, merchantId: '', saltKey: '', saltIndex: '' },
+        razorpay: { enabled: false, keyId: '', keySecret: '' },
         cod: { enabled: true }
       },
       shipping: {
@@ -341,11 +417,17 @@ function App() {
         enableInternational: false
       },
       email: {
-        host: 'smtp.gmail.com',
+        host: '',
         port: 587,
-        user: 'notifications@alphadentkart.com',
-        pass: 'app-password-masked',
+        user: '',
+        pass: '',
         encryption: 'TLS'
+      },
+      whatsapp: {
+        enabled: false,
+        phoneNumberId: '',
+        accessToken: '',
+        businessAccountId: ''
       },
       notifications: {
         orderConfirmation: true,
@@ -376,7 +458,7 @@ function App() {
   // Auth State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('isAdmin') === 'true');
 
   // Cleanup lingering demo user from localStorage
   useEffect(() => {
@@ -589,6 +671,7 @@ function App() {
 
       // Set admin status based on backend role
       setIsAdmin(user.role === 'admin');
+      localStorage.setItem('isAdmin', user.role === 'admin' ? 'true' : 'false');
       setIsLoggedIn(true);
 
       // Navigate to appropriate dashboard
@@ -609,9 +692,25 @@ function App() {
     setUser(null);
     setIsLoggedIn(false);
     setIsAdmin(false);
+    localStorage.removeItem('isAdmin');
     setCart([]);
     setWishlist([]);
     setCurrentView('login');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleAdminLogin = (adminUser?: any) => {
+    if (adminUser) {
+      setUser(adminUser);
+      setIsAdmin(true);
+      setIsLoggedIn(true);
+      localStorage.setItem('isAdmin', 'true');
+    } else {
+      setIsAdmin(true);
+      setIsLoggedIn(true);
+      localStorage.setItem('isAdmin', 'true');
+    }
+    setCurrentView('admin-dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -821,18 +920,50 @@ function App() {
   }, [activeTab, products]);
 
 
+
+
+
+  if ((currentView as ViewState) === 'admin-login') {
+    return (
+      <Suspense fallback={<Loading fullScreen message="Loading Admin Login..." />}>
+        <AdminLogin
+          onAdminLogin={handleAdminLogin}
+          onNavigateToUserLogin={() => handleNavigate('login')}
+          isAdmin={isAdmin}
+          user={user}
+        />
+      </Suspense>
+    );
+  }
+
   if ((currentView as ViewState) === 'admin-dashboard') {
+    if (!isAdmin) {
+      return (
+        <Suspense fallback={<Loading fullScreen message="Loading Admin Login..." />}>
+          <AdminLogin
+            onAdminLogin={handleAdminLogin}
+            onNavigateToUserLogin={() => handleNavigate('login')}
+            isAdmin={isAdmin}
+            user={user}
+          />
+        </Suspense>
+      );
+    }
+
     return (
       <AdminDashboard
         products={products}
         setProducts={setProducts}
         orders={orders}
         setOrders={setOrders}
+        reviews={reviews}
+        setReviews={setReviews}
         categories={categories}
         setCategories={setCategories}
         brands={brands}
         setBrands={setBrands}
         users={users}
+        setUsers={setUsers}
         onLogout={handleLogout}
         onVisitSite={navigateToHome}
         settings={settings}
@@ -859,7 +990,6 @@ function App() {
   if (currentView === 'theme3-demo') {
     return <Theme3Demo />;
   }
-
 
   console.log("App Render:", { currentView, selectedProductId: selectedProduct?.id, productsCount: products.length });
 
