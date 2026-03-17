@@ -8,6 +8,8 @@ interface BrandsProps {
 }
 
 export const Brands: React.FC<BrandsProps> = ({ onBrandClick, brands }) => {
+  if (!brands || brands.length === 0) return null;
+
   return (
     <div className="py-8">
       {/* Hero/Title */}
