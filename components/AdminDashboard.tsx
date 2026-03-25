@@ -634,6 +634,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [activeProductTab, setActiveProductTab] = useState<'general' | 'variations' | 'seo'>('general');
     const [isGeneratingSEO, setIsGeneratingSEO] = useState(false); // SEO Generation state
+    const [reviewsFilter, setReviewsFilter] = useState('all');
+    const [reviewsSearch, setReviewsSearch] = useState('');
+
+    const filteredReviews = useMemo(() => {
+        let filtered = reviews;
+        
+        if (reviewsFilter !== 'all') {
+            if (reviewsFilter === 'approved') {
+                filtered = filtered.filter(r => r.isApproved === true);
+            } else if (reviewsFilter === 'pending') {
+                filtered = filtered.filter(r => r.isApproved === undefined || r.isApproved === null);
+            } else if (reviewsFilter === 'rejected') {
+                filtered = filtered.filter(r => r.isApproved === false);
+            }
+        }
+        
+        if (reviewsSearch) {
+            const search = reviewsSearch.toLowerCase();
+            filtered = filtered.filter(r => 
+                r.product?.toLowerCase().includes(search) ||
+                r.user?.toLowerCase().includes(search) ||
+                r.comment?.toLowerCase().includes(search)
+            );
+        }
+        
+        return filtered;
+    }, [reviews, reviewsFilter, reviewsSearch]);
 
     const initialProductForm = {
         id: 0,
@@ -911,10 +938,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         );
     };
 
-    const handleDeleteReview = (id: number) => {
-        // Reviews are now computed from real data
-        // This function is disabled until a proper reviews system is implemented
-        console.log('Review deletion not yet implemented for real data');
+    const handleDeleteReview = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this review?')) return;
+        try {
+            const { reviewsAPI } = await import('../utils/api');
+            await reviewsAPI.delete(id);
+            setReviews(reviews.filter(r => r.id !== id));
+            alert('Review deleted successfully');
+        } catch (error) {
+            console.error('Error deleting review:', error);
+            alert('Failed to delete review');
+        }
+    };
+
+    const handleModerateReview = async (id: string, isApproved: boolean) => {
+        try {
+            const { reviewsAPI } = await import('../utils/api');
+            await reviewsAPI.moderate(id, isApproved);
+            setReviews(reviews.map(r => r.id === id ? { ...r, isApproved } : r));
+            alert(`Review ${isApproved ? 'approved' : 'rejected'} successfully`);
+        } catch (error) {
+            console.error('Error moderating review:', error);
+            alert('Failed to moderate review');
+        }
     };
 
     const handleEditProduct = (product: Product) => {
@@ -2368,46 +2414,103 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <div className="animate-fade-in space-y-6">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-star text-primary"></i> Product Reviews</h2>
-                                    <div className="flex gap-4">
+                                    <div className="flex gap-4 items-center">
                                         <div className="bg-yellow-50 text-yellow-700 px-4 py-2 rounded-lg text-sm font-bold border border-yellow-100">
-                                            Avg Rating: 4.8/5
+                                            {reviews.length} Reviews
                                         </div>
+                                        <select 
+                                            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-sm"
+                                            onChange={(e) => setReviewsFilter(e.target.value)}
+                                        >
+                                            <option value="all">All</option>
+                                            <option value="approved">Approved</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="rejected">Rejected</option>
+                                        </select>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search reviews..." 
+                                            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-sm"
+                                            value={reviewsSearch}
+                                            onChange={(e) => setReviewsSearch(e.target.value)}
+                                        />
                                     </div>
                                 </div>
-                                <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                    <table className="w-full text-left min-w-[800px]">
-                                        <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                            <tr>
-                                                <th className="px-6 py-4">Product</th>
-                                                <th className="px-6 py-4">User</th>
-                                                <th className="px-6 py-4">Rating</th>
-                                                <th className="px-6 py-4">Comment</th>
-                                                <th className="px-6 py-4">Date</th>
-                                                <th className="px-6 py-4 text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                            {reviews.map(review => (
-                                                <tr key={review.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                                    <td className="px-6 py-4 font-bold text-gray-800 dark:text-white">{review.product}</td>
-                                                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{review.user}</td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex text-yellow-400 text-xs">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <i key={i} className={`${i < review.rating ? 'fas' : 'far'} fa-star`}></i>
-                                                            ))}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-gray-600 dark:text-gray-300 italic max-w-xs truncate">"{review.comment}"</td>
-                                                    <td className="px-6 py-4 text-gray-500 text-xs">{review.date}</td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <button onClick={() => handleDeleteReview(review.id)} className="text-red-500 hover:text-red-700 font-medium text-xs"><i className="fas fa-trash"></i> Delete</button>
-                                                    </td>
+                                
+                                {filteredReviews.length === 0 ? (
+                                    <div className="bg-white dark:bg-surface-dark rounded-xl p-8 text-center border border-gray-200 dark:border-gray-700">
+                                        <i className="fas fa-star text-4xl text-gray-300 mb-4"></i>
+                                        <p className="text-gray-500">No reviews found</p>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                        <table className="w-full text-left min-w-[800px]">
+                                            <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                <tr>
+                                                    <th className="px-6 py-4">Product</th>
+                                                    <th className="px-6 py-4">User</th>
+                                                    <th className="px-6 py-4">Rating</th>
+                                                    <th className="px-6 py-4">Comment</th>
+                                                    <th className="px-6 py-4">Status</th>
+                                                    <th className="px-6 py-4">Date</th>
+                                                    <th className="px-6 py-4 text-right">Actions</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
+                                                {filteredReviews.map(review => (
+                                                    <tr key={review.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                        <td className="px-6 py-4 font-bold text-gray-800 dark:text-white">{review.product}</td>
+                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{review.user}</td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex text-yellow-400 text-xs">
+                                                                {[...Array(5)].map((_, i) => (
+                                                                    <i key={i} className={`${i < review.rating ? 'fas' : 'far'} fa-star`}></i>
+                                                                ))}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300 italic max-w-xs truncate" title={review.comment}>"{review.comment}"</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                                review.isApproved === true ? 'bg-green-100 text-green-700' :
+                                                                review.isApproved === false ? 'bg-red-100 text-red-700' :
+                                                                'bg-yellow-100 text-yellow-700'
+                                                            }`}>
+                                                                {review.isApproved === true ? 'Approved' : review.isApproved === false ? 'Rejected' : 'Pending'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-gray-500 text-xs">{review.date}</td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex gap-2 justify-end">
+                                                                {review.isApproved !== true && (
+                                                                    <button 
+                                                                        onClick={() => handleModerateReview(review.id, true)} 
+                                                                        className="text-green-500 hover:text-green-700 text-xs px-2 py-1 rounded hover:bg-green-50"
+                                                                    >
+                                                                        <i className="fas fa-check mr-1"></i>Approve
+                                                                    </button>
+                                                                )}
+                                                                {review.isApproved !== false && (
+                                                                    <button 
+                                                                        onClick={() => handleModerateReview(review.id, false)} 
+                                                                        className="text-orange-500 hover:text-orange-700 text-xs px-2 py-1 rounded hover:bg-orange-50"
+                                                                    >
+                                                                        <i className="fas fa-times mr-1"></i>Reject
+                                                                    </button>
+                                                                )}
+                                                                <button 
+                                                                    onClick={() => handleDeleteReview(review.id)} 
+                                                                    className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50"
+                                                                >
+                                                                    <i className="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         )}
 

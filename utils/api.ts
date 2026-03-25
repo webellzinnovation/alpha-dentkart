@@ -148,6 +148,14 @@ export const reviewsAPI = {
     getAllAdmin: async () => {
         const response = await api.get('/reviews/all');
         return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/reviews/${id}`);
+        return response.data;
+    },
+    moderate: async (id: string, isApproved: boolean) => {
+        const response = await api.put(`/reviews/${id}/moderate`, { isApproved });
+        return response.data;
     }
 };
 
