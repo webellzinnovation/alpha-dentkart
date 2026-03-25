@@ -1,9 +1,8 @@
-const CACHE_NAME = 'alpha-dentkart-v1';
-const RUNTIME_CACHE = 'alpha-dentkart-runtime';
+const CACHE_NAME = 'alpha-dentkart-v3';
+const RUNTIME_CACHE = 'alpha-dentkart-runtime-v3';
 
 // Assets to cache on install
 const STATIC_CACHE_URLS = [
-  '/',
   '/manifest.json',
   '/Alpha-dentkart-logo-600p.png',
   '/Alpha-dentkart-logo-icon.png'
@@ -61,8 +60,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip all /api/ and /api/v1/ requests - always go directly to network
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   // Handle API requests with network-first strategy
   if (API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
+    event.respondWith(networkFirstStrategy(request));
+    return;
+  }
+
+  // Handle HTML/navigation requests with network-first so deployments aren't permanently cached
+  if (request.mode === 'navigate' || url.pathname === '/') {
     event.respondWith(networkFirstStrategy(request));
     return;
   }
@@ -252,26 +263,7 @@ self.addEventListener('notificationclick', (event) => {
   }
 });
 
-// Performance monitoring
+// Performance monitoring - skip API calls
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('/api/')) {
-    const startTime = performance.now();
-    
-    event.waitUntil(
-      (async () => {
-        try {
-          await fetch(event.request);
-          const endTime = performance.now();
-          const duration = endTime - startTime;
-          
-          // Log slow API calls
-          if (duration > 1000) {
-            console.log(`⚠️ Slow API call: ${event.request.url} took ${duration.toFixed(2)}ms`);
-          }
-        } catch (error) {
-          console.error(`❌ API call failed: ${event.request.url}`, error);
-        }
-      })()
-    );
-  }
+  // Skip API monitoring to avoid double-fetching
 });

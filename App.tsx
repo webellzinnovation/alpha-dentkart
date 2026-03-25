@@ -6,6 +6,7 @@ import { Hero } from './components/Hero';
 import { Loading } from './components/Loading';
 import { BrandScroll } from './components/BrandScroll';
 import { ProductCard } from './components/ProductCard';
+import { SkeletonLoader, ProductCardSkeleton } from './components/SkeletonLoader';
 const Shop = lazy(() => import('./components/Shop').then(m => ({ default: m.Shop })));
 import { Brands } from './components/Brands';
 import { Categories } from './components/Categories';
@@ -31,7 +32,8 @@ const TermsOfService = lazy(() => import('./components/TermsOfService'));
 const AdminLogin = lazy(() => import('./components/AdminLogin').then(m => ({ default: m.AdminLogin })));
 import CookieConsent from './components/CookieConsent';
 import { PROMOS, HERO_SLIDES, CATEGORIES, BRAND_PROFILES } from './constants';
-import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile } from './types';
+import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile, HomepageSettings } from './types';
+import cache, { CACHE_KEYS, CACHE_TTL } from './utils/cache';
 // import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
 // import { MOCK_USER } from './data/mockData';
@@ -40,11 +42,14 @@ import { ordersAPI } from './utils/api';
 type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'admin-login' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Initialize view from URL
   const [currentView, setCurrentView] = useState<ViewState>(() => {
-    const path = window.location.pathname.substring(1); // remove leading slash
+    const path = location.pathname.substring(1); // remove leading slash
     if (path === '' || path === 'home') return 'home';
-    if (path === 'shop') return 'shop';
+    if (path === 'shop' || path.startsWith('category/') || path.startsWith('brand/')) return 'shop';
     if (path === 'brands') return 'brands';
     if (path === 'categories') return 'categories';
     if (path === 'wishlist') return 'wishlist';
@@ -53,18 +58,13 @@ function App() {
     if (path === 'admin') return 'admin-dashboard';
     if (path === 'admin-login') return 'admin-login';
     if (path === 'checkout') return 'checkout';
+    if (path.startsWith('product/')) return 'product-detail';
     if (path === 'privacy-policy') return 'privacy-policy';
     if (path === 'terms-of-service') return 'terms-of-service';
     return 'home';
   });
 
-  // Sync URL with View State
-  useEffect(() => {
-    const path = currentView === 'home' ? '/' : `/${currentView}`;
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, '', path);
-    }
-  }, [currentView]);
+
   const [shopCategory, setShopCategory] = useState<string | null>(null);
   const [shopBrand, setShopBrand] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -72,6 +72,9 @@ function App() {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [activeTab, setActiveTab] = useState<'new' | 'top' | 'featured'>('new');
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [dataLoadError, setDataLoadError] = useState<string | null>(null);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [showSkeletons, setShowSkeletons] = useState(false);
 
   // App Data State (Initially Empty - Populated by Migration Data)
   const [products, setProducts] = useState<Product[]>([]);
@@ -86,175 +89,368 @@ function App() {
 
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [promotionalTiles, setPromotionalTiles] = useState<PromotionalTile[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Load Real Data from Secure Backend API
+  // STALE-WHILE-REVALIDATE: Load data with caching for instant display
   useEffect(() => {
     const loadAppData = async () => {
+      console.log("🚀 Starting app data load with stale-while-revalidate...");
+      
+      // STEP 1: Load from cache FIRST (instant - no waiting)
+      const cachedProducts = cache.get<Product[]>(CACHE_KEYS.PRODUCTS);
+      const cachedCategories = cache.get<any[]>(CACHE_KEYS.CATEGORIES);
+      const cachedBrands = cache.get<any[]>(CACHE_KEYS.BRANDS);
+      const cachedHeroSlides = cache.get<HeroSlide[]>(CACHE_KEYS.HERO_SLIDES);
+      const cachedSettings = cache.get<any>(CACHE_KEYS.SETTINGS);
+
+      // If we have cached data, show it immediately
+      if (cachedProducts) {
+        console.log(`📦 Cache hit: ${cachedProducts.length} products loaded instantly`);
+        setProducts(cachedProducts);
+      }
+      if (cachedCategories) {
+        setCategories(cachedCategories);
+      }
+      if (cachedBrands) {
+        setBrands(cachedBrands);
+      }
+      if (cachedHeroSlides) {
+        setHeroSlides(cachedHeroSlides);
+      }
+      if (cachedSettings) {
+        setSettings((prev: any) => ({ ...prev, ...cachedSettings }));
+      }
+
+      // Show loading state only if we have NO cached data
+      const hasNoData = !cachedProducts && !cachedCategories && !cachedBrands;
+      if (hasNoData) {
+        setIsDataLoading(true);
+      }
+
+      // STEP 2: Fetch FRESH data from API in background
+      setDataLoadError(null);
+      setLoadProgress(10);
+      
       try {
-        const { productsAPI, categoriesAPI, brandsAPI, authAPI, heroSlidesAPI, promotionalTilesAPI, usersAPI, ordersAPI, settingsAPI, reviewsAPI } = await import('./utils/api');
+        const api = await import('./utils/api');
+        const { productsAPI, categoriesAPI, brandsAPI, heroSlidesAPI, promotionalTilesAPI, settingsAPI, authAPI } = api;
 
-        // Fetch critical data first (products, categories, settings) - stagger to avoid cold start overload
-        const criticalData = await Promise.allSettled([
-          productsAPI.getAll({ limit: 5000 }),
+        setLoadProgress(20);
+
+        // Fetch products FIRST (critical), then others in parallel
+        console.log("📡 Fetching products from API...");
+        let productsResponse;
+        try {
+          productsResponse = await productsAPI.getAll({ limit: 5000 });
+          console.log(`📦 Products API response received, type:`, typeof productsResponse);
+          console.log(`📦 Products has products key:`, productsResponse?.products !== undefined);
+        } catch (err) {
+          console.error("❌ Products API call failed:", err);
+          throw err; // Re-throw to trigger catch block
+        }
+        
+        setLoadProgress(40);
+
+        // Then load other data in parallel
+        const [categoriesResponse, brandsResponse, slidesResponse, tilesResponse, settingsResponse, authResponse] = await Promise.allSettled([
           categoriesAPI.getAll(),
-          settingsAPI.get(),
-        ]);
-
-        // Then load secondary data
-        const secondaryData = await Promise.allSettled([
           brandsAPI.getAll(),
-          authAPI.me(),
           heroSlidesAPI.getAll(),
           promotionalTilesAPI.getAll(),
+          settingsAPI.get(),
+          authAPI.me()
         ]);
 
-        // Load admin data (orders, users, reviews) - lower priority
-        const adminData = await Promise.allSettled([
-          usersAPI.getAll({ limit: 500 }),
-          ordersAPI.getAllAdmin({ limit: 500 }),
-          reviewsAPI.getAllAdmin()
-        ]);
+        setLoadProgress(70);
 
-        console.log("Loading secure backend data...");
+        // Process products - check response structure and transform if needed
+        let freshProducts: any[] = [];
+        if (productsResponse && productsResponse.products) {
+          freshProducts = productsResponse.products;
+          console.log(`✅ Products response has ${freshProducts.length} products`);
+        } else if (productsResponse && Array.isArray(productsResponse)) {
+          freshProducts = productsResponse;
+          console.log(`✅ Products response is array with ${freshProducts.length} products`);
+        } else {
+          console.error("❌ Products response structure unexpected:", productsResponse);
+        }
 
-        // Helper to extract data from PromiseSettledResult
-        const getData = (result: PromiseSettledResult<any>, key: string): any[] => {
+        // Transform products to ensure they match Product type
+        const transformedProducts = freshProducts.map((p: any) => ({
+          id: p.id,
+          name: p.name || 'Unknown Product',
+          category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
+          price: p.price || 0,
+          originalPrice: p.originalPrice || p.price,
+          rating: p.rating || 0,
+          reviews: p.reviews || 0,
+          image: p.image || p.images?.[0] || '/placeholder.png',
+          badge: p.badge,
+          badgeColor: p.badgeColor,
+          badgeId: p.badgeId,
+          timer: p.timer,
+          brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+          description: p.description,
+          features: p.features || [],
+          specs: p.specs || {},
+          images: p.images || [p.image],
+          attributes: p.attributes || [],
+          variations: p.variations || [],
+          shortDescription: p.shortDescription,
+          weight: p.weight,
+          seoTitle: p.seoTitle,
+          seoDescription: p.seoDescription,
+          seoKeywords: p.seoKeywords,
+          stock: p.stock ?? 10,
+          // Additional fields from API
+          slug: p.slug,
+          type: p.type,
+          sku: p.sku,
+        }));
+
+        if (transformedProducts.length > 0) {
+          setProducts(transformedProducts);
+          cache.set(CACHE_KEYS.PRODUCTS, transformedProducts, CACHE_TTL.PRODUCTS);
+          console.log(`✅ Loaded and cached ${transformedProducts.length} products`);
+        } else {
+          console.warn("⚠️ No products loaded from API");
+        }
+
+        // Process other results
+        const processResult = (result: PromiseSettledResult<any>, key: string): any[] => {
           if (result.status === 'fulfilled' && result.value) {
-            return result.value[key] || result.value.data || [];
+            // Check for nested structure
+            if (result.value[key]) return result.value[key];
+            if (result.value.data && result.value.data[key]) return result.value.data[key];
+            if (Array.isArray(result.value)) return result.value;
+            return [];
+          }
+          if (result.status === 'rejected') {
+            console.error(`❌ API call failed:`, result.reason);
           }
           return [];
         };
 
-        const getUserData = (result: PromiseSettledResult<any>) => {
-          if (result.status === 'fulfilled' && result.value) {
-            return result.value.user || null;
-          }
-          return null;
-        };
-
-        const products = getData(criticalData[0], 'products');
-        const categories = getData(criticalData[1], 'categories');
-        const settingsData = criticalData[2].status === 'fulfilled' ? criticalData[2].value : null;
-        
-        const brands = getData(secondaryData[0], 'brands');
-        const meUser = getUserData(secondaryData[1]);
-        const heroSlides = getData(secondaryData[2], 'slides');
-        const promoTiles = getData(secondaryData[3], 'tiles');
-        
-        const users = getData(adminData[0], 'users');
-        const orders = getData(adminData[1], 'orders');
-        const reviews = getData(adminData[2], 'reviews');
-
-        if (products && products.length > 0) {
-          setProducts(products);
-        } else {
-          setProducts([]);
-        }
-
-        if (categories && categories.length > 0) {
-          // Add slug and default icons for UI
-          setCategories(categories.map((cat: any) => ({
+        const freshCategories = processResult(categoriesResponse, 'categories');
+        if (freshCategories.length > 0) {
+          const categoriesWithMeta = freshCategories.map((cat: any) => ({
             ...cat,
-            slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
+            slug: cat.slug || cat.name?.toLowerCase().replace(/\s+/g, '-'),
             iconClass: cat.iconClass || 'fas fa-teeth'
-          })));
-        } else {
-          setCategories([]);
+          }));
+          setCategories(categoriesWithMeta);
+          cache.set(CACHE_KEYS.CATEGORIES, categoriesWithMeta, CACHE_TTL.CATEGORIES);
         }
 
-        if (brands && brands.length > 0) {
-          setBrands(brands.map((brand: any) => ({
+        const freshBrands = processResult(brandsResponse, 'brands');
+        if (freshBrands.length > 0) {
+          const brandsWithMeta = freshBrands.map((brand: any) => ({
             ...brand,
             logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
             productCount: brand.productCount || 0
-          })));
-        } else {
-          setBrands([]);
+          }));
+          setBrands(brandsWithMeta);
+          cache.set(CACHE_KEYS.BRANDS, brandsWithMeta, CACHE_TTL.BRANDS);
         }
 
-        if (heroSlides && heroSlides.length > 0) {
-          setHeroSlides(heroSlides);
-        } else {
-          setHeroSlides([]);
+        const freshSlides = processResult(slidesResponse, 'slides');
+        if (freshSlides.length > 0) {
+          setHeroSlides(freshSlides);
+          cache.set(CACHE_KEYS.HERO_SLIDES, freshSlides, CACHE_TTL.HERO_SLIDES);
         }
 
-        if (promoTiles && promoTiles.length > 0) {
-          setPromotionalTiles(promoTiles);
-        } else {
-          setPromotionalTiles([]);
+        const freshTiles = processResult(tilesResponse, 'tiles');
+        if (freshTiles.length > 0) {
+          setPromotionalTiles(freshTiles);
+          cache.set(CACHE_KEYS.PROMO_TILES, freshTiles, CACHE_TTL.PROMO_TILES);
         }
 
-        if (users && users.length > 0) {
-          setUsers(users);
-        } else {
-          setUsers([]);
-        }
-
-        if (orders && orders.length > 0) {
-          setOrders(orders);
-        } else {
-          // Check localStorage as fallback for orders
-          const savedOrders = localStorage.getItem('alpha_orders');
-          if (savedOrders) {
-            setOrders(JSON.parse(savedOrders));
+        // Settings
+        if (settingsResponse.status === 'fulfilled' && settingsResponse.value) {
+          const innerSettings = settingsResponse.value.settings ?? settingsResponse.value;
+          if (innerSettings && typeof innerSettings === 'object') {
+            setSettings((prev: any) => ({
+              ...prev,
+              ...innerSettings,
+              whatsapp: innerSettings.whatsapp || prev.whatsapp
+            }));
+            cache.set(CACHE_KEYS.SETTINGS, innerSettings, CACHE_TTL.SETTINGS);
           }
         }
 
-        if (reviews && reviews.length > 0) {
-          setReviews(reviews);
+        // Auth
+        if (authResponse.status === 'fulfilled' && authResponse.value?.user) {
+          const meUser = authResponse.value.user;
+          if (!localStorage.getItem('alpha_user')) {
+            setUser(meUser);
+            setIsAdmin(meUser.role === 'admin');
+            localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
+            setIsLoggedIn(true);
+          }
+        }
+
+        setLoadProgress(100);
+        setIsDataLoading(false);
+        console.log("✅ All data loaded and cached successfully");
+
+      } catch (err: any) {
+        console.error("❌ Failed to fetch fresh data:", err);
+        console.error("Error type:", err?.constructor?.name);
+        console.error("Error message:", err?.message);
+        console.error("Error code:", err?.code);
+        console.error("Response data:", err?.response?.data);
+        
+        // If we have cached data, keep showing it (stale is better than nothing)
+        if (cachedProducts || cachedCategories || cachedBrands) {
+          console.log("📦 Using stale cached data (fetch failed)");
+          setIsDataLoading(false);
+          setDataLoadError("Using cached data. Some information may be outdated.");
         } else {
-          setReviews([]);
+          // No cache and fetch failed - show error
+          const errorMsg = err?.response?.data?.message || err?.message || "Failed to connect to server";
+          setDataLoadError(errorMsg);
         }
-
-        // Apply settings from API if available
-        if (settingsData && typeof settingsData === 'object') {
-          setSettings((prev: any) => ({
-            ...prev,
-            ...settingsData,
-            // Preserve WhatsApp settings if not in API response
-            whatsapp: settingsData.whatsapp || prev.whatsapp
-          }));
-        }
-
-        if (meUser && !localStorage.getItem('alpha_user')) {
-          // Only set user from API if not already restored from localStorage
-          setUser(meUser);
-          setIsAdmin(meUser.role === 'admin');
-          localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
-          setIsLoggedIn(true);
-        }
-        // This line was duplicated and should be part of the above if block or handled differently
-        // setIsAdmin(meData.user.role === 'admin');
-
-
-        setIsDataLoading(false);
-      } catch (err) {
-        console.warn("SECURE BACKEND UNREACHABLE - Using fallback constants", err);
-        // setProducts(ALL_PRODUCTS);
-        setProducts([]);
-        // setCategories(CATEGORIES.map(cat => ({ ...cat, slug: cat.name.toLowerCase().replace(/\s+/g, '-') })));
-        setCategories([]);
-        // setBrands(BRAND_PROFILES);
-        setBrands([]);
-        // setHeroSlides(HERO_SLIDES);
-        setHeroSlides([]);
-        setIsDataLoading(false);
       }
     };
 
     loadAppData();
   }, []);
 
-  // React Router navigation
-  const navigate = useNavigate();
+  // Retry function for data loading
+  const retryDataLoad = () => {
+    // Clear cache and reload
+    cache.clear();
+    setIsDataLoading(true);
+    setDataLoadError(null);
+    setLoadProgress(0);
+    window.location.reload();
+  };
+
+  // Manual refresh function (for pull-to-refresh or button)
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    cache.clear(); // Clear cache to force fresh fetch
+    
+    try {
+      const api = await import('./utils/api');
+      const { productsAPI, categoriesAPI, brandsAPI, heroSlidesAPI, settingsAPI } = api;
+
+      // Fetch products first
+      const productsResponse = await productsAPI.getAll({ limit: 5000 });
+      
+      // Then others
+      const [categoriesResponse, brandsResponse, slidesResponse, settingsResponse] = await Promise.allSettled([
+        categoriesAPI.getAll(),
+        brandsAPI.getAll(),
+        heroSlidesAPI.getAll(),
+        settingsAPI.get()
+      ]);
+
+      // Process products
+      let freshProducts: any[] = [];
+      if (productsResponse && productsResponse.products) {
+        freshProducts = productsResponse.products;
+      } else if (productsResponse && Array.isArray(productsResponse)) {
+        freshProducts = productsResponse;
+      }
+
+      // Transform products to ensure they match Product type
+      const transformedProducts = freshProducts.map((p: any) => ({
+        id: p.id,
+        name: p.name || 'Unknown Product',
+        category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
+        price: p.price || 0,
+        originalPrice: p.originalPrice || p.price,
+        rating: p.rating || 0,
+        reviews: p.reviews || 0,
+        image: p.image || p.images?.[0] || '/placeholder.png',
+        badge: p.badge,
+        badgeColor: p.badgeColor,
+        badgeId: p.badgeId,
+        timer: p.timer,
+        brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+        description: p.description,
+        features: p.features || [],
+        specs: p.specs || {},
+        images: p.images || [p.image],
+        attributes: p.attributes || [],
+        variations: p.variations || [],
+        shortDescription: p.shortDescription,
+        weight: p.weight,
+        seoTitle: p.seoTitle,
+        seoDescription: p.seoDescription,
+        seoKeywords: p.seoKeywords,
+        stock: p.stock ?? 10,
+        slug: p.slug,
+        type: p.type,
+        sku: p.sku,
+      }));
+
+      if (transformedProducts.length > 0) {
+        setProducts(transformedProducts);
+        cache.set(CACHE_KEYS.PRODUCTS, transformedProducts, CACHE_TTL.PRODUCTS);
+        console.log(`🔄 Refreshed ${transformedProducts.length} products`);
+      }
+
+      const processResult = (result: PromiseSettledResult<any>, key: string): any[] => {
+        if (result.status === 'fulfilled' && result.value) {
+          return result.value[key] || result.value.data || [];
+        }
+        return [];
+      };
+
+      const freshCategories = processResult(categoriesResponse, 'categories');
+      if (freshCategories.length > 0) {
+        const categoriesWithMeta = freshCategories.map((cat: any) => ({
+          ...cat,
+          slug: cat.slug || cat.name?.toLowerCase().replace(/\s+/g, '-'),
+          iconClass: cat.iconClass || 'fas fa-teeth'
+        }));
+        setCategories(categoriesWithMeta);
+        cache.set(CACHE_KEYS.CATEGORIES, categoriesWithMeta, CACHE_TTL.CATEGORIES);
+      }
+
+      const freshBrands = processResult(brandsResponse, 'brands');
+      if (freshBrands.length > 0) {
+        const brandsWithMeta = freshBrands.map((brand: any) => ({
+          ...brand,
+          logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
+          productCount: brand.productCount || 0
+        }));
+        setBrands(brandsWithMeta);
+        cache.set(CACHE_KEYS.BRANDS, brandsWithMeta, CACHE_TTL.BRANDS);
+      }
+
+      const freshSlides = processResult(slidesResponse, 'slides');
+      if (freshSlides.length > 0) {
+        setHeroSlides(freshSlides);
+        cache.set(CACHE_KEYS.HERO_SLIDES, freshSlides, CACHE_TTL.HERO_SLIDES);
+      }
+
+      if (settingsResponse.status === 'fulfilled' && settingsResponse.value) {
+        const innerSettings = settingsResponse.value.settings ?? settingsResponse.value;
+        if (innerSettings && typeof innerSettings === 'object') {
+          setSettings((prev: any) => ({ ...prev, ...innerSettings }));
+          cache.set(CACHE_KEYS.SETTINGS, innerSettings, CACHE_TTL.SETTINGS);
+        }
+      }
+
+      console.log("✅ Data refreshed successfully");
+    } catch (err) {
+      console.error("❌ Refresh failed:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const isInitialMount = useRef(true);
 
-  // Sync URL with state for all pages
+  // Sync URL with state for all pages (Listen to location.pathname changes)
   useEffect(() => {
     // Wait for data to load before syncing URL
     if (products.length === 0) return;
 
-    const path = window.location.pathname;
+    const path = location.pathname;
 
     // Product detail: /product/colgate-periogard-toothbrush-38243
     const productMatch = path.match(/^\/product\/(.+)$/);
@@ -328,7 +524,7 @@ function App() {
     } else if (path === '/') {
       setCurrentView('home');
     }
-  }, [products, brands, categories, navigate]);
+  }, [location.pathname, products, brands, categories]);
 
   // Update URL when view/product/brand/category changes
   useEffect(() => {
@@ -385,8 +581,8 @@ function App() {
       newPath = '/terms-of-service';
     }
 
-    if (window.location.pathname !== newPath) {
-      window.history.pushState({}, '', newPath);
+    if (location.pathname !== newPath) {
+      navigate(newPath);
     }
   }, [currentView, selectedProduct, shopBrand, shopCategory, brands, categories]);
 
@@ -429,6 +625,10 @@ function App() {
         accessToken: '',
         businessAccountId: ''
       },
+      // NEW: Dynamic Homepage Sections
+      featuredCategorySections: ['Restorative', 'Endodontics', 'Equipment'],
+      showcaseCategories: [],
+      showcaseBrands: [],
       notifications: {
         orderConfirmation: true,
         orderConfirmationMessage: 'Thank you for your order! We have received it and will process it shortly.',
@@ -506,7 +706,41 @@ function App() {
   useEffect(() => { localStorage.setItem('alpha_orders', JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem('alpha_recently_viewed', JSON.stringify(recentlyViewed)); }, [recentlyViewed]);
 
-  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  // Sync orders to user (for customer dashboard)
+  useEffect(() => {
+    if (user && orders.length > 0) {
+      const userOrders = orders.filter(o => o.userId === user.email || o.email === user.email || o.customerName === user.name);
+      if (JSON.stringify(userOrders) !== JSON.stringify(user.orders)) {
+        setUser({ ...user, orders: userOrders });
+      }
+    }
+  }, [orders, user]);
+
+  // Fetch user orders on login
+  useEffect(() => {
+    if (user && !isAdmin) {
+      const fetchUserOrders = async () => {
+        try {
+          const response = await ordersAPI.getMyOrders();
+          if (response.orders && response.orders.length > 0) {
+            // Merge with existing orders
+            setOrders(prev => {
+              const existingIds = new Set(prev.map(o => o.id));
+              const newOrders = response.orders.filter((o: any) => !existingIds.has(o.id));
+              return [...newOrders, ...prev];
+            });
+            // Also update user orders
+            setUser({ ...user, orders: response.orders });
+          }
+        } catch (error) {
+          console.error('Failed to fetch user orders:', error);
+        }
+      };
+      fetchUserOrders();
+    }
+  }, [user, isAdmin]);
+
+
 
   // Derived State
   const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + (item.price * item.quantity), 0), [cart]);
@@ -586,7 +820,7 @@ function App() {
     try {
       const { heroSlidesAPI } = await import('./utils/api');
       await heroSlidesAPI.update(updatedSlide.id, updatedSlide);
-      setHeroSlides(heroSlides.map(s => s.id === updatedSlide.id ? updatedSlide : s));
+      setHeroSlides(prev => prev.map(s => s.id === updatedSlide.id ? updatedSlide : s));
     } catch (e) {
       console.error("Failed to update slide", e);
     }
@@ -596,7 +830,7 @@ function App() {
     try {
       const { heroSlidesAPI } = await import('./utils/api');
       await heroSlidesAPI.delete(id);
-      setHeroSlides(heroSlides.filter(s => s.id !== id));
+      setHeroSlides(prev => prev.filter(s => s.id !== id));
     } catch (e) {
       console.error("Failed to delete slide", e);
     }
@@ -622,6 +856,17 @@ function App() {
     }
   };
 
+  // Logic for computing showcase categories for the storefront
+  const { displayCategories, shouldAnimateCategories } = useMemo(() => {
+    const display = (settings?.showcaseCategories && settings.showcaseCategories.length > 0)
+      ? settings.showcaseCategories.map((name: string) => categories.find(c => c.name === name)).filter(Boolean) as Category[]
+      : categories.slice(0, 8);
+    return {
+      displayCategories: display,
+      shouldAnimateCategories: display.length > 6
+    };
+  }, [settings?.showcaseCategories, categories]);
+
   const handleToggleBrandFeatured = async (brandId: number, isFeatured: boolean) => {
     // Optimistic update
     setBrands(prev => prev.map(b => b.id === brandId ? { ...b, isFeatured } : b));
@@ -637,6 +882,12 @@ function App() {
   const handleReorderFeaturedBrands = async (reorderedBrands: BrandProfile[]) => {
     // Logic for reordering if needed in future
     console.log("Reorder not implemented yet");
+  };
+
+  const handleSaveHomepageSettings = async (newSettings: Partial<HomepageSettings>) => {
+    const { settingsAPI } = await import('./utils/api');
+    await settingsAPI.update(newSettings);
+    setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   // Demo User for Local Mode
@@ -794,17 +1045,7 @@ function App() {
     });
   };
 
-  const scrollCategories = (direction: 'left' | 'right') => {
-    if (categoryScrollRef.current) {
-      const { current } = categoryScrollRef;
-      const scrollAmount = 300;
-      if (direction === 'left') {
-        current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-      } else {
-        current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-      }
-    }
-  };
+
 
   const handlePlaceOrder = async (paymentId: string, transactionId: string, signature?: string) => {
     if (!user) return;
@@ -902,9 +1143,7 @@ function App() {
     </section>
   );
 
-  const restorativeProducts = products.filter(p => p.category === 'Restorative').slice(0, 4);
-  const endoProducts = products.filter(p => p.category === 'Endodontics').slice(0, 4);
-  const equipmentProducts = products.filter(p => p.category === 'Equipment').slice(0, 4);
+
 
   // Tabbed Data Logic
   const tabProducts = useMemo(() => {
@@ -919,9 +1158,197 @@ function App() {
     }
   }, [activeTab, products]);
 
+  // Load admin data (orders, users, reviews) when admin dashboard is accessed
+  useEffect(() => {
+    if (isAdmin || currentView === 'admin-dashboard') {
+      const loadAdminData = async () => {
+        try {
+          // Fetch orders
+          const ordersResponse = await ordersAPI.getAllAdmin({ limit: 500 });
+          if (ordersResponse.orders) {
+            setOrders(ordersResponse.orders);
+            localStorage.setItem('alpha_orders', JSON.stringify(ordersResponse.orders));
+          }
+          
+          // Fetch reviews
+          const { reviewsAPI } = await import('./utils/api');
+          try {
+            const reviewsResponse = await reviewsAPI.getAllAdmin();
+            if (reviewsResponse.reviews) {
+              // Map reviews to expected format
+              const mappedReviews = reviewsResponse.reviews.map((r: any) => ({
+                id: r.id,
+                product: r.productId || r.productName || 'Unknown Product',
+                user: r.reviewer || r.userId || 'Anonymous',
+                rating: r.rating || 0,
+                comment: r.content || r.title || '',
+                date: r.createdAt?._seconds 
+                  ? new Date(r.createdAt._seconds * 1000).toLocaleDateString()
+                  : (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Unknown')
+              }));
+              setReviews(mappedReviews);
+            }
+          } catch (reviewError) {
+            console.warn('Reviews API failed:', reviewError);
+          }
+          
+          // Fetch users using pagination
+          await fetchUsersPage(1);
+        } catch (error) {
+          console.error('Failed to load admin data:', error);
+        }
+      };
+      loadAdminData();
+    }
+  }, [isAdmin, currentView]);
 
-
-
+  // Users pagination state
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersPageToken, setUsersPageToken] = useState<string | null>(null);
+  const [isLoadingUsersPage, setIsLoadingUsersPage] = useState(false);
+  const [totalUsersCount, setTotalUsersCount] = useState(0);
+  const [totalUsersPages, setTotalUsersPages] = useState(0);
+  const [usersPageTokens, setUsersPageTokens] = useState<Map<number, string>>(new Map());
+  const usersPerPage = 100;
+  
+  // Fetch a specific page of users (with sequential fetching for cursor-based pagination)
+  const fetchUsersPage = async (page: number, pageTokenFromProps?: string) => {
+    setIsLoadingUsersPage(true);
+    try {
+      // If going to a page we don't have a token for, we need to fetch sequentially
+      const currentPage = usersPage;
+      let targetPage = page;
+      
+      // Check if we have the token for this page
+      let pageToken = pageTokenFromProps || usersPageTokens.get(targetPage);
+      
+      // If no token and not on page 1, we need to fetch sequentially from current position
+      if (!pageToken && targetPage > 1 && targetPage > currentPage) {
+        console.log(`🔄 Need to fetch pages sequentially from ${currentPage + 1} to ${targetPage}`);
+        let nextToken = usersPageToken || usersPageTokens.get(currentPage + 1);
+        let fetchPage = currentPage + 1;
+        
+        // Fetch pages sequentially until we reach target
+        while (fetchPage <= targetPage && nextToken) {
+          const cacheBuster = Date.now();
+          const isLastFetch = fetchPage === targetPage;
+          let url = `/api/v1/users/all?limit=${usersPerPage}&pageToken=${encodeURIComponent(nextToken)}&_cb=${cacheBuster}`;
+          if (isLastFetch) {
+            url += '&getTotal=true'; // Get total on final fetch
+          }
+          
+          console.log(`📡 Sequential fetch: page ${fetchPage}, url: ${url}`);
+          
+          const response = await fetch(url, {
+            credentials: 'include',
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+          const data = await response.json();
+          
+          if (isLastFetch) {
+            // This is our target page
+            if (data.users && data.users.length > 0) {
+              setUsers(data.users);
+            }
+            
+            // Update total count
+            if (data.total && data.total > 0) {
+              setTotalUsersCount(data.total);
+              const pages = Math.ceil(data.total / usersPerPage);
+              setTotalUsersPages(pages);
+              console.log(`📊 Total users: ${data.total}, Total pages: ${pages}`);
+            }
+            
+            // Store next page token
+            if (data.nextPageToken) {
+              setUsersPageTokens(prev => {
+                const newMap = new Map(prev);
+                newMap.set(targetPage + 1, data.nextPageToken);
+                return newMap;
+              });
+              setUsersPageToken(data.nextPageToken);
+            } else {
+              setUsersPageToken(null);
+            }
+            
+            setUsersPage(targetPage);
+            return data;
+          }
+          
+          // Store token for next page
+          if (data.nextPageToken) {
+            setUsersPageTokens(prev => {
+              const newMap = new Map(prev);
+              newMap.set(fetchPage + 1, data.nextPageToken);
+              return newMap;
+            });
+            nextToken = data.nextPageToken;
+          } else {
+            // No more pages
+            console.log('⚠️ No more pages available');
+            break;
+          }
+          
+          fetchPage++;
+        }
+        
+        setIsLoadingUsersPage(false);
+        return;
+      }
+      
+      // Normal fetch with available token
+      const cacheBuster = Date.now();
+      let url = `/api/v1/users/all?limit=${usersPerPage}&_cb=${cacheBuster}`;
+      
+      // On first load (page 1), get total count
+      if (targetPage === 1 && !pageToken) {
+        url += '&getTotal=true';
+      }
+      
+      if (pageToken) {
+        url = `/api/v1/users/all?limit=${usersPerPage}&pageToken=${encodeURIComponent(pageToken)}&_cb=${cacheBuster}`;
+      }
+      
+      console.log(`📡 Fetching users page ${targetPage}, url: ${url}`);
+      
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      const data = await response.json();
+      
+      if (data.users && data.users.length > 0) {
+        setUsers(data.users);
+      }
+      
+      // Update total count
+      if (data.total && data.total > 0) {
+        setTotalUsersCount(data.total);
+        const pages = Math.ceil(data.total / usersPerPage);
+        setTotalUsersPages(pages);
+        console.log(`📊 Total users: ${data.total}, Total pages: ${pages}`);
+      }
+      
+      // Store next page token for next page
+      if (data.nextPageToken) {
+        setUsersPageTokens(prev => {
+          const newMap = new Map(prev);
+          newMap.set(targetPage + 1, data.nextPageToken);
+          return newMap;
+        });
+      }
+      
+      setUsersPageToken(data.nextPageToken || null);
+      setUsersPage(targetPage);
+      
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch users page:', error);
+      throw error;
+    } finally {
+      setIsLoadingUsersPage(false);
+    }
+  };
 
   if ((currentView as ViewState) === 'admin-login') {
     return (
@@ -977,6 +1404,12 @@ function App() {
         onUpdatePromotionalTile={handleUpdatePromotionalTile}
         onToggleBrandFeatured={handleToggleBrandFeatured}
         onReorderFeaturedBrands={handleReorderFeaturedBrands}
+        onSaveSettings={handleSaveHomepageSettings}
+        usersPage={usersPage}
+        totalUsersCount={totalUsersCount}
+        totalUsersPages={totalUsersPages}
+        onUsersPageChange={fetchUsersPage}
+        isLoadingUsersPage={isLoadingUsersPage}
       />
     );
   }
@@ -995,8 +1428,20 @@ function App() {
 
   // Show loading state while data is being fetched (prevents flash of wrong content on direct URL access)
   if (isDataLoading) {
-    return <Loading fullScreen message="Loading Alpha Dentkart..." />;
+    return (
+      <Loading 
+        fullScreen 
+        message="Loading Alpha Dentkart..." 
+        showProgress={true}
+        progress={loadProgress}
+        error={dataLoadError}
+        onRetry={retryDataLoad}
+      />
+    );
   }
+
+  // Show skeleton loaders while data is partially loaded
+  const isPartiallyLoaded = !isDataLoading && products.length === 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background-dark flex flex-col">
@@ -1057,20 +1502,33 @@ function App() {
         {currentView === 'home' && (
           <>
             <div className="space-y-6 md:space-y-8 px-4 md:px-0">
-              <Hero
-                onShopClick={() => navigateToShop()}
-                onProductClick={handleProductClick}
-                onCategoryClick={(category) => navigateToShop(category)}
-                onBrandClick={(brand) => navigateToShop(undefined, brand)}
-                products={products}
-                slides={heroSlides}
-              />
-              <BrandScroll onBrandClick={(brand) => navigateToShop(undefined, brand)} brands={brands} />
+              {products.length > 0 || heroSlides.length > 0 ? (
+                <>
+                  <Hero
+                    onShopClick={() => navigateToShop()}
+                    onProductClick={handleProductClick}
+                    onCategoryClick={(category) => navigateToShop(category)}
+                    onBrandClick={(brand) => navigateToShop(undefined, brand)}
+                    products={products}
+                    slides={heroSlides}
+                  />
+                  <BrandScroll onBrandClick={(brand) => navigateToShop(undefined, brand)} brands={brands} />
+                </>
+              ) : (
+                <div className="animate-pulse">
+                  <div className="bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 h-80 md:h-96 rounded-2xl"></div>
+                  <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0"></div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Premium Categories Box Mesh - Horizontal Scroll */}
-            <section className="px-4 md:px-0">
-              <div className="flex justify-between items-end mb-6">
+            {/* Premium Categories Box Mesh - Horizontal Auto Scroll */}
+            <section className="px-0 relative overflow-hidden">
+              <div className="flex justify-between items-end mb-6 px-4 md:px-0">
                 <div>
                   <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white tracking-tighter">Shop by Category</h3>
                   <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Professional Excellence</p>
@@ -1083,19 +1541,68 @@ function App() {
                 </button>
               </div>
 
-              <div ref={categoryScrollRef} className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide scroll-smooth snap-x">
-                {categories.map(cat => (
-                  <a key={cat.id} onClick={() => navigateToShop(cat.name)} className="flex flex-col items-center min-w-[100px] md:min-w-[140px] gap-3 group cursor-pointer snap-start">
-                    <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] bg-white dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:border-primary/30 group-hover:shadow-premium transition-all duration-500 overflow-hidden relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      <i className={`${cat.icon || 'fas fa-tooth'} text-2xl md:text-4xl group-hover:scale-110 group-hover:text-primary transition-transform duration-500`}></i>
-                    </div>
-                    <span className="text-[10px] md:text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest group-hover:text-primary transition-colors text-center px-1 truncate w-full">
-                      {cat.name}
-                    </span>
-                  </a>
-                ))}
-              </div>
+              {/* Gradient Masks for smooth fade out at edges */}
+              <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent dark:from-surface-dark pointer-events-none z-10 md:hidden"></div>
+              <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent dark:from-surface-dark pointer-events-none z-10 md:hidden"></div>
+
+              {!shouldAnimateCategories ? (
+                <div className="flex flex-wrap justify-center gap-4 md:gap-8 px-4 py-4">
+                  {displayCategories.map(cat => (
+                    <a key={`cat-static-${cat.id}`} onClick={() => navigateToShop(cat.name)} className="flex flex-col items-center min-w-[100px] md:min-w-[140px] gap-3 group cursor-pointer">
+                      <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] bg-white dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:border-primary/30 group-hover:shadow-premium transition-all duration-500 overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        {cat.image ? (
+                          <img src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" />
+                        ) : (
+                          <i className={`${cat.icon || 'fas fa-tooth'} text-2xl md:text-4xl group-hover:scale-110 group-hover:text-primary transition-transform duration-500`}></i>
+                        )}
+                      </div>
+                      <span className="text-[10px] md:text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest group-hover:text-primary transition-colors text-center px-1 truncate w-full">
+                        {cat.name}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex w-max animate-infinite-scroll hover-pause py-4">
+                  {/* First Set */}
+                  <div className="flex gap-4 md:gap-6 px-4 md:px-0">
+                    {displayCategories.map(cat => (
+                      <a key={`cat1-${cat.id}`} onClick={() => navigateToShop(cat.name)} className="flex flex-col items-center min-w-[100px] md:min-w-[140px] gap-3 group cursor-pointer">
+                        <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] bg-white dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:border-primary/30 group-hover:shadow-premium transition-all duration-500 overflow-hidden relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          {cat.image ? (
+                            <img src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" />
+                          ) : (
+                            <i className={`${cat.icon || 'fas fa-tooth'} text-2xl md:text-4xl group-hover:scale-110 group-hover:text-primary transition-transform duration-500`}></i>
+                          )}
+                        </div>
+                        <span className="text-[10px] md:text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest group-hover:text-primary transition-colors text-center px-1 truncate w-full">
+                          {cat.name}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                  {/* Second Set (Duplicate for smooth infinite scroll) */}
+                  <div className="flex gap-4 md:gap-6 px-4 md:px-0">
+                    {displayCategories.map(cat => (
+                      <a key={`cat2-${cat.id}`} onClick={() => navigateToShop(cat.name)} className="flex flex-col items-center min-w-[100px] md:min-w-[140px] gap-3 group cursor-pointer">
+                        <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] bg-white dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:border-primary/30 group-hover:shadow-premium transition-all duration-500 overflow-hidden relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          {cat.image ? (
+                            <img src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" />
+                          ) : (
+                            <i className={`${cat.icon || 'fas fa-tooth'} text-2xl md:text-4xl group-hover:scale-110 group-hover:text-primary transition-transform duration-500`}></i>
+                          )}
+                        </div>
+                        <span className="text-[10px] md:text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-widest group-hover:text-primary transition-colors text-center px-1 truncate w-full">
+                          {cat.name}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
 
@@ -1156,9 +1663,71 @@ function App() {
               </div>
             </section>
 
-            {renderProductSection('Restorative Supplies', restorativeProducts, 'fas fa-fill', 'bg-blue-600/10 dark:bg-blue-900/20', 'text-blue-600 dark:text-blue-400')}
-            {renderProductSection('Endodontic Essentials', endoProducts, 'fas fa-tooth', 'bg-teal-600/10 dark:bg-teal-900/20', 'text-teal-600 dark:text-teal-400')}
-            {renderProductSection('Clinical Equipment', equipmentProducts, 'fas fa-stethoscope', 'bg-cyan-600/10 dark:bg-cyan-900/20', 'text-cyan-700 dark:text-cyan-400')}
+            {/* Dynamic Product Sections (Categories & Brands) */}
+            {(() => {
+              // Priority: User configured sections. Fallback: Default sections only if nothing is configured.
+              const hasUserConfig = (settings?.featuredCategorySections?.length ?? 0) > 0 || (settings?.featuredBrandSections?.length ?? 0) > 0;
+              
+              const categorySections = settings?.featuredCategorySections || (hasUserConfig ? [] : ['Restorative', 'Endodontics', 'Equipment']);
+              const brandSections = settings?.featuredBrandSections || [];
+              
+              const allSections = [
+                ...categorySections.map(name => ({ name, type: 'category' })),
+                ...brandSections.map(name => ({ name, type: 'brand' }))
+              ];
+
+              const styles = [
+                { bg: 'bg-blue-600/10 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400', icon: 'fas fa-fill' },
+                { bg: 'bg-teal-600/10 dark:bg-teal-900/20', text: 'text-teal-600 dark:text-teal-400', icon: 'fas fa-tooth' },
+                { bg: 'bg-cyan-600/10 dark:bg-cyan-900/20', text: 'text-cyan-700 dark:text-cyan-400', icon: 'fas fa-stethoscope' },
+                { bg: 'bg-indigo-600/10 dark:bg-indigo-900/20', text: 'text-indigo-600 dark:text-indigo-400', icon: 'fas fa-vial' },
+                { bg: 'bg-purple-600/10 dark:bg-purple-900/20', text: 'text-purple-600 dark:text-purple-400', icon: 'fas fa-clinic-medical' }
+              ];
+
+              return allSections.map((section, idx) => {
+                const sectionProducts = section.type === 'category' 
+                  ? products.filter(p => {
+                      const catName = typeof p.category === 'object' ? (p.category as any)?.name : p.category;
+                      return catName?.trim().toLowerCase() === section.name.trim().toLowerCase();
+                    }).slice(0, 4)
+                  : products.filter(p => {
+                      const brandName = typeof p.brand === 'object' ? (p.brand as any)?.name : p.brand;
+                      return brandName?.trim().toLowerCase() === section.name.trim().toLowerCase();
+                    }).slice(0, 4);
+                
+                if (sectionProducts.length === 0) {
+                  if (products.length > 0) {
+                    console.log(`[Homepage] Section "${section.name}" (${section.type}) is empty. Products available: ${products.length}`);
+                  }
+                  return null;
+                }
+
+                const style = styles[idx % styles.length];
+                let title = section.name;
+                let icon = style.icon;
+
+                if (section.type === 'category') {
+                  const catObj = categories.find(c => c.name === section.name);
+                  if (catObj?.iconClass) icon = catObj.iconClass;
+                  // Only add "Supplies" if title doesn't already sound like a collection
+                  const lowerTitle = section.name.toLowerCase();
+                  if (!lowerTitle.includes('supplies') && !lowerTitle.includes('essentials') && !lowerTitle.includes('equipment')) {
+                    title = `${section.name} Supplies`;
+                  }
+                } else {
+                  title = `${section.name} Specials`;
+                  const brandObj = brands.find(b => b.name === section.name);
+                  // Use a distinct icon for brands if possible or stick to a nice one
+                  icon = 'fas fa-certificate'; 
+                }
+
+                return (
+                  <div key={`section-${section.type}-${section.name}`}>
+                    {renderProductSection(title, sectionProducts, icon, style.bg, style.text)}
+                  </div>
+                );
+              });
+            })()}
 
             {/* Features Info - Grid */}
             <section className="px-4 md:px-0 py-8 border-t border-gray-200 dark:border-gray-700 mt-8">
@@ -1197,6 +1766,7 @@ function App() {
 
         <div className="px-4 md:px-0">
           {currentView === 'shop' && (
+            products.length > 0 ? (
             <Shop
               products={products}
               initialCategory={shopCategory}
@@ -1211,6 +1781,29 @@ function App() {
               brands={brands}
               onSearchUpdate={setSearchQuery}
             />
+            ) : (
+              <div className="py-8">
+                <div className="mb-6">
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse mb-2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 animate-pulse"></div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="bg-white dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm animate-pulse">
+                      <div className="bg-gray-200 dark:bg-gray-700 h-48"></div>
+                      <div className="p-4 space-y-3">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                        <div className="flex justify-between items-center mt-4">
+                          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                          <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
           )}
 
           {currentView === 'brands' && (

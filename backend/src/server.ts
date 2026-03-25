@@ -13,6 +13,7 @@ import notificationRoutes from './routes/notification.routes';
 import heroSlideRoutes from './routes/heroSlides';
 import promotionalTileRoutes from './routes/promotionalTiles';
 import reviewRoutes from './routes/reviews';
+import settingsRoutes from './routes/settings';
 import shippingRoutes from './routes/shipping';
 import shiprocketRoutes from './routes/shiprocket';
 import guestCheckoutRoutes from './routes/guestCheckout';
@@ -23,6 +24,9 @@ import savedPaymentRoutes from './routes/savedPayment';
 import quickReorderRoutes from './routes/quickReorder';
 import deliveryEstimationRoutes from './routes/deliveryEstimation';
 import returnRoutes from './routes/returns';
+import adminStatsRoutes from './routes/adminStats';
+import chatSessionRoutes from './routes/chatSessionRoutes';
+import userRoutes from './routes/users';
 // import { authLimiter } from '../middleware/rateLimiter'; // specific one
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
@@ -47,12 +51,23 @@ app.use(helmet({
 }));
 
 const ALLOWED_ORIGINS = [
-    CLIENT_URL,
-    'capacitor://localhost',
     'http://localhost:3000',
-    'http://localhost:5173',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:3004',
+    'http://localhost:3005',
+    'http://localhost:3006',
+    'http://localhost:3007',
+    'http://localhost:3008',
+    'http://localhost:3009',
     'https://alphadentkart.com',
-    'https://www.alphadentkart.com'
+    'https://www.alphadentkart.com',
+    'http://192.168.1.14:3000',
+    'http://192.168.1.14:3001',
+    'http://192.168.1.14:3002',
+    'http://192.168.1.14:3003',
+    'http://192.168.1.14:3004'
 ];
 
 app.use(cors({
@@ -103,11 +118,13 @@ app.get('/health', (req, res) => {
     });
 });
 
+
 // Audit logger for all API write operations
 app.use('/api', auditLogger);
 
 // API v1 Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/settings', settingsRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/brands', brandRoutes);
@@ -127,6 +144,9 @@ app.use('/api/v1/saved-payments', savedPaymentRoutes);
 app.use('/api/v1/quick-reorder', quickReorderRoutes);
 app.use('/api/v1/delivery-estimation', deliveryEstimationRoutes);
 app.use('/api/v1/returns', returnRoutes);
+app.use('/api/v1/admin-stats', adminStatsRoutes);
+app.use('/api/v1/chat-sessions', chatSessionRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Backward-compatible redirect: /api/* → /api/v1/*
 // This ensures existing frontend code continues to work

@@ -150,6 +150,7 @@ export interface Address {
   state: string;
   zip: string;
   phone: string;
+  email?: string;
   isDefault: boolean;
 }
 
@@ -166,6 +167,18 @@ export interface Order {
   paymentStatus?: 'pending' | 'paid' | 'failed';
   paymentMethod?: string; // 'razorpay', 'cod', etc.
   transactionId?: string; // Razorpay order ID
+  // NEW: For "new order" badge in admin
+  isNew?: boolean;
+  // NEW: Timestamps
+  createdAt?: string;
+  updatedAt?: string;
+  // NEW: Additional order details
+  email?: string;
+  phone?: string;
+  notes?: string;
+  trackingNumber?: string;
+  courierName?: string;
+  estimatedDelivery?: string;
 }
 
 
@@ -234,4 +247,6 @@ export interface HomepageSettings {
   badges: ProductBadge[];
   showcaseCategories: string[]; // Category names in display order
   showcaseBrands: string[]; // Brand names in display order
+  featuredCategorySections: string[]; // Category names for horizontal product blocks
+  featuredBrandSections: string[]; // Brand names for horizontal product blocks
 }

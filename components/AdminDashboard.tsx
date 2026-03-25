@@ -28,6 +28,8 @@ interface AdminDashboardProps {
     setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
     orders: Order[];
     setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+    reviews: any[];
+    setReviews: React.Dispatch<React.SetStateAction<any[]>>;
     categories: Category[];
     setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
     brands: BrandProfile[];
@@ -51,6 +53,14 @@ interface AdminDashboardProps {
     // Featured Brands
     onToggleBrandFeatured: (brandId: number, isFeatured: boolean) => void;
     onReorderFeaturedBrands: (brands: BrandProfile[]) => void;
+    // Homepage Settings
+    onSaveSettings: (settings: any) => Promise<void>;
+    // Users Pagination
+    usersPage?: number;
+    totalUsersCount?: number;
+    totalUsersPages?: number;
+    onUsersPageChange?: (page: number, pageToken?: string) => Promise<any>;
+    isLoadingUsersPage?: boolean;
 }
 
 const MOCK_CUSTOMERS = [
@@ -279,6 +289,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setProducts,
     orders,
     setOrders,
+    reviews,
+    setReviews,
     categories,
     setCategories,
     brands,
@@ -299,9 +311,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     promotionalTiles,
     onUpdatePromotionalTile,
     onToggleBrandFeatured,
-    onReorderFeaturedBrands
+    onReorderFeaturedBrands,
+    onSaveSettings,
+    usersPage,
+    totalUsersCount,
+    totalUsersPages,
+    onUsersPageChange,
+    isLoadingUsersPage
 }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'homepage' | 'appearance' | 'themes' | 'chat-support'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'homepage' | 'appearance' | 'themes' | 'chat-support'>(() => {
+        const savedTab = localStorage.getItem('alpha_admin_tab');
+        return (savedTab as any) || 'overview';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('alpha_admin_tab', activeTab);
+    }, [activeTab]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
     // Count new orders (from last 48 hours)
@@ -310,30 +335,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     // SMTP testing state
     const [testingSMTP, setTestingSMTP] = useState(false);
 
+    // Orders loading state
+    const [isLoading, setIsLoading] = useState(false);
+
     // Admin Notifications State
     const [notifications, setNotifications] = useState(getAllAdminNotifications());
     const [unreadCount, setUnreadCount] = useState(getUnreadCount());
 
-    // Homepage Settings State
+    // Homepage Settings State - initialized from backend settings
     const [homepageSettings, setHomepageSettings] = useState({
         badges: [
             { id: 'clinic-essential' as const, name: 'CLINIC ESSENTIAL', color: '#0369a1', bgColor: '#e0f2fe', enabled: true },
             { id: 'bundle-deal' as const, name: 'BUNDLE DEAL', color: '#15803d', bgColor: '#dcfce7', enabled: true },
             { id: 'new-arrival' as const, name: 'NEW ARRIVAL', color: '#be123c', bgColor: '#ffe4e6', enabled: true }
         ],
-        showcaseCategories: [],
-        showcaseBrands: []
+        showcaseCategories: (settings?.showcaseCategories || []) as string[],
+        showcaseBrands: [],
+        featuredCategorySections: (settings?.featuredCategorySections || []) as string[],
+        featuredBrandSections: (settings?.featuredBrandSections || []) as string[]
     });
+
+    // Sync all homepage settings from backend when they load
+    useEffect(() => {
+        if (settings) {
+            setHomepageSettings(prev => ({
+                ...prev,
+                showcaseCategories: settings.showcaseCategories || prev.showcaseCategories,
+                featuredCategorySections: settings.featuredCategorySections || prev.featuredCategorySections,
+                featuredBrandSections: settings.featuredBrandSections || prev.featuredBrandSections,
+                badges: settings.badges || prev.badges
+            }));
+        }
+    }, [settings]);
 
     // Dashboard Chart State
     const [chartView, setChartView] = useState<'weekly' | 'monthly'>('weekly');
-
-    // Reviews State - calculated from real data
-    const reviews = useMemo(() => {
-        // For now, return empty array as we don't have a reviews system yet
-        // This can be expanded when you add product reviews feature
-        return [];
-    }, []);
 
     // Real Analytics Data - calculated from actual orders
     const analyticsData = useMemo(() => {
@@ -497,6 +533,73 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
     const [customerFormData, setCustomerFormData] = useState<User | null>(null);
 
+    // Fetch a specific user by email (to update local state after save)
+    const fetchUserByEmail = async (email: string) => {
+        try {
+            const response = await fetch(`/api/users/all?limit=100&email=${encodeURIComponent(email)}`, {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                // Find the user in the response
+                const user = data.users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+                return user;
+            }
+        } catch (error) {
+            console.log('Could not fetch user:', error);
+        }
+        return null;
+    };
+
+    // Customer Detail Modal State (for viewing all customer orders)
+    const [customerDetailModal, setCustomerDetailModal] = useState<{
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+        orderCount: number;
+        spent: number;
+        status: string;
+        joined: string;
+        avatar: string;
+        ordersList: Order[];
+        userType?: 'dental-doctor' | 'student' | 'supplier' | 'regular';
+        verificationStatus?: 'pending' | 'approved' | 'rejected';
+        disabled?: boolean;
+        dentalDoctorInfo?: {
+            licenseId: string;
+            licenseState: string;
+            specialization?: string;
+            clinicName?: string;
+        };
+    } | null>(null);
+
+    // Edit state for customer details
+    const [editCustomerData, setEditCustomerData] = useState<{
+        userType: 'dental-doctor' | 'student' | 'supplier' | 'regular';
+        verificationStatus: 'pending' | 'approved' | 'rejected';
+        disabled: boolean;
+        dentalDoctorInfo: {
+            licenseId: string;
+            licenseState: string;
+            specialization?: string;
+            clinicName?: string;
+        };
+    } | null>(null);
+
+    // Cache for updated users (to persist changes across modal reopens)
+    const [updatedUsersCache, setUpdatedUsersCache] = useState<Record<string, {
+        userType: 'dental-doctor' | 'student' | 'supplier' | 'regular';
+        verificationStatus: 'pending' | 'approved' | 'rejected';
+        disabled: boolean;
+        dentalDoctorInfo: {
+            licenseId: string;
+            licenseState: string;
+            specialization?: string;
+            clinicName?: string;
+        };
+    }>>({});
+
     // Settings Tab State
     const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'payment' | 'shipping' | 'email' | 'notifications'>('general');
 
@@ -600,43 +703,95 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         productPage * itemsPerPage
     );
 
+    // Derive customers from orders (shows all customers who have placed orders)
     const filteredCustomers = useMemo(() => {
-        // Transform real users data to include fields needed by the admin dashboard
-        const transformedUsers = users.map((user, index) => {
-            // Calculate total spent from orders
-            const spent = user.orders?.reduce((total, order) => total + (order.total || 0), 0) || 0;
-
-            // Determine status based on whether they have orders
-            const status = (user.orders?.length || 0) > 0 ? 'Active' : 'Inactive';
-
-            // Generate avatar from initials if not provided
-            const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-            const colors = ['DD3B5F', '3b82f6', '10b981', 'f59e0b', '8b5cf6', 'ec4899'];
-            const avatar = user.avatar || `https://placehold.co/100x100/${colors[index % colors.length]}/white?text=${initials}`;
-
-            // Use current date as joined date (you may want to add this field to User type later)
-            const joined = 'N/A';
-
-            return {
-                id: index + 1,
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                orders: user.orders?.length || 0,
-                spent: spent,
-                status: status,
-                joined: joined,
-                avatar: avatar,
-                addresses: user.addresses || []
+        // Create a map of unique customers from orders
+        const customerMap = new Map<string, {
+            id: string;
+            name: string;
+            email: string;
+            phone: string;
+            orders: number;
+            spent: number;
+            status: string;
+            joined: string;
+            avatar: string;
+            userType?: 'dental-doctor' | 'student' | 'supplier' | 'regular';
+            verificationStatus?: string;
+            dentalDoctorInfo?: {
+                licenseId: string;
+                licenseState: string;
+                specialization?: string;
+                clinicName?: string;
             };
+        }>();
+
+        // Create lookup map for Firebase users by email
+        const userByEmail = new Map<string, User>();
+        users.forEach(user => {
+            if (user.email) {
+                userByEmail.set(user.email.toLowerCase(), user);
+            }
         });
 
-        // Filter based on search term
-        return transformedUsers.filter(c =>
-            c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-            c.email.toLowerCase().includes(customerSearchTerm.toLowerCase())
-        );
-    }, [users, customerSearchTerm]);
+        orders.forEach(order => {
+            const email = (order.customerEmail || order.email || '').toLowerCase().trim();
+            const name = (order.customerName || 'Unknown').trim();
+            
+            // Skip if no email
+            if (!email) return;
+
+            // Skip "Unknown" names
+            if (name.toLowerCase() === 'unknown') return;
+
+            // Get Firebase user data if available
+            const firebaseUser = userByEmail.get(email);
+
+            if (customerMap.has(email)) {
+                // Update existing customer
+                const existing = customerMap.get(email)!;
+                existing.orders++;
+                existing.spent += order.total || 0;
+            } else {
+                // Create new customer
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+                const colors = ['DD3B5F', '3b82f6', '10b981', 'f59e0b', '8b5cf6', 'ec4899'];
+                const colorIndex = customerMap.size % colors.length;
+                
+                customerMap.set(email, {
+                    id: email,
+                    name: name,
+                    email: email,
+                    phone: order.shippingAddress?.phone || '',
+                    orders: 1,
+                    spent: order.total || 0,
+                    status: 'Active',
+                    joined: order.date || 'N/A',
+                    avatar: `https://placehold.co/100x100/${colors[colorIndex]}/white?text=${initials}`,
+                    userType: firebaseUser?.userType,
+                    verificationStatus: firebaseUser?.verificationStatus || 'pending',
+                    dentalDoctorInfo: firebaseUser?.dentalDoctorInfo
+                });
+            }
+        });
+
+        // Convert to array and filter by search term
+        let result = Array.from(customerMap.values());
+        
+        // Filter by search term
+        if (customerSearchTerm) {
+            const search = customerSearchTerm.toLowerCase();
+            result = result.filter(c =>
+                c.name.toLowerCase().includes(search) ||
+                c.email.toLowerCase().includes(search)
+            );
+        }
+
+        // Sort by spent (highest first)
+        result.sort((a, b) => b.spent - a.spent);
+
+        return result;
+    }, [orders, customerSearchTerm, users]);
 
     const currentCustomers = filteredCustomers.slice(
         (customerPage - 1) * itemsPerPage,
@@ -990,6 +1145,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 }
             } catch (error) {
                 console.error('Error sending order status email:', error);
+            }
+        }
+    };
+
+    // Handle status change - just updates status, tracking is saved inline
+    const handleStatusChangeWithTracking = (orderId: string, newStatus: Order['status']) => {
+        const order = orders.find(o => o.id === orderId);
+        if (!order) return;
+
+        const updatedOrder = { ...order, status: newStatus };
+        
+        setOrders(orders.map(o => o.id === orderId ? updatedOrder : o));
+        if (selectedOrder && selectedOrder.id === orderId) {
+            setSelectedOrder(updatedOrder);
+        }
+
+        // Save to backend
+        fetch('/api/v1/orders/update-tracking', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                orderId,
+                status: newStatus,
+                courierName: order.courierName,
+                trackingNumber: order.trackingNumber
+            })
+        }).catch(err => console.error('Error saving status:', err));
+
+        // Send email notification
+        if (settings?.email?.host && order.customerName) {
+            const customer = users.find(u => u.name === order.customerName);
+            const customerEmail = customer?.email || '';
+            if (customerEmail) {
+                sendOrderStatusEmail({
+                    to: customerEmail,
+                    customerName: order.customerName,
+                    orderId: order.id,
+                    orderStatus: newStatus,
+                    orderTotal: order.total,
+                    orderDate: order.date,
+                    trackingNumber: order.trackingNumber,
+                    courierName: order.courierName
+                }, settings.email).catch(err => console.error('Error sending email:', err));
             }
         }
     };
@@ -1674,8 +1872,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
                                         <i className="fas fa-shopping-bag text-primary"></i> Orders List
+                                        <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-sm font-semibold rounded-full">
+                                            {filteredOrders.length}
+                                        </span>
                                     </h2>
                                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                        <button
+                                            onClick={async () => {
+                                                setIsLoading(true);
+                                                try {
+                                                    const { ordersAPI } = await import('../utils/api');
+                                                    const response = await ordersAPI.getAllAdmin({ limit: 500 });
+                                                    if (response.orders) {
+                                                        setOrders(response.orders);
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Failed to refresh orders:', err);
+                                                } finally {
+                                                    setIsLoading(false);
+                                                }
+                                            }}
+                                            className="px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-pink-600 transition-colors text-sm font-medium flex items-center gap-2"
+                                        >
+                                            <i className={`fas fa-sync-alt ${isLoading ? 'animate-spin' : ''}`}></i>
+                                            Refresh
+                                        </button>
                                         <select
                                             value={orderStatusFilter}
                                             onChange={(e) => setOrderStatusFilter(e.target.value as any)}
@@ -1722,7 +1943,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                                {currentOrders.length > 0 ? currentOrders.map(order => (
+                                                {isLoading ? (
+                                                    <tr>
+                                                        <td colSpan={6} className="px-6 py-12 text-center">
+                                                            <div className="flex flex-col items-center justify-center">
+                                                                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                                                                <p className="text-gray-500">Loading orders...</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : currentOrders.length > 0 ? currentOrders.map(order => (
                                                     <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                                         <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
                                                             <div className="flex items-center gap-2">
@@ -1748,7 +1978,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                )) : <TableEmptyState colSpan={6} message="No orders found" icon="fas fa-shopping-bag" />}
+                                                )) : (
+                                                    <tr>
+                                                        <td colSpan={6} className="px-6 py-12 text-center">
+                                                            <div className="flex flex-col items-center justify-center">
+                                                                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                                                                    <i className="fas fa-shopping-bag text-gray-400 text-2xl"></i>
+                                                                </div>
+                                                                <p className="text-gray-500 font-medium mb-2">No orders found</p>
+                                                                <p className="text-gray-400 text-sm">Orders will appear here when customers place them</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
@@ -1855,31 +2097,159 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {activeTab === 'customers' && (
                             <div className="animate-fade-in space-y-6">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-users text-primary"></i> Customer Management</h2>
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-users text-primary"></i> Customer Management</h2>
+                                        {filteredCustomers.length > 0 && (
+                                            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold">
+                                                {filteredCustomers.length} customers
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="flex gap-4 w-full sm:w-auto">
                                         <SearchInput value={customerSearchTerm} onChange={setCustomerSearchTerm} placeholder="Search customers..." />
-                                        <select
-                                            value={customerUserTypeFilter}
-                                            onChange={(e) => setCustomerUserTypeFilter(e.target.value as any)}
-                                            className="px-4 py-2 rounded-lg border border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm"
-                                        >
-                                            <option value="all">All Types</option>
-                                            <option value="dental-doctor">Dental Doctors</option>
-                                            <option value="student">Students</option>
-                                            <option value="supplier">Suppliers</option>
-                                            <option value="regular">Regular</option>
-                                        </select>
                                     </div>
                                 </div>
-                                <CustomerManagement
-                                    users={users}
-                                    onUpdateUser={handleUpdateUser}
-                                    onDeleteUser={handleDeleteUser}
-                                    searchTerm={customerSearchTerm}
-                                    userTypeFilter={customerUserTypeFilter}
-                                    onViewOrder={handleViewOrder}
-                                    settings={settings}
-                                />
+                                
+                                {/* Customers Table */}
+                                <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase">
+                                                <tr>
+                                                    <th className="px-6 py-4 text-left">Customer</th>
+                                                    <th className="px-6 py-4 text-left">Email</th>
+                                                    <th className="px-6 py-4 text-left">Phone</th>
+                                                    <th className="px-6 py-4 text-center">Orders</th>
+                                                    <th className="px-6 py-4 text-right">Total Spent</th>
+                                                    <th className="px-6 py-4 text-center">Status</th>
+                                                    <th className="px-6 py-4 text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
+                                                {currentCustomers.length > 0 ? currentCustomers.map(customer => (
+                                                    <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <img src={customer.avatar} alt="" className="w-10 h-10 rounded-full" />
+                                                                <div>
+                                                                    <span className="font-bold text-gray-900 dark:text-white">{customer.name}</span>
+                                                                    {customer.userType === 'dental-doctor' && customer.dentalDoctorInfo?.licenseId && (
+                                                                        <span className="ml-2 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
+                                                                            <i className="fas fa-certificate mr-1"></i>
+                                                                            Dr.
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{customer.email}</td>
+                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{customer.phone || '-'}</td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-bold">
+                                                                {customer.orders}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-bold text-gray-900 dark:text-white">
+                                                            ₹{customer.spent.toLocaleString('en-IN')}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                                customer.status === 'Active' 
+                                                                    ? 'bg-green-100 text-green-700' 
+                                                                    : 'bg-gray-100 text-gray-600'
+                                                            }`}>
+                                                                {customer.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex gap-2 justify-center">
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        const customerOrders = orders.filter(o => 
+                                                                            (o.customerEmail || '').toLowerCase() === customer.email.toLowerCase()
+                                                                        );
+                                                                        const { orders: orderCountVal, ...rest } = customer;
+                                                                        const modalData = { 
+                                                                            ...rest, 
+                                                                            orderCount: orderCountVal, 
+                                                                            ordersList: customerOrders 
+                                                                        };
+                                                                        setCustomerDetailModal(modalData);
+                                                                        
+                                                                        const customerEmail = customer.email.toLowerCase();
+                                                                        
+                                                                        // Check cache first (updated users), then Firebase users
+                                                                        const cachedUser = updatedUsersCache[customerEmail];
+                                                                        const firebaseUser = users.find(u => 
+                                                                            u.email?.toLowerCase() === customerEmail
+                                                                        );
+                                                                        
+                                                                        // Use cached data if available, otherwise Firebase data, otherwise defaults
+                                                                        setEditCustomerData({
+                                                                            userType: cachedUser?.userType || firebaseUser?.userType || modalData.userType || 'regular',
+                                                                            verificationStatus: cachedUser?.verificationStatus || firebaseUser?.verificationStatus || modalData.verificationStatus || 'pending',
+                                                                            disabled: cachedUser?.disabled ?? firebaseUser?.disabled ?? false,
+                                                                            dentalDoctorInfo: cachedUser?.dentalDoctorInfo || firebaseUser?.dentalDoctorInfo || modalData.dentalDoctorInfo || {
+                                                                                licenseId: '',
+                                                                                licenseState: '',
+                                                                                specialization: '',
+                                                                                clinicName: ''
+                                                                            }
+                                                                        });
+                                                                    }}
+                                                                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-500 hover:text-white hover:border-blue-500 text-gray-500 flex items-center justify-center transition-all"
+                                                                    title="View Details"
+                                                                >
+                                                                    <i className="fas fa-eye text-xs"></i>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )) : (
+                                                    <tr>
+                                                        <td colSpan={7} className="px-6 py-12 text-center">
+                                                            <div className="flex flex-col items-center justify-center">
+                                                                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                                                                    <i className="fas fa-users text-gray-400 text-2xl"></i>
+                                                                </div>
+                                                                <p className="text-gray-500 font-medium">No customers found</p>
+                                                                <p className="text-gray-400 text-sm">Customers will appear here when they place orders</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                {/* Pagination */}
+                                {filteredCustomers.length > itemsPerPage && (
+                                    <div className="flex justify-between items-center px-6 py-4 bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700">
+                                        <span className="text-sm text-gray-500">
+                                            Showing {((customerPage - 1) * itemsPerPage) + 1} to {Math.min(customerPage * itemsPerPage, filteredCustomers.length)} of {filteredCustomers.length} customers
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                disabled={customerPage === 1} 
+                                                onClick={() => setCustomerPage(p => Math.max(1, p - 1))}
+                                                className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-sm"
+                                            >
+                                                <i className="fas fa-chevron-left"></i>
+                                            </button>
+                                            <span className="px-4 py-2 bg-primary text-white rounded-lg font-bold">
+                                                {customerPage}
+                                            </span>
+                                            <button 
+                                                disabled={customerPage * itemsPerPage >= filteredCustomers.length} 
+                                                onClick={() => setCustomerPage(p => p + 1)}
+                                                className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-sm"
+                                            >
+                                                <i className="fas fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -2614,6 +2984,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 onUpdatePromotionalTile={onUpdatePromotionalTile}
                                 onToggleBrandFeatured={onToggleBrandFeatured}
                                 onReorderFeaturedBrands={onReorderFeaturedBrands}
+                                onSaveSettings={onSaveSettings}
                             />
                         </div>
                     )}
@@ -3120,14 +3491,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <h4 className="font-bold text-gray-800 dark:text-white mb-2 text-sm uppercase">Order Status</h4>
                                     <select
                                         value={selectedOrder.status}
-                                        onChange={(e) => handleOrderStatusChange(selectedOrder.id, e.target.value as any)}
-                                        className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                                        onChange={(e) => handleStatusChangeWithTracking(selectedOrder.id, e.target.value as any)}
+                                        className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm mb-2"
                                     >
                                         <option value="Processing">Processing</option>
                                         <option value="Shipped">Shipped</option>
                                         <option value="Delivered">Delivered</option>
                                         <option value="Cancelled">Cancelled</option>
                                     </select>
+                                    
+                                    {selectedOrder.status === 'Shipped' && (
+                                        <div className="space-y-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                            <div>
+                                                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Courier</label>
+                                                <select
+                                                    value={selectedOrder.courierName || ''}
+                                                    onChange={(e) => {
+                                                        const updated = { ...selectedOrder, courierName: e.target.value };
+                                                        setSelectedOrder(updated);
+                                                        setOrders(orders.map(o => o.id === selectedOrder.id ? updated : o));
+                                                    }}
+                                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                                                >
+                                                    <option value="">Select Courier</option>
+                                                    {['Delhivery', 'BlueDart', 'FedEx', 'DTDC', 'India Post', 'Ekart', 'Shadowfax', 'XpressBees'].map(c => (
+                                                        <option key={c} value={c}>{c}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Tracking Number / AWB</label>
+                                                <input
+                                                    type="text"
+                                                    value={selectedOrder.trackingNumber || ''}
+                                                    onChange={(e) => {
+                                                        const updated = { ...selectedOrder, trackingNumber: e.target.value };
+                                                        setSelectedOrder(updated);
+                                                        setOrders(orders.map(o => o.id === selectedOrder.id ? updated : o));
+                                                    }}
+                                                    placeholder="Enter tracking number"
+                                                    className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -3226,6 +3633,362 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                 )
             }
+
+            {/* Customer Detail Modal */}
+            {customerDetailModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setCustomerDetailModal(null)}></div>
+                    <div className="bg-white dark:bg-surface-dark rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl">
+                        {/* Header */}
+                        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-20">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                                    <i className="fas fa-user-edit text-primary"></i> Edit Customer
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">{customerDetailModal.email}</p>
+                            </div>
+                            <button 
+                                onClick={() => setCustomerDetailModal(null)} 
+                                className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center hover:text-red-500 shadow-sm"
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {/* Basic Information */}
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <i className="fas fa-user-circle text-primary"></i> Basic Information
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                        <input
+                                            type="text"
+                                            value={editCustomerData?.name || ''}
+                                            onChange={(e) => setEditCustomerData(prev => prev ? { ...prev, name: e.target.value } : null)}
+                                            className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                                        <input
+                                            type="email"
+                                            value={customerDetailModal.email}
+                                            disabled
+                                            className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-500 cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                                        <input
+                                            type="tel"
+                                            value={editCustomerData?.phone || ''}
+                                            onChange={(e) => setEditCustomerData(prev => prev ? { ...prev, phone: e.target.value } : null)}
+                                            className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* User Type & Verification */}
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <i className="fas fa-shield-alt text-primary"></i> User Type & Verification
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User Type</label>
+                                        <select
+                                            value={editCustomerData?.userType || 'regular'}
+                                            onChange={(e) => {
+                                                const newData = { ...editCustomerData!, userType: e.target.value as any };
+                                                setEditCustomerData(newData);
+                                            }}
+                                            className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
+                                        >
+                                            <option value="regular">Regular Customer</option>
+                                            <option value="dental-doctor">Dental Doctor</option>
+                                            <option value="student">Student</option>
+                                            <option value="supplier">Supplier</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verification Status</label>
+                                        <select
+                                            value={editCustomerData?.verificationStatus || 'pending'}
+                                            onChange={(e) => {
+                                                const newData = { ...editCustomerData!, verificationStatus: e.target.value as any };
+                                                setEditCustomerData(newData);
+                                            }}
+                                            className={`w-full rounded-lg border focus:ring-primary focus:border-primary ${
+                                                editCustomerData?.verificationStatus === 'approved' ? 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700' :
+                                                editCustomerData?.verificationStatus === 'rejected' ? 'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700' :
+                                                'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700'
+                                            } dark:bg-gray-800 dark:text-white`}
+                                        >
+                                            <option value="pending">Pending</option>
+                                            <option value="approved">Approved</option>
+                                            <option value="rejected">Rejected</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Status</label>
+                                        <select
+                                            value={editCustomerData?.disabled ? 'inactive' : 'active'}
+                                            onChange={(e) => {
+                                                const newData = { ...editCustomerData!, disabled: e.target.value === 'inactive' };
+                                                setEditCustomerData(newData);
+                                            }}
+                                            className={`w-full rounded-lg border focus:ring-primary focus:border-primary ${
+                                                editCustomerData?.disabled ? 'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700' : 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700'
+                                            } dark:bg-gray-800 dark:text-white`}
+                                        >
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive (Disabled)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* License Information */}
+                            {(editCustomerData?.userType === 'dental-doctor' || customerDetailModal?.dentalDoctorInfo?.licenseId) && (
+                                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
+                                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                        <i className="fas fa-certificate text-purple-600"></i> Professional License Information
+                                    </h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">License ID *</label>
+                                            <input
+                                                type="text"
+                                                value={editCustomerData?.dentalDoctorInfo?.licenseId || ''}
+                                                onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                    ...prev, 
+                                                    dentalDoctorInfo: { ...prev.dentalDoctorInfo, licenseId: e.target.value }
+                                                } : null)}
+                                                placeholder="Enter license number"
+                                                className="w-full px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-600 dark:bg-gray-800 dark:text-white focus:ring-purple-500 focus:border-purple-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">License State *</label>
+                                            <input
+                                                type="text"
+                                                value={editCustomerData?.dentalDoctorInfo?.licenseState || ''}
+                                                onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                    ...prev, 
+                                                    dentalDoctorInfo: { ...prev.dentalDoctorInfo, licenseState: e.target.value }
+                                                } : null)}
+                                                placeholder="Enter state"
+                                                className="w-full px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-600 dark:bg-gray-800 dark:text-white focus:ring-purple-500 focus:border-purple-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Specialization</label>
+                                            <input
+                                                type="text"
+                                                value={editCustomerData?.dentalDoctorInfo?.specialization || ''}
+                                                onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                    ...prev, 
+                                                    dentalDoctorInfo: { ...prev.dentalDoctorInfo, specialization: e.target.value }
+                                                } : null)}
+                                                placeholder="e.g., Orthodontics"
+                                                className="w-full px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-600 dark:bg-gray-800 dark:text-white focus:ring-purple-500 focus:border-purple-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Clinic Name</label>
+                                            <input
+                                                type="text"
+                                                value={editCustomerData?.dentalDoctorInfo?.clinicName || ''}
+                                                onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                    ...prev, 
+                                                    dentalDoctorInfo: { ...prev.dentalDoctorInfo, clinicName: e.target.value }
+                                                } : null)}
+                                                placeholder="Enter clinic name"
+                                                className="w-full px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-600 dark:bg-gray-800 dark:text-white focus:ring-purple-500 focus:border-purple-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Order Statistics */}
+                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <i className="fas fa-shopping-bag text-primary"></i> Order Statistics
+                                </h4>
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                                        <div className="text-3xl font-bold text-primary">{customerDetailModal.orderCount || 0}</div>
+                                        <div className="text-sm text-gray-500">Total Orders</div>
+                                    </div>
+                                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                                        <div className="text-3xl font-bold text-green-600">₹{customerDetailModal.spent?.toLocaleString('en-IN')}</div>
+                                        <div className="text-sm text-gray-500">Total Spent</div>
+                                    </div>
+                                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                                        <div className="text-3xl font-bold text-blue-600">₹{customerDetailModal.spent ? Math.round(customerDetailModal.spent / (customerDetailModal.orderCount || 1)).toLocaleString('en-IN') : 0}</div>
+                                        <div className="text-sm text-gray-500">Avg Order Value</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Order History */}
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <i className="fas fa-list text-primary"></i> Order History ({customerDetailModal.ordersList?.length || 0} orders)
+                                </h4>
+                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    {customerDetailModal.ordersList && customerDetailModal.ordersList.length > 0 ? (
+                                        customerDetailModal.ordersList.map((order: Order, idx: number) => (
+                                            <div 
+                                                key={order.id || idx} 
+                                                className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-colors cursor-pointer"
+                                                onClick={() => {
+                                                    setSelectedOrder(order);
+                                                    setIsOrderModalOpen(true);
+                                                    setCustomerDetailModal(null);
+                                                }}
+                                            >
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                                                            <i className="fas fa-box text-primary"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-bold text-gray-900 dark:text-white">{order.id}</div>
+                                                            <div className="text-sm text-gray-500">{order.date}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="font-bold text-gray-900 dark:text-white">₹{order.total?.toLocaleString('en-IN')}</div>
+                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                            order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
+                                                            order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
+                                                            order.status === 'Processing' ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-red-100 text-red-700'
+                                                        }`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {order.trackingNumber && (
+                                                    <div className="mt-2 text-xs text-blue-600 flex items-center gap-1">
+                                                        <i className="fas fa-truck"></i>
+                                                        {order.courierName} - {order.trackingNumber}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-8 text-gray-500">
+                                            <i className="fas fa-shopping-bag text-4xl mb-2 opacity-30"></i>
+                                            <p>No orders found</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-6 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 sticky bottom-0">
+                            <button
+                                onClick={() => setCustomerDetailModal(null)}
+                                className="px-6 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={async () => {
+                                    if (!customerDetailModal || !editCustomerData) return;
+                                    
+                                    try {
+                                        const response = await fetch('/api/users/by-email', {
+                                            method: 'PUT',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                email: customerDetailModal.email,
+                                                userType: editCustomerData.userType,
+                                                verificationStatus: editCustomerData.verificationStatus,
+                                                disabled: editCustomerData.disabled,
+                                                dentalDoctorInfo: editCustomerData.dentalDoctorInfo
+                                            })
+                                        });
+
+                                        const data = await response.json();
+
+                                        if (response.ok) {
+                                            const searchEmail = customerDetailModal.email.toLowerCase();
+                                            
+                                            // Update local users state
+                                            setUsers(prevUsers => {
+                                                const userIndex = prevUsers.findIndex(u => 
+                                                    u.email?.toLowerCase() === searchEmail
+                                                );
+                                                
+                                                if (userIndex !== -1) {
+                                                    const newUsers = [...prevUsers];
+                                                    newUsers[userIndex] = {
+                                                        ...newUsers[userIndex],
+                                                        userType: editCustomerData.userType,
+                                                        verificationStatus: editCustomerData.verificationStatus,
+                                                        disabled: editCustomerData.disabled,
+                                                        dentalDoctorInfo: editCustomerData.dentalDoctorInfo
+                                                    };
+                                                    return newUsers;
+                                                }
+                                                return prevUsers;
+                                            });
+                                            
+                                            // Update cache for future modal opens
+                                            setUpdatedUsersCache(prev => ({
+                                                ...prev,
+                                                [searchEmail]: {
+                                                    userType: editCustomerData.userType,
+                                                    verificationStatus: editCustomerData.verificationStatus,
+                                                    disabled: editCustomerData.disabled,
+                                                    dentalDoctorInfo: editCustomerData.dentalDoctorInfo
+                                                }
+                                            }));
+                                            
+                                            // Update customerDetailModal with saved data (for when modal reopens)
+                                            const savedData = {
+                                                ...customerDetailModal,
+                                                userType: editCustomerData.userType,
+                                                verificationStatus: editCustomerData.verificationStatus,
+                                                disabled: editCustomerData.disabled,
+                                                dentalDoctorInfo: editCustomerData.dentalDoctorInfo
+                                            };
+                                            
+                                            // Update modal with saved data so form shows correct values
+                                            setCustomerDetailModal(savedData);
+                                            setEditCustomerData(editCustomerData);
+                                            
+                                            // Show success message
+                                            const statusText = editCustomerData.disabled ? 'Inactive' : 'Active';
+                                            const userTypeText = editCustomerData.userType === 'dental-doctor' ? 'Dental Doctor' : 
+                                                                editCustomerData.userType === 'student' ? 'Student' :
+                                                                editCustomerData.userType === 'supplier' ? 'Supplier' : 'Regular Customer';
+                                            alert(`Customer updated successfully!\n\nUser Type: ${userTypeText}\nVerification: ${editCustomerData.verificationStatus}\nStatus: ${statusText}`);
+                                        } else {
+                                            alert('Failed to update: ' + (data.message || data.error));
+                                        }
+                                    } catch (error) {
+                                        console.error('Error saving customer:', error);
+                                        alert('Error saving customer data');
+                                    }
+                                }}
+                                className="px-6 py-2 text-sm font-bold rounded-lg bg-primary text-white hover:bg-pink-700 transition-colors shadow-lg shadow-primary/20"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Password Reset Modal */}
             {

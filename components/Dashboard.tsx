@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User, Address } from '../types';
+import { User, Address, Order } from '../types';
 import { AlertCircle, Package, User as UserIcon, LogOut, MapPin, ChevronRight, Settings, Camera, ShieldCheck } from 'lucide-react';
 import VerificationManager from './VerificationManager';
 
@@ -28,6 +28,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
         phone: '',
         isDefault: false
     });
+
+    // Tracking Modal State
+    const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+    const [trackingData, setTrackingData] = useState<any>(null);
+    const [isTrackingLoading, setIsTrackingLoading] = useState(false);
 
     // Delete Confirmation State
     const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -310,14 +315,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                             </div>
                                             <div className="flex gap-3">
                                                 <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">Invoice</button>
-                                                <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-pink-700 shadow-lg shadow-primary/20">Track Order</button>
+                                                {(order.status === 'Shipped' || order.status === 'Delivered') && order.trackingNumber ? (
+                                                    <button 
+                                                        onClick={() => { setTrackingOrder(order); }}
+                                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                                                    >
+                                                        <i className="fas fa-truck text-xs"></i>
+                                                        Track Order
+                                                    </button>
+                                                ) : (
+                                                    <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-pink-700 shadow-lg shadow-primary/20">
+                                                        Track Order
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="p-6">
-                                            <div className="mb-6">
+                                            <div className="flex flex-wrap items-center gap-3 mb-4">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${statusColors[order.status]}`}>
                                                     {order.status}
                                                 </span>
+                                                {order.status === 'Shipped' && order.trackingNumber && (
+                                                    <div className="flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800">
+                                                        <i className="fas fa-shipping-fast text-blue-600 text-xs"></i>
+                                                        <span className="text-blue-800 dark:text-blue-300">
+                                                            {order.courierName} • {order.trackingNumber}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="space-y-4">
                                                 {order.items.map((item, idx) => (
@@ -788,6 +813,146 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Tracking Modal */}
+            {trackingOrder && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-2xl">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <i className="fas fa-truck"></i> Order Tracking
+                                    </h3>
+                                    <p className="text-sm text-white/80 mt-1">Order #{trackingOrder.id}</p>
+                                </div>
+                                <button
+                                    onClick={() => { setTrackingOrder(null); setTrackingData(null); }}
+                                    className="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
+                                >
+                                    <i className="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            {/* Tracking Info */}
+                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6 border border-blue-200 dark:border-blue-800">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                                        <i className="fas fa-shipping-fast text-blue-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-900 dark:text-white">{trackingOrder.courierName || 'Courier'}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">AWB: {trackingOrder.trackingNumber}</p>
+                                    </div>
+                                </div>
+                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${
+                                    trackingOrder.status === 'Delivered' 
+                                        ? 'bg-green-100 text-green-700' 
+                                        : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                    <i className={`fas ${trackingOrder.status === 'Delivered' ? 'fa-check-circle' : 'fa-truck'}`}></i>
+                                    {trackingOrder.status}
+                                </div>
+                            </div>
+
+                            {/* Status Timeline */}
+                            <div className="space-y-4">
+                                <h4 className="font-bold text-gray-900 dark:text-white">Order Timeline</h4>
+                                
+                                <div className="relative">
+                                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+                                    
+                                    {/* Order Placed */}
+                                    <div className="relative flex items-start gap-4 pb-6">
+                                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center z-10">
+                                            <i className="fas fa-check text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-900 dark:text-white">Order Placed</p>
+                                            <p className="text-sm text-gray-500">{trackingOrder.date}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Processing */}
+                                    <div className="relative flex items-start gap-4 pb-6">
+                                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center z-10">
+                                            <i className="fas fa-box text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-900 dark:text-white">Processing</p>
+                                            <p className="text-sm text-gray-500">Order confirmed and being prepared</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Shipped */}
+                                    <div className={`relative flex items-start gap-4 pb-6 ${trackingOrder.status === 'Shipped' || trackingOrder.status === 'Delivered' ? '' : 'opacity-50'}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${trackingOrder.status === 'Shipped' || trackingOrder.status === 'Delivered' ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                                            <i className={`fas fa-truck text-white text-xs ${trackingOrder.status === 'Shipped' || trackingOrder.status === 'Delivered' ? '' : 'opacity-50'}`}></i>
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-900 dark:text-white">Shipped</p>
+                                            <p className="text-sm text-gray-500">
+                                                {trackingOrder.courierName} - {trackingOrder.trackingNumber}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Delivered */}
+                                    <div className={`relative flex items-start gap-4 ${trackingOrder.status === 'Delivered' ? '' : 'opacity-50'}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${trackingOrder.status === 'Delivered' ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                            <i className={`fas fa-home text-white text-xs ${trackingOrder.status === 'Delivered' ? '' : 'opacity-50'}`}></i>
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-900 dark:text-white">Delivered</p>
+                                            <p className="text-sm text-gray-500">
+                                                {trackingOrder.status === 'Delivered' ? 'Order delivered successfully' : 'Pending delivery'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Track on Courier Website */}
+                            {trackingOrder.trackingNumber && (
+                                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                    {(() => {
+                                        const courierUrls: Record<string, { url: string; name: string }> = {
+                                            'Delhivery': { url: `https://www.delhivery.com/track/package/${trackingOrder.trackingNumber}`, name: 'Delhivery' },
+                                            'BlueDart': { url: `https://www.bluedart.com/track?AWB=${trackingOrder.trackingNumber}`, name: 'BlueDart' },
+                                            'FedEx': { url: `https://www.fedex.com/fedextrack/?trknbr=${trackingOrder.trackingNumber}`, name: 'FedEx' },
+                                            'DTDC': { url: `https://www.dtdc.com/tracking/track-result.php?strTdcval=${trackingOrder.trackingNumber}`, name: 'DTDC' },
+                                            'India Post': { url: `https://www.indiapost.gov.in/Pages/TrackDocument.aspx?TrackingId=${trackingOrder.trackingNumber}`, name: 'India Post' },
+                                            'Ekart': { url: `https://www.ekartlogistics.com/track/${trackingOrder.trackingNumber}`, name: 'Ekart' },
+                                            'Shadowfax': { url: `https://www.shadowfax.in/track-order/?order_id=${trackingOrder.trackingNumber}`, name: 'Shadowfax' },
+                                            'XpressBees': { url: `https://www.xpressbees.com/track/?tracking_id=${trackingOrder.trackingNumber}`, name: 'XpressBees' },
+                                            'Shiprocket': { url: `https://shiprocket.co/tracking/${trackingOrder.trackingNumber}`, name: 'Shiprocket' },
+                                        };
+                                        
+                                        const courier = courierUrls[trackingOrder.courierName || ''] || { 
+                                            url: `https://shiprocket.co/tracking/${trackingOrder.trackingNumber}`, 
+                                            name: trackingOrder.courierName || 'Courier' 
+                                        };
+                                        
+                                        return (
+                                            <a
+                                                href={courier.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg shadow-blue-600/20"
+                                            >
+                                                <i className="fas fa-external-link-alt"></i>
+                                                Track on {courier.name} Website
+                                            </a>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

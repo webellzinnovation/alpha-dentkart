@@ -9,6 +9,8 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 120000, // 2 minute timeout for large product loads
+    validateStatus: (status) => status >= 200 && status < 400, // Accept 304 as valid
 });
 
 // Auth API
@@ -62,11 +64,11 @@ export const brandsAPI = {
         return response.data;
     },
     update: async (id: number, data: any) => {
-        const response = await api.put(`/brands/${id}`, data);
+        const response = await api.patch(`/brands/${id}/featured`, data);
         return response.data;
     },
     reorder: async (brands: any[]) => {
-        const response = await api.post('/brands/reorder', { brands });
+        const response = await api.patch('/brands/featured/reorder', { brands });
         return response.data;
     }
 };
@@ -82,7 +84,7 @@ export const heroSlidesAPI = {
         return response.data;
     },
     update: async (id: number, data: any) => {
-        const response = await api.put(`/hero-slides/${id}`, data);
+        const response = await api.patch(`/hero-slides/${id}`, data);
         return response.data;
     },
     delete: async (id: number) => {
@@ -90,7 +92,7 @@ export const heroSlidesAPI = {
         return response.data;
     },
     reorder: async (slides: any[]) => {
-        const response = await api.post('/hero-slides/reorder', { slides });
+        const response = await api.patch('/hero-slides/reorder/batch', { slides });
         return response.data;
     }
 };
@@ -102,7 +104,7 @@ export const promotionalTilesAPI = {
         return response.data;
     },
     update: async (id: number, data: any) => {
-        const response = await api.put(`/promotional-tiles/${id}`, data);
+        const response = await api.patch(`/promotional-tiles/${id}`, data);
         return response.data;
     }
 };
@@ -118,6 +120,47 @@ export const ordersAPI = {
         const response = await api.get('/orders/me');
         return response.data;
     },
+
+    getAllAdmin: async (params?: { page?: number; limit?: number }) => {
+        const response = await api.get('/orders/all', { params });
+        return response.data;
+    },
+    
+    updateStatus: async (id: string, status: string) => {
+        const response = await api.put(`/orders/${id}/status`, { status });
+        return response.data;
+    }
+};
+
+// Users API - uses longer timeout for Firebase Auth which can be slow
+export const usersAPI = {
+    getAll: async (params?: { limit?: number }) => {
+        const response = await api.get('/users/all', { 
+            params,
+            timeout: 60000 // 60 second timeout for users endpoint
+        });
+        return response.data;
+    }
+};
+
+// Reviews API
+export const reviewsAPI = {
+    getAllAdmin: async () => {
+        const response = await api.get('/reviews/all');
+        return response.data;
+    }
+};
+
+// Settings API
+export const settingsAPI = {
+    get: async () => {
+        const response = await api.get('/settings');
+        return response.data;
+    },
+    update: async (data: any) => {
+        const response = await api.put('/settings', data);
+        return response.data;
+    }
 };
 
 // AI API

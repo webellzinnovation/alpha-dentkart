@@ -42,6 +42,7 @@ export async function createOrder(req: Request, res: Response) {
         const orderData = {
             userId,
             customerName: validatedData.shippingAddress?.name || 'Guest',
+            customerEmail: validatedData.shippingAddress?.email || null,
             total: validatedData.total,
             items: validatedData.items, // Store natively
             shippingAddress: validatedData.shippingAddress || null, // Store natively
@@ -136,6 +137,108 @@ export async function getMyOrders(req: Request, res: Response) {
         res.json({ orders });
     } catch (error) {
         logger.error('GetMyOrders error', { error, userId: (req as any).user?.userId });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+export async function getAllOrders(req: Request, res: Response) {
+    try {
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 50;
+        const status = req.query.status as string;
+        
+        const baseRef = db.collection('orders');
+        
+        let query: FirebaseFirestore.Query;
+        if (status) {
+            query = baseRef.where('status', '==', status);
+        } else {
+            query = baseRef;
+        }
+        
+        const countSnapshot = await query.get();
+        const total = countSnapshot.size;
+        
+        const offset = (page - 1) * limit;
+        const snapshot = await query
+            .orderBy('createdAt', 'desc')
+            .offset(offset)
+            .limit(limit)
+            .get();
+
+        const orders = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                createdAt: (data.createdAt as any)?.toDate ? (data.createdAt as any).toDate() : data.createdAt
+            };
+        });
+
+        res.json({ 
+            orders, 
+            pagination: { 
+                total, 
+                page, 
+                limit, 
+                pages: Math.ceil(total / limit) 
+            } 
+        });
+    } catch (error) {
+        logger.error('GetAllOrders error', { error });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+export async function updateOrderTracking(req: Request, res: Response) {
+    try {
+        const { orderId, courierName, trackingNumber, estimatedDelivery, status } = req.body;
+
+        if (!orderId) {
+            return res.status(400).json({ error: 'Order ID is required' });
+        }
+
+        const orderRef = db.collection('orders').doc(orderId);
+        const orderDoc = await orderRef.get();
+
+        if (!orderDoc.exists) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+
+        const updateData: any = {
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (status) {
+            updateData.status = status;
+        }
+        if (courierName) {
+            updateData.courierName = courierName;
+        }
+        if (trackingNumber) {
+            updateData.trackingNumber = trackingNumber;
+        }
+        if (estimatedDelivery) {
+            updateData.estimatedDelivery = estimatedDelivery;
+        }
+
+        await orderRef.update(updateData);
+
+        logger.info('Order tracking updated', { orderId, courierName, trackingNumber });
+
+        res.json({
+            success: true,
+            message: 'Order tracking updated successfully',
+            data: {
+                orderId,
+                courierName,
+                trackingNumber,
+                estimatedDelivery,
+                status
+            }
+        });
+    } catch (error) {
+        logger.error('UpdateOrderTracking error', { error });
         res.status(500).json({ error: 'Internal server error' });
     }
 }
