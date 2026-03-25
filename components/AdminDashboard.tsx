@@ -7,7 +7,6 @@ import { HomepageTab } from './HomepageTab';
 import { CustomerManagement } from './CustomerManagement';
 import { AISettings } from './AISettings';
 import { ChatSupport } from './ChatSupport';
-import { sendOrderStatusEmail } from '../utils/orderEmailService';
 import {
     getAllAdminNotifications,
     getUnreadCount,
@@ -1117,34 +1116,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             setSelectedOrder({ ...selectedOrder, status: newStatus });
         }
 
-        // Send email notification if SMTP is configured
+        // Send email notification via backend API
         if (settings?.email?.host && order.customerName) {
-            try {
-                // Find customer email from users
-                const customer = users.find(u => u.name === order.customerName);
-                const customerEmail = customer?.email || '';
+            const customer = users.find(u => u.name === order.customerName);
+            const customerEmail = customer?.email || '';
 
-                if (customerEmail) {
-                    const result = await sendOrderStatusEmail(
-                        {
-                            to: customerEmail,
-                            customerName: order.customerName,
-                            orderId: order.id,
-                            orderStatus: newStatus,
-                            orderTotal: order.total,
-                            orderDate: order.date
-                        },
-                        settings.email
-                    );
-
-                    if (result.success) {
-                        console.log(`✅ Order status email sent to ${customerEmail}`);
-                    } else {
-                        console.warn(`⚠️ Failed to send order status email: ${result.message}`);
-                    }
-                }
-            } catch (error) {
-                console.error('Error sending order status email:', error);
+            if (customerEmail) {
+                fetch('/api/v1/notifications/order-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: customerEmail,
+                        orderId: order.id,
+                        customerName: order.customerName,
+                        orderStatus: newStatus,
+                        orderTotal: order.total,
+                        orderDate: order.date,
+                        trackingNumber: order.trackingNumber,
+                        courierName: order.courierName
+                    })
+                }).catch(err => console.error('Error sending email:', err));
             }
         }
     };
@@ -1173,21 +1164,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             })
         }).catch(err => console.error('Error saving status:', err));
 
-        // Send email notification
+        // Send email notification via backend API
         if (settings?.email?.host && order.customerName) {
             const customer = users.find(u => u.name === order.customerName);
             const customerEmail = customer?.email || '';
             if (customerEmail) {
-                sendOrderStatusEmail({
-                    to: customerEmail,
-                    customerName: order.customerName,
-                    orderId: order.id,
-                    orderStatus: newStatus,
-                    orderTotal: order.total,
-                    orderDate: order.date,
-                    trackingNumber: order.trackingNumber,
-                    courierName: order.courierName
-                }, settings.email).catch(err => console.error('Error sending email:', err));
+                fetch('/api/v1/notifications/order-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: customerEmail,
+                        orderId: order.id,
+                        customerName: order.customerName,
+                        orderStatus: newStatus,
+                        orderTotal: order.total,
+                        orderDate: order.date,
+                        trackingNumber: order.trackingNumber,
+                        courierName: order.courierName
+                    })
+                }).catch(err => console.error('Error sending email:', err));
             }
         }
     };
