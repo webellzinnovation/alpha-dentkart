@@ -3500,10 +3500,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <option value="Cancelled">Cancelled</option>
                                     </select>
                                     
-                                    {selectedOrder.status === 'Delivered' && (
+                                    {(selectedOrder.status === 'Shipped' || selectedOrder.status === 'Delivered') && (
                                         <div className="space-y-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                                             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                                <i className="fas fa-info-circle mr-1"></i> Tracking details for post-delivery support
+                                                <i className="fas fa-info-circle mr-1"></i> 
+                                                {selectedOrder.status === 'Shipped' ? 'Enter tracking details for customer tracking' : 'Tracking details for post-delivery support'}
                                             </p>
                                             <div>
                                                 <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Courier</label>
