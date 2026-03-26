@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.alphadentkart.app',
+  appId: 'com.adk.app',
   appName: 'Alpha Dentkart',
   webDir: 'dist',
   server: {
