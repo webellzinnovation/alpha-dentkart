@@ -2525,8 +2525,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {/* REVIEW DETAIL MODAL */}
                         {isReviewModalOpen && selectedReview && (
                             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-                                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in">
-                                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 rounded-t-2xl">
+                                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in overflow-hidden">
+                                    <div className="bg-gradient-to-r from-primary to-pink-600 px-6 py-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
@@ -2534,7 +2534,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 </div>
                                                 <div>
                                                     <h3 className="text-xl font-bold text-white">Review Details</h3>
-                                                    <p className="text-blue-100 text-sm">{selectedReview.product}</p>
+                                                    <p className="text-pink-100 text-sm">{selectedReview.product}</p>
                                                 </div>
                                             </div>
                                             <button 
@@ -2547,37 +2547,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     </div>
                                     
                                     <div className="p-6 space-y-4">
-                                        <div className="flex justify-between items-center">
+                                        <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                                             <div>
-                                                <p className="text-sm text-gray-500">Customer</p>
+                                                <p className="text-xs text-gray-500 uppercase tracking-wider">Customer</p>
                                                 <p className="font-bold text-gray-800 dark:text-white">{selectedReview.user}</p>
                                             </div>
                                             <div className="flex text-yellow-400 text-lg">
                                                 {[...Array(5)].map((_, i) => (
                                                     <i key={i} className={`${i < selectedReview.rating ? 'fas' : 'far'} fa-star`}></i>
                                                 ))}
-                                                <span className="text-gray-600 dark:text-gray-400 ml-2 text-sm">({selectedReview.rating}/5)</span>
                                             </div>
                                         </div>
                                         
-                                        <div>
-                                            <p className="text-sm text-gray-500 mb-1">Product</p>
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Product</p>
                                             <p className="font-medium text-gray-800 dark:text-white">{selectedReview.product}</p>
                                         </div>
                                         
-                                        <div>
-                                            <p className="text-sm text-gray-500 mb-1">Review</p>
-                                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                                                <p className="text-gray-700 dark:text-gray-300 italic">"{selectedReview.comment}"</p>
-                                            </div>
+                                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Review</p>
+                                            <p className="text-gray-700 dark:text-gray-300">"{selectedReview.comment}"</p>
                                         </div>
                                         
-                                        <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                                        <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                                             <div>
-                                                <p className="text-sm text-gray-500">Date</p>
+                                                <p className="text-xs text-gray-500 uppercase tracking-wider">Date</p>
                                                 <p className="font-medium text-gray-800 dark:text-white">{selectedReview.date}</p>
                                             </div>
-                                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                                                 selectedReview.isApproved === true ? 'bg-green-100 text-green-700' :
                                                 selectedReview.isApproved === false ? 'bg-red-100 text-red-700' :
                                                 'bg-yellow-100 text-yellow-700'
@@ -2586,24 +2583,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             </span>
                                         </div>
                                         
-                                        <div className="flex gap-3 pt-4">
+                                        <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                                             <button 
-                                                onClick={() => { setIsReviewModalOpen(false); }}
-                                                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium transition-all"
+                                                onClick={() => setIsReviewModalOpen(false)}
+                                                className="px-6 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                             >
                                                 Close
                                             </button>
+                                            <div className="flex-1"></div>
+                                            {selectedReview.isApproved !== false && (
+                                                <button 
+                                                    onClick={async () => {
+                                                        await handleModerateReview(selectedReview.id, false);
+                                                        setSelectedReview({ ...selectedReview, isApproved: false });
+                                                    }}
+                                                    className="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shadow-lg shadow-orange-500/30 transition-all"
+                                                >
+                                                    <i className="fas fa-times mr-2"></i>Reject
+                                                </button>
+                                            )}
                                             {selectedReview.isApproved !== true && (
                                                 <button 
-                                                    onClick={() => { handleModerateReview(selectedReview.id, true); setIsReviewModalOpen(false); }}
-                                                    className="flex-1 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-all"
+                                                    onClick={async () => {
+                                                        await handleModerateReview(selectedReview.id, true);
+                                                        setSelectedReview({ ...selectedReview, isApproved: true });
+                                                    }}
+                                                    className="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg shadow-green-600/30 transition-all"
                                                 >
                                                     <i className="fas fa-check mr-2"></i>Approve
                                                 </button>
                                             )}
                                             <button 
-                                                onClick={() => handleDeleteReview(selectedReview.id)}
-                                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-all"
+                                                onClick={async () => {
+                                                    await handleDeleteReview(selectedReview.id);
+                                                    setIsReviewModalOpen(false);
+                                                }}
+                                                className="px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg shadow-red-500/30 transition-all"
                                             >
                                                 <i className="fas fa-trash"></i>
                                             </button>
