@@ -1184,7 +1184,8 @@ function App() {
                 comment: r.content || r.title || '',
                 date: r.createdAt?._seconds 
                   ? new Date(r.createdAt._seconds * 1000).toLocaleDateString()
-                  : (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Unknown')
+                  : (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Unknown'),
+                isApproved: r.isApproved
               }));
               setReviews(mappedReviews);
             }
