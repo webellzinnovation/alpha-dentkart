@@ -956,12 +956,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const handleModerateReview = async (id: string, isApproved: boolean) => {
         try {
             const { reviewsAPI } = await import('../utils/api');
-            await reviewsAPI.moderate(id, isApproved);
+            console.log(`Moderating review ${id} to ${isApproved}`);
+            const result = await reviewsAPI.moderate(id, isApproved);
+            console.log('Moderation result:', result);
             setReviews(reviews.map(r => r.id === id ? { ...r, isApproved } : r));
             alert(`Review ${isApproved ? 'approved' : 'rejected'} successfully`);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error moderating review:', error);
-            alert('Failed to moderate review');
+            alert(`Failed to moderate review: ${error?.response?.data?.error || error.message}`);
         }
     };
 
