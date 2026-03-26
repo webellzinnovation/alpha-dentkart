@@ -59,6 +59,10 @@
     "winston": "^3.19.0",
     "zod": "^4.3.5"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.22.4",
+    "@rollup/rollup-linux-x64-musl": "4.22.4"
+  },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.0.2",
