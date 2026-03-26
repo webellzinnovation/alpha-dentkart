@@ -1175,13 +1175,15 @@ function App() {
           try {
             const reviewsResponse = await reviewsAPI.getAllAdmin();
             if (reviewsResponse.reviews) {
+              // Helper to strip HTML tags
+              const stripHtml = (html: string) => html ? html.replace(/<[^>]*>/g, '').trim() : '';
               // Map reviews to expected format
               const mappedReviews = reviewsResponse.reviews.map((r: any) => ({
                 id: r.id,
                 product: r.productId || r.productName || 'Unknown Product',
                 user: r.reviewer || r.userId || 'Anonymous',
                 rating: r.rating || 0,
-                comment: r.content || r.title || '',
+                comment: stripHtml(r.content || r.title || ''),
                 date: r.createdAt?._seconds 
                   ? new Date(r.createdAt._seconds * 1000).toLocaleDateString()
                   : (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Unknown'),
