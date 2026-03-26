@@ -636,6 +636,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [isGeneratingSEO, setIsGeneratingSEO] = useState(false); // SEO Generation state
     const [reviewsFilter, setReviewsFilter] = useState('all');
     const [reviewsSearch, setReviewsSearch] = useState('');
+    const [selectedReview, setSelectedReview] = useState<any>(null);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
     const filteredReviews = useMemo(() => {
         let filtered = reviews;
@@ -2481,6 +2483,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <td className="px-6 py-4 text-gray-500 text-xs">{review.date}</td>
                                                         <td className="px-6 py-4 text-right">
                                                             <div className="flex gap-2 justify-end">
+                                                                <button 
+                                                                    onClick={() => { setSelectedReview(review); setIsReviewModalOpen(true); }}
+                                                                    className="text-blue-500 hover:text-blue-700 text-xs px-2 py-1 rounded hover:bg-blue-50"
+                                                                >
+                                                                    <i className="fas fa-eye mr-1"></i>View
+                                                                </button>
                                                                 {review.isApproved !== true && (
                                                                     <button 
                                                                         onClick={() => handleModerateReview(review.id, true)} 
@@ -2511,6 +2519,97 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         </table>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* REVIEW DETAIL MODAL */}
+                        {isReviewModalOpen && selectedReview && (
+                            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                                <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in">
+                                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 rounded-t-2xl">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                                                    <i className="fas fa-star text-white text-xl"></i>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-white">Review Details</h3>
+                                                    <p className="text-blue-100 text-sm">{selectedReview.product}</p>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                onClick={() => setIsReviewModalOpen(false)}
+                                                className="text-white/80 hover:text-white text-2xl"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="p-6 space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <p className="text-sm text-gray-500">Customer</p>
+                                                <p className="font-bold text-gray-800 dark:text-white">{selectedReview.user}</p>
+                                            </div>
+                                            <div className="flex text-yellow-400 text-lg">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <i key={i} className={`${i < selectedReview.rating ? 'fas' : 'far'} fa-star`}></i>
+                                                ))}
+                                                <span className="text-gray-600 dark:text-gray-400 ml-2 text-sm">({selectedReview.rating}/5)</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <p className="text-sm text-gray-500 mb-1">Product</p>
+                                            <p className="font-medium text-gray-800 dark:text-white">{selectedReview.product}</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <p className="text-sm text-gray-500 mb-1">Review</p>
+                                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                                <p className="text-gray-700 dark:text-gray-300 italic">"{selectedReview.comment}"</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                                            <div>
+                                                <p className="text-sm text-gray-500">Date</p>
+                                                <p className="font-medium text-gray-800 dark:text-white">{selectedReview.date}</p>
+                                            </div>
+                                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                                                selectedReview.isApproved === true ? 'bg-green-100 text-green-700' :
+                                                selectedReview.isApproved === false ? 'bg-red-100 text-red-700' :
+                                                'bg-yellow-100 text-yellow-700'
+                                            }`}>
+                                                {selectedReview.isApproved === true ? 'Approved' : selectedReview.isApproved === false ? 'Rejected' : 'Pending'}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="flex gap-3 pt-4">
+                                            <button 
+                                                onClick={() => { setIsReviewModalOpen(false); }}
+                                                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium transition-all"
+                                            >
+                                                Close
+                                            </button>
+                                            {selectedReview.isApproved !== true && (
+                                                <button 
+                                                    onClick={() => { handleModerateReview(selectedReview.id, true); setIsReviewModalOpen(false); }}
+                                                    className="flex-1 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-all"
+                                                >
+                                                    <i className="fas fa-check mr-2"></i>Approve
+                                                </button>
+                                            )}
+                                            <button 
+                                                onClick={() => handleDeleteReview(selectedReview.id)}
+                                                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-all"
+                                            >
+                                                <i className="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
