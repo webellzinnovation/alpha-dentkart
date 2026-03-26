@@ -20,6 +20,7 @@ jobs:
         run: |
           rm -rf node_modules package-lock.json
           npm install
+          npm install @rollup/rollup-linux-x64-gnu
 
       - name: Build Web App
         run: npm run build
