@@ -19,7 +19,8 @@ jobs:
       - name: Install Dependencies
         run: |
           rm -rf node_modules package-lock.json
-          npm install
+          npm install --legacy-peer-deps
+          npm rebuild
 
       - name: Build Web App
         run: npm run build
@@ -62,7 +63,8 @@ jobs:
       - name: Install Dependencies
         run: |
           rm -rf node_modules package-lock.json
-          npm install
+          npm install --legacy-peer-deps
+          npm rebuild
 
       - name: Build Web App
         run: npm run build
