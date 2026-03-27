@@ -50,10 +50,30 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease
 
+      - name: Delete Old Artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            for (const artifact of artifacts.data.artifacts) {
+              if (artifact.name.includes('android-apk') || artifact.name.includes('ios-build')) {
+                console.log(`Deleting artifact: ${artifact.name} (${artifact.id})`);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id
+                });
+              }
+            }
+
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
+          name: android-apk-${{ github.run_id }}
           path: |
             android/app/build/outputs/apk/debug/app-debug.apk
             android/app/build/outputs/apk/release/app-release-unsigned.apk
@@ -121,5 +141,5 @@ jobs:
       - name: Upload iOS Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build
+          name: ios-build-${{ github.run_id }}
           path: ios/App/build/Build/Products
