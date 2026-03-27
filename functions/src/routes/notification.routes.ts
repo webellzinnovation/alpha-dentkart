@@ -1,20 +1,26 @@
 import { Router } from 'express';
-import { db } from '../config/firebase'; // Firestore
+import { db } from '../config/firebase';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// Save or update FCM token for a user
-router.post('/save-token', async (req, res) => {
-    const { userId, token } = req.body;
+// Save or update FCM token for authenticated user
+router.post('/save-token', authenticateToken, async (req: AuthRequest, res) => {
+    const { token } = req.body;
+    const userId = req.user?.id;
 
-    if (!userId || !token) {
-        return res.status(400).json({ error: 'User ID and Token are required' });
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!token) {
+        return res.status(400).json({ error: 'Token is required' });
     }
 
     try {
         await db.collection('users').doc(userId).set({
             fcmToken: token,
-            updatedAt: new Date().toISOString()
+            fcmTokenUpdatedAt: new Date().toISOString()
         }, { merge: true });
 
         res.json({ success: true, message: 'Token saved successfully' });
