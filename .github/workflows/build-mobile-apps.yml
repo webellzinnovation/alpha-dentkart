@@ -100,8 +100,15 @@ jobs:
 
       - name: Install CocoaPods
         run: |
+          ls -la ios/App/
           ls -la ios/App/App/
-          pod install --project-directory=ios/App/App
+          # Check where Podfile should be
+          find ios -name "Podfile" -type f 2>/dev/null || echo "No Podfile found"
+          # Initialize Podfile if not exists
+          if [ ! -f "ios/App/Podfile" ]; then
+            cd ios/App && pod init && cd ../..
+          fi
+          pod install --project-directory=ios/App
 
       - name: Build iOS (Debug)
         env:
@@ -109,7 +116,7 @@ jobs:
           configuration: Debug
           platform: iOS Simulator
         run: |
-          cd ios/App/App
+          cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme $scheme -configuration $configuration -platform $platform -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
 
       - name: Build iOS (Release)
@@ -118,11 +125,11 @@ jobs:
           configuration: Release
           platform: iOS Simulator
         run: |
-          cd ios/App/App
+          cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme $scheme -configuration $configuration -platform $platform -derivedDataPath build CODE_SIGNING_ALLOWED=NO
 
       - name: Upload iOS Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ios-build
-          path: ios/App/App/build/Build/Products
+          path: ios/App/build/Build/Products
