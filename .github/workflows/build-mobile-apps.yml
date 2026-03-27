@@ -97,19 +97,17 @@ jobs:
         env:
           scheme: App
           configuration: Debug
-          platform: iOS Simulator
         run: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme $scheme -configuration $configuration -platform $platform -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -workspace App.xcworkspace -scheme $scheme -configuration $configuration -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
       - name: Build iOS (Release)
         env:
           scheme: App
           configuration: Release
-          platform: iOS Simulator
         run: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme $scheme -configuration $configuration -platform $platform -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -workspace App.xcworkspace -scheme $scheme -configuration $configuration -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
       - name: Upload iOS Artifacts
         uses: actions/upload-artifact@v4
