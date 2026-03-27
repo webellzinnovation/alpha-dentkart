@@ -95,18 +95,16 @@ jobs:
         id: find-workspace
         run: |
           echo "Looking for workspace..."
-          find ios -name "*.xcworkspace" -type d
-          find ios -name "*.xcodeproj" -type d
+          find ios -name "*.xcworkspace" -not -path "*/project.xcworkspace" -type d || true
+          find ios -name "*.xcodeproj" -type d || true
 
       - name: Build iOS (Debug)
         env:
           scheme: App
           configuration: Debug
         run: |
-          WORKSPACE=$(find ios -name "*.xcworkspace" -type d | head -1)
-          PROJECT=$(find ios -name "*.xcodeproj" -type d | head -1)
-          echo "Found workspace: $WORKSPACE"
-          echo "Found project: $PROJECT"
+          WORKSPACE=$(find ios -name "*.xcworkspace" -not -path "*/project.xcworkspace" -type d | head -1)
+          echo "Using workspace: $WORKSPACE"
           cd ios/App
           xcodebuild -workspace "$WORKSPACE" -scheme "$scheme" -configuration $configuration -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
@@ -115,10 +113,8 @@ jobs:
           scheme: App
           configuration: Release
         run: |
-          WORKSPACE=$(find ios -name "*.xcworkspace" -type d | head -1)
-          PROJECT=$(find ios -name "*.xcodeproj" -type d | head -1)
-          echo "Found workspace: $WORKSPACE"
-          echo "Found project: $PROJECT"
+          WORKSPACE=$(find ios -name "*.xcworkspace" -not -path "*/project.xcworkspace" -type d | head -1)
+          echo "Using workspace: $WORKSPACE"
           cd ios/App
           xcodebuild -workspace "$WORKSPACE" -scheme "$scheme" -configuration $configuration -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
