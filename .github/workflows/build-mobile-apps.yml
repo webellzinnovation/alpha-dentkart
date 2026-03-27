@@ -93,51 +93,6 @@ jobs:
         with:
           xcode-version: 'latest'
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.1'
-
-      - name: Install CocoaPods
-        run: |
-          ls -la ios/App/
-          find ios -name "Podfile" -type f 2>/dev/null || echo "No Podfile found"
-          find ios -name "*.xcworkspace" -type d 2>/dev/null || echo "No workspace found"
-          find ios -name "*.xcodeproj" -type d 2>/dev/null || echo "No project found"
-          # Create Podfile if not exists (Capacitor 8 format)
-          if [ ! -f "ios/App/Podfile" ]; then
-            cat > ios/App/Podfile << 'PODFILE'
-platform :ios, '13.4'
-use_frameworks!
-workspace 'App'
-target 'App' do
-  pod 'Capacitor', :path => '../..'
-  pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
-  pod 'CapacitorAppLauncher', :path => '../../node_modules/@capacitor/app-launcher'
-  pod 'CapacitorBrowser', :path => '../../node_modules/@capacitor/browser'
-  pod 'CapacitorCamera', :path => '../../node_modules/@capacitor/camera'
-  pod 'CapacitorFilesystem', :path => '../../node_modules/@capacitor/filesystem'
-  pod 'CapacitorGeolocation', :path => '../../node_modules/@capacitor/geolocation'
-  pod 'CapacitorHaptics', :path => '../../node_modules/@capacitor/haptics'
-  pod 'CapacitorKeyboard', :path => '../../node_modules/@capacitor/keyboard'
-  pod 'CapacitorLocalNotifications', :path => '../../node_modules/@capacitor/local-notifications'
-  pod 'CapacitorNetwork', :path => '../../node_modules/@capacitor/network'
-  pod 'CapacitorPushNotifications', :path => '../../node_modules/@capacitor/push-notifications'
-  pod 'CapacitorShare', :path => '../../node_modules/@capacitor/share'
-  pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
-  pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
-end
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.4'
-    end
-  end
-end
-PODFILE
-          fi
-          pod install --project-directory=ios/App
-
       - name: Build iOS (Debug)
         env:
           scheme: App
