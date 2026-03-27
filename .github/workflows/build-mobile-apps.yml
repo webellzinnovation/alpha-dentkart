@@ -100,8 +100,8 @@ jobs:
 
       - name: Install CocoaPods
         run: |
-          cd ios/App
-          pod install
+          ls -la ios/App/
+          pod install --project-directory=ios/App
 
       - name: Build iOS (Debug)
         env:
