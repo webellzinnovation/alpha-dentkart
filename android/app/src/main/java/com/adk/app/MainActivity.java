@@ -1,4 +1,4 @@
-package com.alphadentkart.app;
+package com.adk.app;
 
 import com.getcapacitor.BridgeActivity;
 
