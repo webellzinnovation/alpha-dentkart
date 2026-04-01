@@ -141,7 +141,7 @@ function App() {
         console.log("📡 Fetching products from API...");
         let productsResponse;
         try {
-          productsResponse = await productsAPI.getAll({ limit: 5000 });
+productsResponse = await productsAPI.getAll({ limit: 48 });
           console.log(`📦 Products API response received, type:`, typeof productsResponse);
           console.log(`📦 Products has products key:`, productsResponse?.products !== undefined);
         } catch (err) {
@@ -336,7 +336,7 @@ function App() {
       const { productsAPI, categoriesAPI, brandsAPI, heroSlidesAPI, settingsAPI } = api;
 
       // Fetch products first
-      const productsResponse = await productsAPI.getAll({ limit: 5000 });
+      const productsResponse = await productsAPI.getAll({ limit: 48 });
       
       // Then others
       const [categoriesResponse, brandsResponse, slidesResponse, settingsResponse] = await Promise.allSettled([
@@ -1769,7 +1769,7 @@ function App() {
 
         <div className="px-4 md:px-0">
           {currentView === 'shop' && (
-            products.length > 0 ? (
+            products && products.length > 0 ? (
             <Shop
               products={products}
               initialCategory={shopCategory}
@@ -1780,8 +1780,8 @@ function App() {
               onAddToCart={addToCart}
               onQuickView={(p) => setQuickViewProduct(p)}
               wishlistIds={wishlist.map(p => p.id)}
-              categories={categories}
-              brands={brands}
+              categories={categories || []}
+              brands={brands || []}
               onSearchUpdate={setSearchQuery}
             />
             ) : (
@@ -1862,7 +1862,38 @@ function App() {
             </Suspense>
           )}
 
-          {currentView === 'checkout' && user && (
+          {/* Checkout - Cart Empty */}
+          {currentView === 'checkout' && (!cart || cart.length === 0) && (
+            <div className="flex flex-col items-center justify-center py-20 min-h-[60vh]">
+              <i className="fas fa-shopping-cart text-5xl text-gray-300 mb-4"></i>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Your cart is empty</h2>
+              <p className="text-gray-500 mb-6">Add some products to your cart first.</p>
+              <button
+                onClick={() => navigateToShop()}
+                className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90"
+              >
+                Continue Shopping
+              </button>
+            </div>
+          )}
+
+          {/* Checkout - Login Required */}
+          {currentView === 'checkout' && cart && cart.length > 0 && (!user || user === null) && (
+            <div className="flex flex-col items-center justify-center py-20 min-h-[60vh]">
+              <i className="fas fa-lock text-5xl text-gray-300 mb-4"></i>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Login Required</h2>
+              <p className="text-gray-500 mb-6">Please login to complete your purchase.</p>
+              <button
+                onClick={() => handleNavigate('login')}
+                className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90"
+              >
+                Login
+              </button>
+            </div>
+          )}
+
+          {/* Checkout - User Logged In with Items */}
+          {currentView === 'checkout' && cart && cart.length > 0 && user && (
             <div className="bg-gray-50 dark:bg-background-dark min-h-[60vh]">
               <Checkout
                 cart={cart}

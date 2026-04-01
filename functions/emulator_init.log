@@ -1,0 +1,220 @@
+[36m[1mi  emulators:[22m[39m Starting emulators: functions
+[33m[1m!  functions:[22m[39m The following emulators are not running, calls to these services from the Functions emulator will affect production: [1mapphosting, auth, firestore, database, hosting, pubsub, storage, dataconnect[22m
+[36m[1mi  functions:[22m[39m Watching "D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions" for Cloud Functions...
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8968
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\node_modules\uuid\dist-node\index.js from D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js not supported.
+Instead change the require of index.js in D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js to a dynamic import() which is available in all CommonJS modules.
+    at Object.<anonymous> (D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js:7:24) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+[31m[1m!!  functions:[22m[39m Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error
+
+[90mÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ[39m
+[90mÔöé[39m [32mÔ£ö[39m  [1mAll emulators ready! It is now safe to connect your app.[22m [90mÔöé[39m
+[90mÔöé[39m [36mi[39m  View Emulator UI at [4m[1mhttp://127.0.0.1:4000/[22m[24m               [90mÔöé[39m
+[90mÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ[39m
+
+[90mÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ[39m[90mÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ[39m[90mÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ[39m
+[90mÔöé[39m[33m Emulator  [39m[90mÔöé[39m[33m Host:Port      [39m[90mÔöé[39m[33m View in Emulator UI             [39m[90mÔöé[39m
+[90mÔö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ[39m[90mÔö╝ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ[39m[90mÔö╝ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöñ[39m
+[90mÔöé[39m Functions [90mÔöé[39m 127.0.0.1:5001 [90mÔöé[39m [4m[1mhttp://127.0.0.1:4000/functions[22m[24m [90mÔöé[39m
+[90mÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ[39m[90mÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ[39m[90mÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ[39m
+[90m  Emulator Hub host: 127.0.0.1 port: 4400[39m
+[90m  Other reserved ports:[39m 4500
+
+Issues? Report them at [4m[1mhttps://github.com/firebase/firebase-tools/issues[22m[24m and attach the *-debug.log files.
+ 
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8638
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\node_modules\uuid\dist-node\index.js from D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js not supported.
+Instead change the require of index.js in D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js to a dynamic import() which is available in all CommonJS modules.
+    at Object.<anonymous> (D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js:7:24) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+[31m[1m!!  functions:[22m[39m Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8071
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\node_modules\uuid\dist-node\index.js from D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js not supported.
+Instead change the require of index.js in D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js to a dynamic import() which is available in all CommonJS modules.
+    at Object.<anonymous> (D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js:7:24) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8832
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ÔÜÖ´©Å  enable debug logging with { debug: true }
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\node_modules\uuid\dist-node\index.js from D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js not supported.
+Instead change the require of index.js in D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js to a dynamic import() which is available in all CommonJS modules.
+    at Object.<anonymous> (D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js:7:24) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+[31m[1m!!  functions:[22m[39m Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error
+[31m[1m!!  functions:[22m[39m Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8281
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ÔÜÖ´©Å  override existing env vars with { override: true }
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\node_modules\uuid\dist-node\index.js from D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js not supported.
+Instead change the require of index.js in D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js to a dynamic import() which is available in all CommonJS modules.
+    at Object.<anonymous> (D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js:7:24) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+[31m[1m!!  functions:[22m[39m Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8516
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ­ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Error [ERR_REQUIRE_ESM]: require() of ES Module D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\node_modules\uuid\dist-node\index.js from D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js not supported.
+Instead change the require of index.js in D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js to a dynamic import() which is available in all CommonJS modules.
+    at Object.<anonymous> (D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js:7:24) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Serving at port 8102
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\node_modules\uuid\dist-node\index.js from D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js not supported.
+Instead change the require of index.js in D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js to a dynamic import() which is available in all CommonJS modules.
+    at Object.<anonymous> (D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\functions\lib\controllers\guestCheckoutController.js:7:24) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+[31m[1m!!  functions:[22m[39m Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error
+[31m[1m!!  functions:[22m[39m Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8805
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
+
+2026-03-10 17:48:56 [[32minfo[39m]: Sentry DSN not configured ÔÇö error tracking is in log-only mode {"service":"alpha-dentkart-api"}
+
+[32m[1m+  functions:[22m[39m Loaded functions definitions from source: api.
+[32m[1m+  functions[asia-south1-api]:[22m[39m [1mhttp[22m function initialized (http://127.0.0.1:5001/alphadentkart-001/asia-south1/api).
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8248
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ÔÜÖ´©Å  enable debug logging with { debug: true }
+
+2026-03-10 17:49:24 [[32minfo[39m]: Sentry DSN not configured ÔÇö error tracking is in log-only mode {"service":"alpha-dentkart-api"}
+
+[32m[1m+  functions:[22m[39m Loaded functions definitions from source: api.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8408
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+
+2026-03-10 17:53:15 [[32minfo[39m]: Sentry DSN not configured ÔÇö error tracking is in log-only mode {"service":"alpha-dentkart-api"}
+
+[32m[1m+  functions:[22m[39m Loaded functions definitions from source: api.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8319
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ­ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+
+2026-03-10 17:53:34 [[32minfo[39m]: Sentry DSN not configured ÔÇö error tracking is in log-only mode {"service":"alpha-dentkart-api"}
+
+[32m[1m+  functions:[22m[39m Loaded functions definitions from source: api.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mpackage.json indicates an outdated version of firebase-functions. Please upgrade using [1mnpm install --save firebase-functions@latest[22m in your functions directory.
+[33m[1m! [22m[39m [1m[33mfunctions: [39m[22mPlease note that there will be breaking changes when you upgrade.
+[32m[1m+  functions:[22m[39m Using node@20 from host.
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+Serving at port 8249
+
+[dotenv@17.3.1] injecting env (16) from .env -- tip: ­ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+
+­ƒöÑ Firebase Admin initialized via native FIREBASE_CONFIG
+
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ­ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+
+2026-03-10 17:53:55 [[32minfo[39m]: Sentry DSN not configured ÔÇö error tracking is in log-only mode {"service":"alpha-dentkart-api"}
+
+[32m[1m+  functions:[22m[39m Loaded functions definitions from source: api.
+ 
+[36m[1mi  emulators:[22m[39m Received SIGHUP for the first time. Starting a clean shutdown.
+[36m[1mi  emulators:[22m[39m Please wait for a clean shutdown or send the SIGHUP signal again to stop right now.
+[36m[1mi  emulators:[22m[39m Shutting down emulators.
+[36m[1mi  ui:[22m[39m Stopping Emulator UI
+[36m[1mi  functions:[22m[39m Stopping Functions Emulator

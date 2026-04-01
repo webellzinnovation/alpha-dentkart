@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.auth = exports.db = exports.admin = void 0;
+exports.isFirebaseInitialized = exports.auth = exports.db = exports.admin = void 0;
 exports.withTimeout = withTimeout;
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
 exports.admin = firebase_admin_1.default;
@@ -88,6 +88,8 @@ catch (error) {
     console.error('❌ Firebase Admin Initialization Error:', error);
     throw error;
 }
+const isFirebaseInitialized = () => firebaseInitialized;
+exports.isFirebaseInitialized = isFirebaseInitialized;
 /**
  * Wraps a Firestore promise with a timeout to prevent indefinite hangs
  * when Firebase retries quota-exhausted requests (which can take 40-60 seconds).

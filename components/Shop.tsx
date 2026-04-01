@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ProductCard } from './ProductCard';
 import { Product, Category, BrandProfile } from '../types';
 import { CustomDropdown } from './CustomDropdown';
+import { productsAPI } from '../utils/api';
 
 interface ShopProps {
   products: Product[];
@@ -20,7 +21,7 @@ interface ShopProps {
 }
 
 export const Shop: React.FC<ShopProps> = ({
-  products,
+  products: initialProducts,
   initialCategory,
   initialBrand,
   onProductClick,
@@ -39,8 +40,61 @@ export const Shop: React.FC<ShopProps> = ({
   const [minRating, setMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<string>('featured');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
-  const [displayLimit, setDisplayLimit] = useState(24); // Show 24 products initially
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(initialProducts);
+  
+  // Server-side pagination
+  const [page, setPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [allLoadedProducts, setAllLoadedProducts] = useState<Product[]>([]);
+
+  const fetchProducts = useCallback(async (pageNum: number) => {
+    setIsLoadingMore(true);
+    try {
+      const categoryId = selectedCategories.length === 1 
+        ? categories.find(c => c.name === selectedCategories[0])?.id 
+        : undefined;
+      const brandId = selectedBrands.length === 1
+        ? brands.find(b => b.name === selectedBrands[0])?.id
+        : undefined;
+      
+      const response = await productsAPI.getAll({
+        page: pageNum,
+        limit: 24,
+        categoryId,
+        brandId,
+        search: searchQuery || undefined
+      });
+      
+      const newProducts = response.products || [];
+      setTotalProducts(response.pagination?.total || 0);
+      
+      if (pageNum === 1) {
+        setAllLoadedProducts(newProducts);
+      } else {
+        setAllLoadedProducts(prev => [...prev, ...newProducts]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [selectedCategories, selectedBrands, searchQuery, categories, brands]);
+
+  // Initial load and when filters change
+  useEffect(() => {
+    setPage(1);
+    fetchProducts(1);
+  }, [selectedCategories, selectedBrands, searchQuery]);
+
+  const loadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage);
+  };
+
+  // Use API products if loaded, otherwise fall back to initial products
+  const products = allLoadedProducts.length > 0 ? allLoadedProducts : initialProducts;
 
   // Derive Single Active Brand or Category Profile
   const activeBrandProfile = selectedBrands.length === 1 ? brands.find(b => b.name === selectedBrands[0]) : null;
@@ -100,7 +154,6 @@ export const Shop: React.FC<ShopProps> = ({
     }
 
     setFilteredProducts(result);
-    setDisplayLimit(24); // Reset to initial limit when filters change
   }, [products, selectedCategories, selectedBrands, priceRange, minRating, sortBy, searchQuery]);
 
   const toggleCategory = (categoryName: string) => {
@@ -309,7 +362,7 @@ export const Shop: React.FC<ShopProps> = ({
           {filteredProducts.length > 0 ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-                {filteredProducts.slice(0, displayLimit).map(product => (
+                {filteredProducts.map(product => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -322,16 +375,64 @@ export const Shop: React.FC<ShopProps> = ({
                 ))}
               </div>
 
-              {/* Load More Button */}
-              {displayLimit < filteredProducts.length && (
-                <div className="flex justify-center mt-8">
+              {/* Pagination */}
+              {totalProducts > 24 && (
+                <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
+                  {/* Previous */}
                   <button
-                    onClick={() => setDisplayLimit(prev => prev + 24)}
-                    className="px-8 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-md hover:shadow-lg flex items-center gap-2"
+                    onClick={() => { setPage(1); fetchProducts(1); }}
+                    disabled={page === 1}
+                    className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
-                    <span>Load More Products</span>
-                    <span className="text-sm opacity-80">({Math.min(24, filteredProducts.length - displayLimit)} more)</span>
+                    <i className="fas fa-angle-double-left"></i>
                   </button>
+                  <button
+                    onClick={() => { const p = page - 1; setPage(p); fetchProducts(p); }}
+                    disabled={page === 1}
+                    className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <i className="fas fa-chevron-left"></i>
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  {Array.from({ length: Math.min(5, Math.ceil(totalProducts / 24)) }, (_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => { setPage(pageNum); fetchProducts(pageNum); }}
+                        className={`px-4 py-2 rounded-lg border ${
+                          page === pageNum 
+                            ? 'bg-primary text-white border-primary' 
+                            : 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  {/* Next */}
+                  <button
+                    onClick={() => { const p = page + 1; setPage(p); fetchProducts(p); }}
+                    disabled={page >= Math.ceil(totalProducts / 24)}
+                    className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <i className="fas fa-chevron-right"></i>
+                  </button>
+                  <button
+                    onClick={() => { const p = Math.ceil(totalProducts / 24); setPage(p); fetchProducts(p); }}
+                    disabled={page >= Math.ceil(totalProducts / 24)}
+                    className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <i className="fas fa-angle-double-right"></i>
+                  </button>
+                </div>
+              )}
+
+              {totalProducts > 0 && (
+                <div className="text-center mt-4 text-gray-500 text-sm">
+                  Page {page} of {Math.ceil(totalProducts / 24)} • Showing {allLoadedProducts.length} of {totalProducts} products
                 </div>
               )}
             </>

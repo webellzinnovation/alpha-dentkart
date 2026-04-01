@@ -1,0 +1,16 @@
+capacitor.config.ts(14,29): error TS1005: ':' expected.
+capacitor.config.ts(15,26): error TS1005: ':' expected.
+capacitor.config.ts(16,27): error TS1005: ':' expected.
+capacitor.config.ts(17,23): error TS1005: ':' expected.
+capacitor.config.ts(18,22): error TS1005: ':' expected.
+capacitor.config.ts(19,27): error TS1005: ':' expected.
+capacitor.config.ts(20,35): error TS1005: ':' expected.
+capacitor.config.ts(21,23): error TS1005: ':' expected.
+capacitor.config.ts(22,23): error TS1005: ':' expected.
+capacitor.config.ts(23,21): error TS1005: ':' expected.
+capacitor.config.ts(24,34): error TS1005: ':' expected.
+capacitor.config.ts(25,24): error TS1005: ':' expected.
+capacitor.config.ts(27,3): error TS1005: ':' expected.
+capacitor.config.ts(27,4): error TS1128: Declaration or statement expected.
+capacitor.config.ts(32,2): error TS1128: Declaration or statement expected.
+capacitor.config.ts(38,1): error TS1128: Declaration or statement expected.

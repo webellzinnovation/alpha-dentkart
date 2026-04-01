@@ -22,6 +22,7 @@ export const createOrderSchema = z.object({
     total: z.number().min(0),
     shippingAddress: z.object({
         name: z.string(),
+        email: z.string().email().optional(),
         street: z.string(),
         city: z.string(),
         state: z.string(),

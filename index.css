@@ -1,5 +1,9 @@
 /* Main CSS with Mobile / Capacitor Optimizations */
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer base {
   :root {
     --primary: #0ea5e9;

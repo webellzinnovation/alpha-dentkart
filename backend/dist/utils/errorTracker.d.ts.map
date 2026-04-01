@@ -1,0 +1,1 @@
+{"version":3,"file":"errorTracker.d.ts","sourceRoot":"","sources":["../../src/utils/errorTracker.ts"],"names":[],"mappings":"AAyCA,eAAO,MAAM,YAAY;IACrB;;OAEG;;IAKH;;OAEG;4BACqB,KAAK,GAAG,OAAO,YAAY,MAAM,CAAC,MAAM,EAAE,GAAG,CAAC;IAuBtE;;OAEG;4BACqB,MAAM,YAAY,MAAM,CAAC,MAAM,EAAE,GAAG,CAAC;CAOhE,CAAC"}

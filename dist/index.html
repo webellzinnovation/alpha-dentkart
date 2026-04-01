@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
+    <title>Alpha Dentkart - Dental Supplies</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="/Alpha-dentkart-logo-icon.png" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#DD3B5F",
+                        secondary: "#1F2937",
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#111827",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1F2937",
+                        "text-light": "#374151",
+                        "text-dark": "#E5E7EB",
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                    animation: {
+                        'infinite-scroll': 'infinite-scroll 80s linear infinite',
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        'infinite-scroll': {
+                            from: { transform: 'translateX(0)' },
+                            to: { transform: 'translateX(-50%)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                },
+            },
+        };
+    </script>
+    <style>
+        /* Force font consistency */
+        body,
+        input,
+        textarea,
+        select,
+        button {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .mask-image-gradient {
+            -webkit-mask-image: linear-gradient(to right, black 60%, transparent 100%);
+            mask-image: linear-gradient(to right, black 60%, transparent 100%);
+        }
+
+        .hover-pause:hover {
+            animation-play-state: paused;
+        }
+
+        /* Custom Scrollbar Design */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #CBD5E1;
+            /* gray-300 */
+            border-radius: 20px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #94A3B8;
+            /* gray-400 */
+        }
+
+        /* Dark mode scrollbar override */
+        .dark ::-webkit-scrollbar-thumb {
+            background-color: #4B5563;
+            /* gray-600 */
+        }
+
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background-color: #6B7280;
+            /* gray-500 */
+        }
+    </style>
+
+    <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
+    "react/": "https://esm.sh/react@^19.2.1/",
+    "react": "https://esm.sh/react@^19.2.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "vite": "https://esm.sh/vite@^7.2.7",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "path": "https://esm.sh/path@^0.12.7",
+    "url": "https://esm.sh/url@^0.11.4"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-BQCqeSAF.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vendor-PidWjDGE.js">
+  <link rel="modulepreload" crossorigin href="/assets/products-B4oOGGSc.js">
+  <link rel="modulepreload" crossorigin href="/assets/themes-DdSmXeol.js">
+  <link rel="modulepreload" crossorigin href="/assets/ai-ZayOz6mS.js">
+  <link rel="modulepreload" crossorigin href="/assets/admin-Bi_Pa1Qa.js">
+  <link rel="modulepreload" crossorigin href="/assets/checkout-x17KXKCX.js">
+  <link rel="stylesheet" crossorigin href="/assets/products-CpOn96BZ.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-CqtwokDF.css">
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-200 antialiased">
+    <div id="root"></div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registered:', registration);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // New content is available
+                                        if (confirm('New version available! Reload to update?')) {
+                                            window.location.reload();
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('❌ Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+    
+    <!-- Performance Monitoring -->
+    <script>
+        // Core Web Vitals monitoring
+        function measureWebVitals() {
+            if ('PerformanceObserver' in window) {
+                // Largest Contentful Paint
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach((entry) => {
+                        if (entry.name === 'largest-contentful-paint') {
+                            console.log('🎯 LCP:', entry.startTime);
+                        }
+                    });
+                }).observe({ entryTypes: ['largest-contentful-paint'] });
+
+                // First Input Delay
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach((entry) => {
+                        if (entry.name === 'first-input') {
+                            console.log('⚡ FID:', entry.processingStart - entry.startTime);
+                        }
+                    });
+                }).observe({ entryTypes: ['first-input'] });
+
+                // Cumulative Layout Shift
+                let clsScore = 0;
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach((entry) => {
+                        if (!entry.hadRecentInput) {
+                            clsScore += entry.value;
+                            console.log('📊 CLS:', clsScore);
+                        }
+                    });
+                }).observe({ entryTypes: ['layout-shift'] });
+            }
+        }
+
+        // Mobile performance optimizations
+        function optimizeForMobile() {
+            // Reduce motion on low-end devices
+            const isLowEndDevice = navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4;
+            if (isLowEndDevice) {
+                document.documentElement.style.setProperty('--animation-duration', '0s');
+                document.body.classList.add('reduce-motion');
+            }
+
+            // Detect slow network
+            if ('connection' in navigator) {
+                const connection = navigator.connection;
+                if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
+                    document.body.classList.add('slow-network');
+                    console.log('🐌 Slow network detected, reducing animations');
+                }
+            }
+
+            // Touch optimization
+            if ('ontouchstart' in window) {
+                document.body.classList.add('touch-device');
+            }
+        }
+
+        // Initialize optimizations
+        document.addEventListener('DOMContentLoaded', () => {
+            measureWebVitals();
+            optimizeForMobile();
+        });
+
+        // Memory management
+        window.addEventListener('beforeunload', () => {
+            // Clean up any resources
+            if (window.gc) {
+                window.gc();
+            }
+        });
+    </script>
+    
+</body>
+
+</html>

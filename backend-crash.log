@@ -1,0 +1,14 @@
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+­ƒöÑ Firebase Admin initialized from Local File: D:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\firebase-service-account.json
+d:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\backend\src\utils\jwt.ts:8
+    throw new Error(
+          ^
+
+
+Error: ÔØî FATAL: JWT_SECRET environment variable is not set. Set a strong random string (min 32 chars) in your .env file before starting the server.
+    at <anonymous> (d:\Cloud iDrive\Cloud-Drive_webellzinnovation@gmail.com\Ai studio\alpha-dentkart\backend\src\utils\jwt.ts:8:11)
+    at ModuleJob.run (node:internal/modules/esm/module_job:234:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:473:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:123:5)
+
+Node.js v20.18.0

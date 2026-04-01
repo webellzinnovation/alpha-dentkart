@@ -87,6 +87,7 @@ try {
 }
 
 export { admin, db, auth };
+export const isFirebaseInitialized = () => firebaseInitialized;
 
 /**
  * Wraps a Firestore promise with a timeout to prevent indefinite hangs

@@ -34,6 +34,21 @@ export const authAPI = {
         const response = await api.get('/auth/me');
         return response.data;
     },
+
+    forgotPassword: async (email: string) => {
+        const response = await api.post('/auth/forgot-password', { email });
+        return response.data;
+    },
+
+    resetPassword: async (token: string, password: string) => {
+        const response = await api.post('/auth/reset-password', { token, password });
+        return response.data;
+    },
+
+    verifyEmail: async (token: string) => {
+        const response = await api.post('/auth/verify-email', { token });
+        return response.data;
+    },
 };
 
 // Products API
@@ -175,6 +190,30 @@ export const settingsAPI = {
 export const aiAPI = {
     chat: async (message: string, context: string) => {
         const response = await api.post('/ai/chat', { message, context });
+        return response.data;
+    },
+};
+
+// Coupons API
+export const couponsAPI = {
+    getAll: async () => {
+        const response = await api.get('/coupons');
+        return response.data;
+    },
+    create: async (data: any) => {
+        const response = await api.post('/coupons', data);
+        return response.data;
+    },
+    update: async (id: string, data: any) => {
+        const response = await api.put(`/coupons/${id}`, data);
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/coupons/${id}`);
+        return response.data;
+    },
+    validate: async (code: string, orderAmount: number) => {
+        const response = await api.post('/coupons/validate', { code, orderAmount });
         return response.data;
     },
 };

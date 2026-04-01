@@ -1,0 +1,103 @@
+src/config/firebase.ts(10,34): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', or 'nodenext'.
+src/controllers/aiController.ts(5,23): error TS7030: Not all code paths return a value.
+src/controllers/authController.ts(9,23): error TS7030: Not all code paths return a value.
+src/controllers/authController.ts(83,23): error TS7030: Not all code paths return a value.
+src/controllers/authController.ts(154,23): error TS7030: Not all code paths return a value.
+src/controllers/authController.ts(183,23): error TS7030: Not all code paths return a value.
+src/controllers/authController.ts(243,23): error TS7030: Not all code paths return a value.
+src/controllers/authController.ts(292,23): error TS7030: Not all code paths return a value.
+src/controllers/authController.ts(342,15): error TS6133: 'role' is declared but its value is never read.
+src/controllers/brandController.ts(85,23): error TS7030: Not all code paths return a value.
+src/controllers/brandController.ts(112,23): error TS7030: Not all code paths return a value.
+src/controllers/brandController.ts(135,23): error TS7030: Not all code paths return a value.
+src/controllers/categoryController.ts(26,23): error TS7030: Not all code paths return a value.
+src/controllers/categoryController.ts(54,23): error TS7030: Not all code paths return a value.
+src/controllers/categoryController.ts(77,23): error TS7030: Not all code paths return a value.
+src/controllers/chatSessionController.ts(32,27): error TS7030: Not all code paths return a value.
+src/controllers/chatSessionController.ts(62,27): error TS7030: Not all code paths return a value.
+src/controllers/chatSessionController.ts(107,36): error TS7030: Not all code paths return a value.
+src/controllers/couponController.ts(2,14): error TS6133: 'admin' is declared but its value is never read.
+src/controllers/couponController.ts(37,29): error TS7030: Not all code paths return a value.
+src/controllers/couponController.ts(90,30): error TS7030: Not all code paths return a value.
+src/controllers/couponController.ts(110,32): error TS7030: Not all code paths return a value.
+src/controllers/couponController.ts(130,29): error TS7030: Not all code paths return a value.
+src/controllers/couponController.ts(159,29): error TS7030: Not all code paths return a value.
+src/controllers/couponController.ts(229,31): error TS7030: Not all code paths return a value.
+src/controllers/couponController.ts(256,35): error TS7030: Not all code paths return a value.
+src/controllers/guestCheckoutController.ts(3,14): error TS6133: 'admin' is declared but its value is never read.
+src/controllers/guestCheckoutController.ts(76,37): error TS7030: Not all code paths return a value.
+src/controllers/guestCheckoutController.ts(116,33): error TS7030: Not all code paths return a value.
+src/controllers/guestCheckoutController.ts(195,30): error TS7030: Not all code paths return a value.
+src/controllers/guestCheckoutController.ts(219,33): error TS7030: Not all code paths return a value.
+src/controllers/guestCheckoutController.ts(245,36): error TS7030: Not all code paths return a value.
+src/controllers/guestCheckoutController.ts(278,34): error TS7030: Not all code paths return a value.
+src/controllers/guestCheckoutController.ts(306,31): error TS7030: Not all code paths return a value.
+src/controllers/notificationsController.ts(6,7): error TS6133: 'TRACKING_PROVIDERS' is declared but its value is never read.
+src/controllers/notificationsController.ts(18,39): error TS7030: Not all code paths return a value.
+src/controllers/notificationsController.ts(74,41): error TS7030: Not all code paths return a value.
+src/controllers/orderCancellationController.ts(20,28): error TS7030: Not all code paths return a value.
+src/controllers/orderCancellationController.ts(84,33): error TS7030: Not all code paths return a value.
+src/controllers/orderCancellationController.ts(152,44): error TS7030: Not all code paths return a value.
+src/controllers/orderCancellationController.ts(171,40): error TS7030: Not all code paths return a value.
+src/controllers/orderController.ts(6,23): error TS7030: Not all code paths return a value.
+src/controllers/orderController.ts(100,23): error TS7030: Not all code paths return a value.
+src/controllers/orderController.ts(151,23): error TS7030: Not all code paths return a value.
+src/controllers/orderController.ts(233,23): error TS7030: Not all code paths return a value.
+src/controllers/orderController.ts(277,23): error TS7030: Not all code paths return a value.
+src/controllers/productController.ts(7,23): error TS7030: Not all code paths return a value.
+src/controllers/productController.ts(91,23): error TS7030: Not all code paths return a value.
+src/controllers/productController.ts(127,23): error TS7030: Not all code paths return a value.
+src/controllers/productController.ts(152,23): error TS7030: Not all code paths return a value.
+src/controllers/productController.ts(175,23): error TS7030: Not all code paths return a value.
+src/controllers/returnController.ts(27,7): error TS6133: 'updateReturnRequestSchema' is declared but its value is never read.
+src/controllers/returnController.ts(42,23): error TS7030: Not all code paths return a value.
+src/controllers/returnController.ts(105,23): error TS7030: Not all code paths return a value.
+src/controllers/returnController.ts(147,23): error TS7030: Not all code paths return a value.
+src/controllers/returnController.ts(173,23): error TS7030: Not all code paths return a value.
+src/controllers/returnController.ts(215,23): error TS7030: Not all code paths return a value.
+src/controllers/returnController.ts(267,23): error TS7030: Not all code paths return a value.
+src/controllers/reviewController.ts(124,23): error TS7030: Not all code paths return a value.
+src/controllers/reviewController.ts(153,23): error TS7030: Not all code paths return a value.
+src/controllers/reviewController.ts(237,23): error TS7030: Not all code paths return a value.
+src/controllers/reviewController.ts(275,23): error TS7030: Not all code paths return a value.
+src/controllers/reviewController.ts(314,23): error TS7030: Not all code paths return a value.
+src/controllers/reviewController.ts(334,23): error TS7030: Not all code paths return a value.
+src/controllers/settingsController.ts(8,28): error TS7030: Not all code paths return a value.
+src/controllers/shippingController.ts(2,14): error TS6133: 'admin' is declared but its value is never read.
+src/controllers/shippingController.ts(11,7): error TS6133: 'shippingRateSchema' is declared but its value is never read.
+src/controllers/shippingController.ts(28,23): error TS7030: Not all code paths return a value.
+src/controllers/shippingController.ts(162,23): error TS7030: Not all code paths return a value.
+src/controllers/shippingController.ts(240,23): error TS7030: Not all code paths return a value.
+src/controllers/shippingController.ts(294,23): error TS7030: Not all code paths return a value.
+src/controllers/shippingController.ts(357,23): error TS7030: Not all code paths return a value.
+src/controllers/shippingController.ts(400,23): error TS7030: Not all code paths return a value.
+src/controllers/shiprocketController.ts(6,43): error TS7030: Not all code paths return a value.
+src/controllers/shiprocketController.ts(57,33): error TS7030: Not all code paths return a value.
+src/controllers/shiprocketController.ts(113,37): error TS7030: Not all code paths return a value.
+src/controllers/shiprocketController.ts(154,38): error TS7030: Not all code paths return a value.
+src/controllers/shiprocketController.ts(202,30): error TS7030: Not all code paths return a value.
+src/controllers/shiprocketController.ts(259,38): error TS7030: Not all code paths return a value.
+src/controllers/shiprocketController.ts(296,37): error TS7030: Not all code paths return a value.
+src/controllers/shiprocketController.ts(329,41): error TS7030: Not all code paths return a value.
+src/controllers/userController.ts(6,23): error TS7030: Not all code paths return a value.
+src/controllers/userController.ts(47,23): error TS7030: Not all code paths return a value.
+src/index.ts(7,6): error TS2339: Property 'region' does not exist on type 'typeof import("D:/Cloud iDrive/Cloud-Drive_webellzinnovation@gmail.com/Ai studio/alpha-dentkart/functions/node_modules/firebase-functions/lib/v2/index")'.
+src/middleware/auth.ts(13,17): error TS7030: Not all code paths return a value.
+src/middleware/auth.ts(29,17): error TS7030: Not all code paths return a value.
+src/middleware/errorHandler.ts(2,1): error TS6133: 'logger' is declared but its value is never read.
+src/middleware/errorHandler.ts(5,17): error TS7030: Not all code paths return a value.
+src/routes/auth.ts(3,29): error TS6133: 'requireAdmin' is declared but its value is never read.
+src/routes/notification.routes.ts(7,28): error TS7030: Not all code paths return a value.
+src/routes/shiprocket.ts(62,42): error TS7030: Not all code paths return a value.
+src/routes/verification.ts(14,29): error TS6133: 'AuthRequest' is declared but its value is never read.
+src/scripts/migrateOrders.ts(1,14): error TS6133: 'admin' is declared but its value is never read.
+src/scripts/migrateProducts.ts(1,14): error TS6133: 'admin' is declared but its value is never read.
+src/scripts/migrateProducts.ts(4,1): error TS6133: 'https' is declared but its value is never read.
+src/scripts/migrateUsers.ts(1,20): error TS6133: 'admin' is declared but its value is never read.
+src/server.ts(39,1): error TS6133: 'db' is declared but its value is never read.
+src/services/shiprocketService.ts(1,1): error TS6133: 'axios' is declared but its value is never read.
+src/services/shiprocketService.ts(4,13): error TS6133: 'token' is declared but its value is never read.
+src/services/verificationService.ts(1,14): error TS6133: 'admin' is declared but its value is never read.
+src/services/whatsappService.ts(29,13): error TS6133: 'businessNumber' is declared but its value is never read.
+src/services/whatsappService.ts(30,13): error TS6133: 'baseUrl' is declared but its value is never read.
+src/services/whatsappService.ts(193,13): error TS6133: 'formatTemplate' is declared but its value is never read.

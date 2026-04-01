@@ -250,3 +250,38 @@ export interface HomepageSettings {
   featuredCategorySections: string[]; // Category names for horizontal product blocks
   featuredBrandSections: string[]; // Brand names for horizontal product blocks
 }
+
+export interface Coupon {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minOrderAmount?: number;
+  maxDiscount?: number;
+  expiresAt?: string;
+  startsAt?: string;
+  usageLimit?: number;
+  usedCount?: number;
+  isActive: boolean;
+}
+
+export interface AdminNotification {
+  id: string;
+  type: 'order' | 'inventory' | 'customer' | 'system';
+  category: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  link?: string;
+  data?: any;
+}
+
+export interface StockNotification {
+  productId: number;
+  productName: string;
+  userEmail: string;
+  userName: string;
+  subscribedDate: string;
+  notified: boolean;
+}

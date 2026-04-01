@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+*.log
+.git
+.gitignore
+README.md
+dist
+.env
+.env.local
+*.ts
+!*.d.ts
+firebase-test-*.log
+sql
+scripts
+api
