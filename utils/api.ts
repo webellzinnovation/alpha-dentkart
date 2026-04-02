@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = '/api/v1';
+import { API_BASE_URL } from '../src/config/api';
 
 // Create axios instance with default config
 const api = axios.create({
