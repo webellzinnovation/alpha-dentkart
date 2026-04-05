@@ -1,22 +1,32 @@
 import { Request, Response } from 'express';
 import { db } from '../config/firebase'; // Firestore
+import { cacheService } from '../services/cacheService';
 import logger from '../utils/logger';
 
 // Get all brands
 export async function getAllBrands(req: Request, res: Response) {
     try {
         const { featured } = req.query;
-        let query: FirebaseFirestore.Query = db.collection('brands');
-
+        
         if (featured === 'true') {
-            query = query.where('isFeatured', '==', true).orderBy('featuredOrder', 'asc');
-        } else {
-            query = query.orderBy('name', 'asc');
+            const cacheKey = 'brands:featured';
+            let cached = await cacheService.get(cacheKey);
+            if (cached) {
+                return res.json({ brands: cached });
+            }
+            
+            const snapshot = await db.collection('brands')
+                .where('isFeatured', '==', true)
+                .orderBy('featuredOrder', 'asc')
+                .get();
+            const brands = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            await cacheService.set(cacheKey, brands, 3600);
+            return res.json({ brands });
         }
-
-        const snapshot = await query.get();
-        const brands = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
+        
+        // Use cacheService for all brands
+        const brands = await cacheService.getBrands();
         res.json({ brands });
     } catch (error) {
         logger.error('Error fetching brands:', error);
@@ -36,6 +46,7 @@ export async function toggleBrandFeatured(req: Request, res: Response) {
         }
 
         await db.collection('brands').doc(String(id)).update(updates);
+        await cacheService.invalidateBrandsCache();
         const updatedDoc = await db.collection('brands').doc(String(id)).get();
 
         res.json({ id: updatedDoc.id, ...updatedDoc.data() });
@@ -57,6 +68,7 @@ export async function reorderFeaturedBrands(req: Request, res: Response) {
         });
 
         await batch.commit();
+        await cacheService.invalidateBrandsCache();
 
         res.json({ message: 'Featured brands reordered successfully' });
     } catch (error) {

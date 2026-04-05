@@ -27,12 +27,18 @@ import returnRoutes from './routes/returns';
 import adminStatsRoutes from './routes/adminStats';
 import chatSessionRoutes from './routes/chatSessionRoutes';
 import userRoutes from './routes/users';
+import invoiceRoutes from './routes/invoice';
+import webhookRoutes from './routes/webhooks';
+import analyticsRoutes from './routes/analytics';
+import pushNotificationRoutes from './routes/pushNotifications';
+import whatsappRoutes from './routes/whatsapp';
 // import { authLimiter } from '../middleware/rateLimiter'; // specific one
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
 import { sanitizeInput } from './middleware/sanitize';
 import { requestLogger } from './middleware/requestLogger';
 import { auditLogger } from './middleware/auditLogger';
+import { generateCsrfToken, validateCsrfToken } from './middleware/csrf';
 import logger from './utils/logger';
 import { errorTracker } from './utils/errorTracker';
 import { db } from './config/firebase'; // Config
@@ -88,6 +94,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(generateCsrfToken);
+// Skip CSRF validation in development for easier testing
+if (process.env.NODE_ENV === 'production') {
+    app.use(validateCsrfToken);
+}
 app.use(sanitizeInput);
 app.use(requestLogger);
 
@@ -116,6 +127,12 @@ app.get('/health', (req, res) => {
         database: 'Firebase Firestore',
         apiVersion: 'v1',
     });
+});
+
+// CSRF token endpoint (expose token to frontend)
+app.get('/api/v1/csrf-token', (req, res) => {
+    const token = req.cookies['csrf-token'];
+    res.json({ csrfToken: token || null });
 });
 
 
@@ -147,6 +164,11 @@ app.use('/api/v1/returns', returnRoutes);
 app.use('/api/v1/admin-stats', adminStatsRoutes);
 app.use('/api/v1/chat-sessions', chatSessionRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/invoice', invoiceRoutes);
+app.use('/api/v1/webhooks', webhookRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/push-notifications', pushNotificationRoutes);
+app.use('/api/v1/whatsapp', whatsappRoutes);
 
 // Backward-compatible redirect: /api/* → /api/v1/*
 // This ensures existing frontend code continues to work

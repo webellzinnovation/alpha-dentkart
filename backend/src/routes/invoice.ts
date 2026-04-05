@@ -88,8 +88,13 @@ router.get('/:id', async (req: Request, res: Response) => {
 </html>
         `;
         
+        const download = req.query.download === 'true';
+        
+        if (download) {
+            res.setHeader('Content-Disposition', `attachment; filename=invoice-${orderId.slice(0, 8)}.html`);
+        }
+        
         res.setHeader('Content-Type', 'text/html');
-        res.setHeader('Content-Disposition', `attachment; filename=invoice-${orderId.slice(0, 8)}.html`);
         res.send(invoiceHtml);
     } catch (error) {
         logger.error('Generate invoice error', { error, orderId: req.params.id });

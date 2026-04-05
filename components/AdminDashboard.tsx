@@ -7,6 +7,7 @@ import { HomepageTab } from './HomepageTab';
 import { CustomerManagement } from './CustomerManagement';
 import { AISettings } from './AISettings';
 import { ChatSupport } from './ChatSupport';
+import OrderTracking from './OrderTracking';
 import {
     getAllAdminNotifications,
     getUnreadCount,
@@ -477,6 +478,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     // Order Detail State
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [orderTrackingData, setOrderTrackingData] = useState<any>(null);
+    const [showOrderTracking, setShowOrderTracking] = useState(false);
     const [orderFilterMonth, setOrderFilterMonth] = useState<string>('all'); // Format: 'YYYY-MM' or 'all'
 
     // Password Reset State
@@ -714,7 +717,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         return products.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
                 p.category.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
-                p.brand.toLowerCase().includes(inventorySearchTerm.toLowerCase());
+                (p.brand && p.brand.toLowerCase().includes(inventorySearchTerm.toLowerCase()));
             const matchesCategory = inventoryCategoryFilter === 'all' || p.category === inventoryCategoryFilter;
             const matchesBrand = inventoryBrandFilter === 'all' || p.brand === inventoryBrandFilter;
             return matchesSearch && matchesCategory && matchesBrand;
@@ -3751,6 +3754,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
                                                 />
                                             </div>
+                                            {(selectedOrder.trackingNumber || selectedOrder.courierName) && (
+                                                <button
+                                                    onClick={async () => {
+                                                        try {
+                                                            const api = (await import('../utils/api')).default;
+                                                            const response = await api.post('/shiprocket/track', { orderId: selectedOrder.id });
+                                                            if (response.data.tracking) {
+                                                                setOrderTrackingData(response.data.tracking);
+                                                                setShowOrderTracking(true);
+                                                            } else {
+                                                                alert('Tracking information not available yet.');
+                                                            }
+                                                        } catch (err) {
+                                                            alert('Failed to fetch tracking. Make sure the order has been shipped via Shiprocket.');
+                                                        }
+                                                    }}
+                                                    className="w-full mt-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 flex items-center justify-center gap-1"
+                                                >
+                                                    <i className="fas fa-truck"></i> Track via Shiprocket
+                                                </button>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -4504,6 +4528,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 )
             }
 
+            {/* Order Tracking Modal */}
+            {showOrderTracking && selectedOrder && (
+                <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowOrderTracking(false)}>
+                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <OrderTracking orderId={selectedOrder.id} onClose={() => setShowOrderTracking(false)} />
+                    </div>
+                </div>
+            )}
         </div >
 
     );

@@ -159,12 +159,59 @@ export async function me(req: any, res: Response) {
             role: userData?.role,
             phone: userData?.phone,
             avatar: userData?.avatar,
+            addresses: userData?.addresses || [],
             isVerified: userData?.isVerified ?? false,
         };
 
         res.json({ user });
     } catch (error) {
         logger.error('Me endpoint error', { error, userId: req.user?.id });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+export async function updateProfile(req: any, res: Response) {
+    try {
+        const userId = req.user?.id;
+        const updates = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        // Only allow updating specific fields
+        const allowedUpdates = ['name', 'phone', 'avatar', 'addresses'];
+        const sanitizedUpdates: any = {};
+        
+        allowedUpdates.forEach(field => {
+            if (updates[field] !== undefined) {
+                sanitizedUpdates[field] = updates[field];
+            }
+        });
+
+        sanitizedUpdates.updatedAt = new Date().toISOString();
+
+        await db.collection('users').doc(userId).update(sanitizedUpdates);
+
+        // Fetch and return the updated user
+        const docSnapshot = await db.collection('users').doc(userId).get();
+        const userData = docSnapshot.data();
+
+        const user = {
+            id: docSnapshot.id,
+            email: userData?.email,
+            name: userData?.name,
+            role: userData?.role,
+            phone: userData?.phone,
+            avatar: userData?.avatar,
+            addresses: userData?.addresses || [],
+            isVerified: userData?.isVerified ?? false,
+        };
+
+        logger.info('User profile updated', { userId });
+        res.json({ message: 'Profile updated successfully', user });
+    } catch (error) {
+        logger.error('Update profile error', { error, userId: req.user?.id });
         res.status(500).json({ error: 'Internal server error' });
     }
 }

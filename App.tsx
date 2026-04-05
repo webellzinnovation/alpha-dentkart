@@ -13,6 +13,8 @@ import { Categories } from './components/Categories';
 import { Footer } from './components/Footer';
 const Wishlist = lazy(() => import('./components/Wishlist').then(m => ({ default: m.Wishlist })));
 import { CartSidebar } from './components/CartSidebar';
+import { QuickReorder } from './components/QuickReorder';
+import { GuestCheckout } from './components/GuestCheckout';
 import { ProductModal } from './components/ProductModal';
 const Login = lazy(() => import('./components/Login').then(m => ({ default: m.Login })));
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -131,6 +133,13 @@ function App() {
       setDataLoadError(null);
       setLoadProgress(10);
       
+      // Fetch CSRF token first (required for POST requests)
+      try {
+        await fetch('/api/v1/csrf-token', { credentials: 'include' });
+      } catch (err) {
+        console.warn('CSRF token fetch warning (non-critical):', err);
+      }
+      
       try {
         const api = await import('./utils/api');
         const { productsAPI, categoriesAPI, brandsAPI, heroSlidesAPI, promotionalTilesAPI, settingsAPI, authAPI } = api;
@@ -141,7 +150,7 @@ function App() {
         console.log("📡 Fetching products from API...");
         let productsResponse;
         try {
-productsResponse = await productsAPI.getAll({ limit: 48 });
+productsResponse = await productsAPI.getAll({ limit: 100 });
           console.log(`📦 Products API response received, type:`, typeof productsResponse);
           console.log(`📦 Products has products key:`, productsResponse?.products !== undefined);
         } catch (err) {
@@ -281,12 +290,10 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
         // Auth
         if (authResponse.status === 'fulfilled' && authResponse.value?.user) {
           const meUser = authResponse.value.user;
-          if (!localStorage.getItem('alpha_user')) {
-            setUser(meUser);
-            setIsAdmin(meUser.role === 'admin');
-            localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
-            setIsLoggedIn(true);
-          }
+          setUser(meUser);
+          setIsAdmin(meUser.role === 'admin');
+          localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
+          setIsLoggedIn(true);
         }
 
         setLoadProgress(100);
@@ -336,7 +343,7 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
       const { productsAPI, categoriesAPI, brandsAPI, heroSlidesAPI, settingsAPI } = api;
 
       // Fetch products first
-      const productsResponse = await productsAPI.getAll({ limit: 48 });
+      const productsResponse = await productsAPI.getAll({ limit: 100 });
       
       // Then others
       const [categoriesResponse, brandsResponse, slidesResponse, settingsResponse] = await Promise.allSettled([
@@ -458,16 +465,63 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
       const slug = productMatch[1];
       const productId = extractIdFromSlug(slug);
       if (productId) {
-        // Convert string ID to number for comparison
+        // First try to find in already loaded products
         const product = products.find(p => p.id === Number(productId));
         if (product) {
           setSelectedProduct(product);
           setCurrentView('product-detail');
           return;
+        } else if (products.length > 0) {
+          // Product not in loaded array - fetch it on-demand from API
+          (async () => {
+            try {
+              const { productsAPI } = await import('./utils/api');
+              const response = await productsAPI.getById(Number(productId));
+              if (response.product) {
+                const p = response.product;
+                const transformedProduct = {
+                  id: Number(p.id),
+                  name: p.name || 'Unknown Product',
+                  category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
+                  price: p.price || 0,
+                  originalPrice: p.originalPrice || p.price,
+                  rating: p.rating || 0,
+                  reviews: p.reviews || 0,
+                  image: p.image || p.images?.[0] || '/placeholder.png',
+                  badge: p.badge,
+                  badgeColor: p.badgeColor,
+                  badgeId: p.badgeId,
+                  timer: p.timer,
+                  brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+                  description: p.description,
+                  features: p.features || [],
+                  specs: p.specs || {},
+                  images: p.images || [p.image],
+                  attributes: p.attributes || [],
+                  variations: p.variations || [],
+                  shortDescription: p.shortDescription,
+                  weight: p.weight,
+                  seoTitle: p.seoTitle,
+                  seoDescription: p.seoDescription,
+                  seoKeywords: p.seoKeywords,
+                  stock: p.stock ?? 10,
+                  slug: p.slug,
+                  type: p.type,
+                  sku: p.sku,
+                };
+                setSelectedProduct(transformedProduct);
+                setCurrentView('product-detail');
+              } else {
+                navigate('/shop');
+              }
+            } catch (err) {
+              console.error('Failed to fetch product detail:', err);
+              navigate('/shop');
+            }
+          })();
+          return;
         }
       }
-      // navigate('/');
-      // return;
     }
 
     // Brand page: /brand/colgate
@@ -687,6 +741,7 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isGuestCheckout, setIsGuestCheckout] = useState(false);
 
   // Persist Cart & Wishlist
   useEffect(() => {
@@ -701,8 +756,6 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
 
   // Persistence Sync (Only for user data, not migrated data)
   useEffect(() => { localStorage.setItem('alpha_settings', JSON.stringify(settings)); }, [settings]);
-  useEffect(() => { localStorage.setItem('alpha_cart', JSON.stringify(cart)); }, [cart]);
-  useEffect(() => { localStorage.setItem('alpha_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
   useEffect(() => { localStorage.setItem('alpha_orders', JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem('alpha_recently_viewed', JSON.stringify(recentlyViewed)); }, [recentlyViewed]);
 
@@ -720,6 +773,7 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
   useEffect(() => {
     if (user && !isAdmin) {
       const fetchUserOrders = async () => {
+        if (!user) return;
         try {
           const response = await ordersAPI.getMyOrders();
           if (response.orders && response.orders.length > 0) {
@@ -732,8 +786,11 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
             // Also update user orders
             setUser({ ...user, orders: response.orders });
           }
-        } catch (error) {
-          console.error('Failed to fetch user orders:', error);
+        } catch (error: any) {
+          // Silently ignore 401 errors (not logged in)
+          if (error.response?.status !== 401) {
+            console.error('Failed to fetch user orders:', error);
+          }
         }
       };
       fetchUserOrders();
@@ -913,11 +970,13 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
         name: user.name,
         phone: user.phone || '',
         avatar: user.avatar || '',
+        addresses: user.addresses || [],
+        isVerified: user.isVerified ?? false,
+        role: user.role,
         cart: [],
         wishlist: [],
         orders: [],
         recentlyViewed: [],
-        addresses: [],
       });
 
       // Set admin status based on backend role
@@ -939,11 +998,19 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const { authAPI } = await import('./utils/api');
+      await authAPI.logout();
+    } catch (e) {
+      console.error("Logout API failed:", e);
+    }
+    
     setUser(null);
     setIsLoggedIn(false);
     setIsAdmin(false);
     localStorage.removeItem('isAdmin');
+    localStorage.removeItem('alpha_user');
     setCart([]);
     setWishlist([]);
     setCurrentView('login');
@@ -965,9 +1032,21 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleUpdateUser = (updatedData: Partial<User>) => {
+  const handleUpdateUser = async (updatedData: Partial<User>) => {
     if (user) {
+      // Optimistic update
+      const previousUser = { ...user };
       setUser({ ...user, ...updatedData });
+      
+      try {
+        const { authAPI } = await import('./utils/api');
+        await authAPI.updateProfile(updatedData);
+        console.log("✅ User profile persisted to server");
+      } catch (error) {
+        console.error("❌ Failed to persist user profile:", error);
+        // Rollback on failure
+        setUser(previousUser);
+      }
     }
   };
 
@@ -1050,6 +1129,11 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
   const handlePlaceOrder = async (paymentId: string, transactionId: string, signature?: string) => {
     if (!user) return;
 
+    if (!user.addresses || user.addresses.length === 0) {
+      alert('Please add a shipping address before placing an order.');
+      return;
+    }
+
     // 1. Prepare Order Data calling Backend API
     const orderItems = cart.map(item => ({
       productId: item.id, // Assuming cart item has ID
@@ -1064,17 +1148,26 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
     const orderPayload = {
       items: orderItems,
       total: totalAmount,
-      shippingAddress: shippingAddress,
+      shippingAddress: {
+        name: shippingAddress.name,
+        street: shippingAddress.street,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        zip: shippingAddress.zip,
+        phone: shippingAddress.phone,
+      },
       paymentMethod: 'razorpay',
       paymentId: paymentId,
-      transactionId: transactionId, // Razorpay Order ID
+      transactionId: transactionId,
       signature: signature
     };
 
     try {
       setIsDataLoading(true);
+      console.log('Sending order payload:', JSON.stringify(orderPayload, null, 2));
       const response = await ordersAPI.create(orderPayload);
-      const newOrder = response.order; // Assuming backend returns { order: ... }
+      console.log('Order response:', response);
+      const newOrder = response.order;
 
       // 2. Update Local State with Server Response
       setOrders(prev => [newOrder, ...prev]);
@@ -1096,9 +1189,11 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
       setCurrentView('dashboard');
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create order on backend:', error);
-      alert('Order creation failed on server. Please contact support if payment was deducted.');
+      const serverError = error.response?.data?.error || error.response?.data?.message || 'Unknown server error';
+      console.error('Server error details:', serverError);
+      alert(`Order creation failed: ${serverError}`);
     } finally {
       setIsDataLoading(false);
     }
@@ -1483,6 +1578,10 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
           setIsCartOpen(false);
           handleNavigate('login');
         }}
+        onGuestCheckout={() => {
+          setIsGuestCheckout(true);
+          setCurrentView('checkout');
+        }}
       />
 
       <ProductModal
@@ -1492,6 +1591,7 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
         onAddToCart={addToCart}
       />
 
+      <Suspense fallback={null}>
       <AIChat
         products={products}
         onProductClick={handleProductClick}
@@ -1499,8 +1599,10 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
         isLoggedIn={isLoggedIn}
         onLoginRedirect={() => handleNavigate('login')}
       />
+      </Suspense>
 
       <main className={`container mx-auto px-0 md:px-4 pb-24 md:pb-8 space-y-8 md:space-y-12 flex-1 ${currentView === 'shop' ? 'pt-2 md:pt-4' : 'pt-4 md:pt-8'}`}>
+        <Suspense fallback={<Loading />}>
 
         {currentView === 'home' && (
           <>
@@ -1769,7 +1871,6 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
 
         <div className="px-4 md:px-0">
           {currentView === 'shop' && (
-            products && products.length > 0 ? (
             <Shop
               products={products}
               initialCategory={shopCategory}
@@ -1784,29 +1885,6 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
               brands={brands || []}
               onSearchUpdate={setSearchQuery}
             />
-            ) : (
-              <div className="py-8">
-                <div className="mb-6">
-                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse mb-2"></div>
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 animate-pulse"></div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} className="bg-white dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm animate-pulse">
-                      <div className="bg-gray-200 dark:bg-gray-700 h-48"></div>
-                      <div className="p-4 space-y-3">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                        <div className="flex justify-between items-center mt-4">
-                          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
-                          <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
           )}
 
           {currentView === 'brands' && (
@@ -1877,18 +1955,45 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
             </div>
           )}
 
-          {/* Checkout - Login Required */}
-          {currentView === 'checkout' && cart && cart.length > 0 && (!user || user === null) && (
+          {/* Checkout - Guest Checkout */}
+          {currentView === 'checkout' && cart && cart.length > 0 && (!user || user === null) && isGuestCheckout && (
+            <div className="bg-gray-50 dark:bg-background-dark min-h-[60vh]">
+              <GuestCheckout
+                cart={cart}
+                onOrderSuccess={(orderId) => {
+                  setCart([]);
+                  setIsGuestCheckout(false);
+                  alert('Order placed successfully! Order ID: ' + orderId);
+                  setCurrentView('shop');
+                }}
+                onCancel={() => {
+                  setIsGuestCheckout(false);
+                  setCurrentView('shop');
+                }}
+              />
+            </div>
+          )}
+
+          {/* Checkout - Login Required (with Guest option) */}
+          {currentView === 'checkout' && cart && cart.length > 0 && (!user || user === null) && !isGuestCheckout && (
             <div className="flex flex-col items-center justify-center py-20 min-h-[60vh]">
               <i className="fas fa-lock text-5xl text-gray-300 mb-4"></i>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Login Required</h2>
-              <p className="text-gray-500 mb-6">Please login to complete your purchase.</p>
-              <button
-                onClick={() => handleNavigate('login')}
-                className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90"
-              >
-                Login
-              </button>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Checkout</h2>
+              <p className="text-gray-500 mb-6">Login for a faster checkout experience or continue as guest.</p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => handleNavigate('login')}
+                  className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => setIsGuestCheckout(true)}
+                  className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  Continue as Guest
+                </button>
+              </div>
             </div>
           )}
 
@@ -1933,6 +2038,7 @@ productsResponse = await productsAPI.getAll({ limit: 48 });
           </section>
         )}
 
+        </Suspense>
       </main>
 
       <MobileBottomNav

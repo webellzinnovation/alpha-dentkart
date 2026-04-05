@@ -1,0 +1,40 @@
+[     695ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[    1220ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[    1234ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    1235ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    1313ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/shop:149
+[    1316ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775285692534:92
+[    1317ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775285692534:92
+[    1318ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    1319ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    1325ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775285692534:124
+[    1327ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775285692534:124
+[    1329ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    1329ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    6571ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775285692534:128
+[    6571ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775285692534:129
+[    6580ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    6581ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    6666ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775285692534:128
+[    6666ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775285692534:129
+[    6673ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    6674ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    7040ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[    7386ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[    7398ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx?t=1775285692534:149
+[    7398ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx?t=1775285692534:190
+[    7398ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775285692534:256
+[    7399ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    7400ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    7700ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    7701ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    8002ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx?t=1775285692534:149
+[    8003ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx?t=1775285692534:190
+[    8004ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775285692534:256
+[    8006ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    8007ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    8390ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    8391ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[    8438ms] [LOG] 📊 CLS: 0.23651093180635085 @ http://localhost:3000/shop:205
+[    8536ms] [LOG] 📊 CLS: 0.3678659315697317 @ http://localhost:3000/shop:205
+[    9627ms] [LOG] 📊 CLS: 0.8639380530973452 @ http://localhost:3000/shop:205

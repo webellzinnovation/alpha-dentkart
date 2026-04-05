@@ -20,7 +20,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
     razorpayKey
 }) => {
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
-        user.addresses.find(a => a.isDefault)?.id || (user.addresses.length > 0 ? user.addresses[0].id : null)
+        user.addresses?.find(a => a.isDefault)?.id || (user.addresses?.length > 0 ? user.addresses[0].id : null)
     );
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -169,7 +169,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
                             </button>
                         </div>
 
-                        {user.addresses.length === 0 ? (
+                        {(!user.addresses || user.addresses.length === 0) ? (
                             <div className="text-center py-8 text-gray-500">
                                 <p className="mb-4">No addresses found.</p>
                                 <button onClick={handleAddNewAddress} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-pink-700 transition-colors">
@@ -178,7 +178,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {user.addresses.map((addr, idx) => (
+                                {user.addresses?.map((addr, idx) => (
                                     <div
                                         key={addr.id}
                                         onClick={() => setSelectedAddressId(addr.id)}

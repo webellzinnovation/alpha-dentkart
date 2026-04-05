@@ -1,0 +1,7 @@
+[    1071ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[    2418ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[    2796ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3001/index.css:0
+[    4783ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3001/@vite/client:0
+[    4783ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3001/index.tsx:0
+[    5174ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3001/@react-refresh:0
+[    5179ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3001/:149

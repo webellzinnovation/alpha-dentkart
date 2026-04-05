@@ -13,6 +13,7 @@ router.get('/verify-email', authController_1.verifyEmail);
 // Protected routes
 router.post('/logout', auth_1.authenticateToken, authController_1.logout);
 router.get('/me', auth_1.authenticateToken, authController_1.me);
+router.patch('/profile', auth_1.authenticateToken, authController_1.updateProfile);
 router.post('/resend-verification', auth_1.authenticateToken, authController_1.resendVerification);
 exports.default = router;
 //# sourceMappingURL=auth.js.map

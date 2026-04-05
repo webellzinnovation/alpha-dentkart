@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE_URL } from '../src/config/api';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') || '/api/v1';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -10,6 +10,20 @@ const api = axios.create({
     },
     timeout: 120000, // 2 minute timeout for large product loads
     validateStatus: (status) => status >= 200 && status < 400, // Accept 304 as valid
+});
+
+// CSRF Protection: Attach token to all non-GET requests
+api.interceptors.request.use((config) => {
+    if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
+        const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrf-token='))
+            ?.split('=')[1];
+        if (csrfToken) {
+            config.headers['x-csrf-token'] = csrfToken;
+        }
+    }
+    return config;
 });
 
 // Auth API
@@ -48,11 +62,16 @@ export const authAPI = {
         const response = await api.post('/auth/verify-email', { token });
         return response.data;
     },
+
+    updateProfile: async (data: any) => {
+        const response = await api.patch('/auth/profile', data);
+        return response.data;
+    },
 };
 
 // Products API
 export const productsAPI = {
-    getAll: async (params?: { page?: number; limit?: number; categoryId?: number; brandId?: number; search?: string }) => {
+    getAll: async (params?: { page?: number; limit?: number; categoryId?: string | number; brandId?: string | number; search?: string; sortBy?: string; sortOrder?: string }) => {
         const response = await api.get('/products', { params });
         return response.data;
     },
@@ -161,6 +180,10 @@ export const usersAPI = {
 export const reviewsAPI = {
     getAllAdmin: async () => {
         const response = await api.get('/reviews/all');
+        return response.data;
+    },
+    getProductReviews: async (productId: number | string) => {
+        const response = await api.get(`/reviews/product/${productId}`);
         return response.data;
     },
     delete: async (id: string) => {

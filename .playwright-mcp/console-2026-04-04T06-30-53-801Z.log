@@ -1,0 +1,93 @@
+[    1836ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[    8148ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[    8179ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[    8180ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[    8258ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3001/:149
+[    8267ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3001/App.tsx:92
+[    8271ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3001/App.tsx:92
+[    8281ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[    8282ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[    8288ms] [LOG] 📡 Fetching products from API... @ http://localhost:3001/App.tsx:124
+[    8298ms] [LOG] 📡 Fetching products from API... @ http://localhost:3001/App.tsx:124
+[    8301ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[    8302ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   41054ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3001/@vite/client:963
+[   41351ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3001/App.tsx:131
+[   41352ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3001/App.tsx:258
+[   41353ms] [ERROR] Error type: AxiosError @ http://localhost:3001/App.tsx:259
+[   41353ms] [ERROR] Error message: Network Error @ http://localhost:3001/App.tsx:260
+[   41353ms] [ERROR] Error code: ERR_NETWORK @ http://localhost:3001/App.tsx:261
+[   41353ms] [ERROR] Response data: undefined @ http://localhost:3001/App.tsx:262
+[   41353ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3001/api/v1/products?limit=48:0
+[   41354ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   41355ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   41413ms] [LOG] 📊 CLS: 0.07124681715401514 @ http://localhost:3001/:205
+[   41490ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error during WebSocket handshake: net::ERR_CONNECTION_RESET @ http://localhost:3001/@vite/client:1034
+[   41492ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3001/App.tsx:131
+[   41492ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3001/App.tsx:258
+[   41493ms] [ERROR] Error type: AxiosError @ http://localhost:3001/App.tsx:259
+[   41493ms] [ERROR] Error message: Network Error @ http://localhost:3001/App.tsx:260
+[   41493ms] [ERROR] Error code: ERR_NETWORK @ http://localhost:3001/App.tsx:261
+[   41493ms] [ERROR] Response data: undefined @ http://localhost:3001/App.tsx:262
+[   41493ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3001/api/v1/products?limit=48:0
+[   41494ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   41494ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   45782ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[   53850ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[   53884ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   53884ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   53972ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3001/:149
+[   53974ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3001/App.tsx:92
+[   53975ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3001/App.tsx:92
+[   53976ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   53977ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   53985ms] [LOG] 📡 Fetching products from API... @ http://localhost:3001/App.tsx:124
+[   53989ms] [LOG] 📡 Fetching products from API... @ http://localhost:3001/App.tsx:124
+[   53995ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   53995ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   60376ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3001/@vite/client:963
+[   62713ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3001/App.tsx:131
+[   62714ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3001/App.tsx:258
+[   62714ms] [ERROR] Error type: AxiosError @ http://localhost:3001/App.tsx:259
+[   62714ms] [ERROR] Error message: Network Error @ http://localhost:3001/App.tsx:260
+[   62714ms] [ERROR] Error code: ERR_NETWORK @ http://localhost:3001/App.tsx:261
+[   62714ms] [ERROR] Response data: undefined @ http://localhost:3001/App.tsx:262
+[   62714ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3001/api/v1/products?limit=48:0
+[   62715ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   62717ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   62804ms] [LOG] 📊 CLS: 0.07124681715401514 @ http://localhost:3001/:205
+[   62804ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   62971ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3001/App.tsx:131
+[   62971ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3001/App.tsx:258
+[   62971ms] [ERROR] Error type: AxiosError @ http://localhost:3001/App.tsx:259
+[   62971ms] [ERROR] Error message: Network Error @ http://localhost:3001/App.tsx:260
+[   62971ms] [ERROR] Error code: ERR_NETWORK @ http://localhost:3001/App.tsx:261
+[   62971ms] [ERROR] Response data: undefined @ http://localhost:3001/App.tsx:262
+[   62972ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:3001/api/v1/products?limit=48:0
+[   62972ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   62973ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3001/App.tsx:1291
+[   66177ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   69554ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   72914ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   76293ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   79655ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   83012ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   86371ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   89707ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   93055ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   96425ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[   99787ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  103119ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  106482ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  109860ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  113227ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  116620ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  119985ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  123367ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  126753ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  130142ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  133507ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  136888ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  140263ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  143639ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034
+[  147015ms] [ERROR] WebSocket connection to 'ws://localhost:3001/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/@vite/client:1034

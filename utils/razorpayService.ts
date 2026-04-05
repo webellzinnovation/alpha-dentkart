@@ -100,8 +100,8 @@ export const getPaymentSettings = () => {
     return {
         enabled: true,
         testMode: true,
-        keyId: process.env.REACT_APP_RAZORPAY_KEY_ID || '',
-        secretKey: process.env.REACT_APP_RAZORPAY_SECRET || ''
+        keyId: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+        secretKey: import.meta.env.RAZORPAY_KEY_SECRET || ''
     };
 };
 
@@ -145,7 +145,7 @@ export const formatAmountFromRazorpay = (amount: number): number => {
 // Get Razorpay key based on mode
 export const getRazorpayKey = (): string => {
     const settings = getPaymentSettings();
-    return settings.keyId || process.env.REACT_APP_RAZORPAY_KEY_ID || '';
+    return settings.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || '';
 };
 
 // Check if payment gateway is enabled

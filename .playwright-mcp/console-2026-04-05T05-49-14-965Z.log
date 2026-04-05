@@ -1,0 +1,162 @@
+[     263ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[     741ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[     767ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     768ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     814ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/dashboard:149
+[     819ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775368146136:93
+[     822ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775368146136:93
+[     833ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     834ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     866ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775368146136:130
+[     870ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     871ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     877ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775368146136:130
+[     879ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     879ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     937ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775368146136:134
+[     937ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775368146136:135
+[     948ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     950ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     955ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775368146136:134
+[     955ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775368146136:135
+[     963ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[     964ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    1496ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/categories:0
+[    1559ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/brands:0
+[    1847ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx?t=1775368146136:155
+[    1848ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx?t=1775368146136:196
+[    1849ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775368146136:262
+[    1850ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    1851ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    2110ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    2110ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    2247ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/promotional-tiles:0
+[    2339ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/auth/me:0
+[    2343ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/hero-slides:0
+[    2344ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx?t=1775368146136:155
+[    2345ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx?t=1775368146136:196
+[    2345ms] [ERROR] ❌ API call failed: AxiosError @ http://localhost:3000/App.tsx?t=1775368146136:208
+[    2345ms] [ERROR] ❌ API call failed: AxiosError @ http://localhost:3000/App.tsx?t=1775368146136:208
+[    2345ms] [ERROR] ❌ API call failed: AxiosError @ http://localhost:3000/App.tsx?t=1775368146136:208
+[    2345ms] [ERROR] ❌ API call failed: AxiosError @ http://localhost:3000/App.tsx?t=1775368146136:208
+[    2345ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775368146136:262
+[    2346ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/orders/me:0
+[    2347ms] [ERROR] Failed to fetch user orders: AxiosError @ http://localhost:3000/App.tsx?t=1775368146136:683
+[    2348ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    2349ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    2372ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    2374ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368146136:1344
+[    2532ms] TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368146136:308:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3705:24)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3739:39)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19818:15)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+[    2538ms] TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368146136:308:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3705:24)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3739:39)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19818:15)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+[    2503ms] [ERROR] The above error occurred in the <Dashboard> component:
+
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368146136:11:29)
+    at div
+    at Suspense
+    at main
+    at div
+    at App (http://localhost:3000/App.tsx?t=1775368146136:51:20)
+    at ThemeProvider (http://localhost:3000/contexts/ThemeContext.tsx:5:33)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=97706f7e:7102:13)
+    at BrowserRouter (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=97706f7e:10272:3)
+    at ErrorBoundary (http://localhost:3000/components/ErrorBoundary.tsx:3:1)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14079
+[    2503ms] [ERROR] ErrorBoundary caught an error: TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368146136:308:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19806:22)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19190:13)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19169:15)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18786:28) {componentStack: 
+    at Dashboard (http://localhost:3000/component…/localhost:3000/components/ErrorBoundary.tsx:3:1)} @ http://localhost:3000/components/ErrorBoundary.tsx:8
+[    2503ms] [ERROR] Error stack: TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368146136:308:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19806:22)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19190:13)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19169:15)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18786:28) @ http://localhost:3000/components/ErrorBoundary.tsx:9
+[   99109ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3000/@vite/client:963
+[   99268ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed:  @ http://localhost:3000/@vite/client:1034
+[  102640ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  106020ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  109398ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  112766ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  116162ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  119534ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  122931ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  126327ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  129704ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  133068ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  136483ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  139903ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  143478ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  147251ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  151356ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  155340ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  162873ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  167598ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[  172428ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[  172454ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172456ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172508ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/dashboard:149
+[  172513ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[  172516ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[  172524ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172525ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172582ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/csrf-token:0
+[  172583ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[  172587ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172587ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172614ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/csrf-token:0
+[  172616ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[  172617ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172618ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172634ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/products?limit=100:0
+[  172636ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[  172637ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[  172637ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[  172637ms] [ERROR] Error message: Request failed with status code 429 @ http://localhost:3000/App.tsx:266
+[  172637ms] [ERROR] Error code: ERR_BAD_REQUEST @ http://localhost:3000/App.tsx:267
+[  172637ms] [ERROR] Response data: Too many requests from this IP, please try again later @ http://localhost:3000/App.tsx:268
+[  172638ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172639ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172692ms] [ERROR] Failed to load resource: the server responded with a status of 429 (Too Many Requests) @ http://localhost:3000/api/v1/products?limit=100:0
+[  172694ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[  172694ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[  172694ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[  172694ms] [ERROR] Error message: Request failed with status code 429 @ http://localhost:3000/App.tsx:266
+[  172694ms] [ERROR] Error code: ERR_BAD_REQUEST @ http://localhost:3000/App.tsx:267
+[  172694ms] [ERROR] Response data: Too many requests from this IP, please try again later @ http://localhost:3000/App.tsx:268
+[  172695ms] [LOG] 📊 CLS: 0.07124681715401514 @ http://localhost:3000/dashboard:205
+[  172696ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  172697ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344

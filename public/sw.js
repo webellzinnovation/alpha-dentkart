@@ -1,5 +1,5 @@
-const CACHE_NAME = 'alpha-dentkart-v3';
-const RUNTIME_CACHE = 'alpha-dentkart-runtime-v3';
+const CACHE_NAME = 'alpha-dentkart-v4';
+const RUNTIME_CACHE = 'alpha-dentkart-runtime-v4';
 
 // Assets to cache on install
 const STATIC_CACHE_URLS = [

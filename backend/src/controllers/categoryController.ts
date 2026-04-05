@@ -1,23 +1,13 @@
 import { Request, Response } from 'express';
 import { db } from '../config/firebase';
+import { cacheService } from '../services/cacheService';
 import logger from '../utils/logger';
-
-let cacheService: any;
-try {
-    cacheService = require('../services/cacheService');
-} catch (e) {
-    console.log('cacheService not available');
-}
 
 export async function getAllCategories(req: Request, res: Response) {
     try {
-        console.log('Fetching categories from Firebase...');
-        const snapshot = await db.collection('categories').get();
-        console.log('Categories fetched:', snapshot.size);
-        const categories = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+        const categories = await cacheService.getCategories();
         res.json({ categories });
     } catch (error: any) {
-        console.error('Error fetching categories:', error);
         logger.error('Error fetching categories:', error);
         res.status(500).json({ error: 'Failed to fetch categories: ' + error.message });
     }

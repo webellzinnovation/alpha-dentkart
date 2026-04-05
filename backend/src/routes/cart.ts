@@ -47,7 +47,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
 router.get('/', authenticateToken, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user?.id;
-        const cartDoc = await withTimeout(db.collection('carts').doc(userId).get());
+        const cartDoc = await withTimeout(db.collection('carts').doc(userId).get(), 10000);
 
         if (!cartDoc.exists) {
             return res.json({ items: [] });
@@ -72,7 +72,7 @@ router.post('/merge', authenticateToken, async (req: Request, res: Response) => 
         }
 
         const cartRef = db.collection('carts').doc(userId);
-        const cartDoc = await withTimeout(cartRef.get());
+        const cartDoc = await withTimeout(cartRef.get(), 10000);
 
         let serverItems: CartItem[] = [];
         if (cartDoc.exists) {
@@ -114,7 +114,7 @@ router.post('/merge', authenticateToken, async (req: Request, res: Response) => 
 router.delete('/', authenticateToken, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user?.id;
-        await withTimeout(db.collection('carts').doc(userId).delete());
+        await withTimeout(db.collection('carts').doc(userId).delete(), 10000);
 
         logger.info('Cart cleared', { userId });
         res.json({ success: true, message: 'Cart cleared' });

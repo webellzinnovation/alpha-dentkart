@@ -1,0 +1,863 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: 
+        - text: India (INR)
+      - generic [ref=e9]:
+        - generic [ref=e10]: 
+        - text: Free Shipping > ₹2000
+    - generic [ref=e11]:
+      - generic [ref=e12] [cursor=pointer]: Daily Deals
+      - generic [ref=e13] [cursor=pointer]: Support
+  - banner [ref=e14]:
+    - generic [ref=e15]:
+      - text:   
+      - generic [ref=e16]:
+        - img "Alpha DentKart" [ref=e19] [cursor=pointer]
+        - generic [ref=e20]:
+          - button "All Categories " [ref=e23] [cursor=pointer]:
+            - generic [ref=e24]: All Categories
+            - generic [ref=e25]: 
+          - textbox "Search products..." [ref=e26]
+          - button "" [ref=e27] [cursor=pointer]:
+            - generic [ref=e28]: 
+        - generic [ref=e29]:
+          - link " Need Help?" [ref=e30] [cursor=pointer]:
+            - /url: https://wa.me/
+            - generic [ref=e32]: 
+            - generic [ref=e34]: Need Help?
+          - generic [ref=e35] [cursor=pointer]:
+            - generic [ref=e37]: 
+            - generic [ref=e38]:
+              - generic [ref=e39]: My Account
+              - generic [ref=e40]: Log In
+          - generic [ref=e41] [cursor=pointer]:
+            - generic [ref=e42]:
+              - generic [ref=e43]: 
+              - generic [ref=e44]: "0"
+            - generic [ref=e45]:
+              - generic [ref=e46]: Wishlist
+              - generic [ref=e47]: 0 Items
+          - generic [ref=e48] [cursor=pointer]:
+            - generic [ref=e49]:
+              - generic [ref=e50]: 
+              - generic [ref=e51]: "0"
+            - generic [ref=e52]:
+              - generic [ref=e53]: Cart
+              - generic [ref=e54]: ₹0.00
+    - text: 
+    - navigation [ref=e55]:
+      - list [ref=e57]:
+        - generic [ref=e58]:
+          - listitem [ref=e59]:
+            - button " SHOP BY CATEGORY" [ref=e60] [cursor=pointer]:
+              - generic [ref=e61]: 
+              - text: SHOP BY CATEGORY
+            - text:                                                                                                                                                                                                                                 
+          - listitem [ref=e62]:
+            - generic [ref=e63] [cursor=pointer]: Home
+          - listitem [ref=e64]:
+            - generic [ref=e65] [cursor=pointer]: Shop
+          - listitem [ref=e66]:
+            - generic [ref=e67] [cursor=pointer]: Brands
+          - listitem [ref=e68]:
+            - generic [ref=e69] [cursor=pointer]:
+              - generic [ref=e70]: 
+              - text: New Arrivals
+        - listitem [ref=e71]:
+          - button " Recently Viewed" [ref=e72] [cursor=pointer]:
+            - generic [ref=e73]: 
+            - text: Recently Viewed
+  - text:              
+  - generic [ref=e74]:
+    - generic [ref=e75]:
+      - heading " Your Cart (0)" [level=2] [ref=e76]:
+        - generic [ref=e77]: 
+        - text: Your Cart (0)
+      - button "" [ref=e78] [cursor=pointer]:
+        - generic [ref=e79]: 
+    - generic [ref=e81]:
+      - generic [ref=e83]: 
+      - heading "Your cart is empty" [level=3] [ref=e84]
+      - paragraph [ref=e85]: Looks like you haven't added anything to your cart yet.
+      - button "Start Shopping" [ref=e86] [cursor=pointer]
+  - button "" [ref=e87] [cursor=pointer]:
+    - generic [ref=e88]: 
+  - generic:
+    - generic:
+      - generic:
+        - generic: 
+      - generic:
+        - heading "Alphadentbot AI" [level=3]
+        - paragraph: Restricted
+    - generic:
+      - generic:
+        - generic: 
+      - generic:
+        - heading "Login Required" [level=4]
+        - paragraph: Please sign in to chat with Alphadentbot and get personalized product recommendations.
+      - button "Sign In to Chat"
+  - main [ref=e89]:
+    - generic [ref=e92]:
+      - complementary [ref=e93]:
+        - text: 
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - heading "Categories" [level=4] [ref=e96]
+            - generic [ref=e97]:
+              - generic [ref=e100] [cursor=pointer]: Shade Guides
+              - generic [ref=e103] [cursor=pointer]: Coltene Whaledent
+              - generic [ref=e106] [cursor=pointer]: Tray Adhesive
+              - generic [ref=e109] [cursor=pointer]: Equipments
+              - generic [ref=e112] [cursor=pointer]: Luting
+              - generic [ref=e115] [cursor=pointer]: LED Light Cure Unit
+              - generic [ref=e118] [cursor=pointer]: Applicator Tips
+              - generic [ref=e121] [cursor=pointer]: Prevention
+              - generic [ref=e124] [cursor=pointer]: Temporary Crown Materials
+              - generic [ref=e127] [cursor=pointer]: Glass Ionomer
+              - generic [ref=e130] [cursor=pointer]: Self Etch
+              - generic [ref=e133] [cursor=pointer]: Corona Safety
+              - generic [ref=e136] [cursor=pointer]: RVG Sensors &amp; Positioners
+              - generic [ref=e139] [cursor=pointer]: Ultrasonic Systems
+              - generic [ref=e142] [cursor=pointer]: Plastic Trays
+              - generic [ref=e145] [cursor=pointer]: Laboratory
+              - generic [ref=e148] [cursor=pointer]: Burs
+              - generic [ref=e151] [cursor=pointer]: Teeth Sets
+              - generic [ref=e154] [cursor=pointer]: Instruments
+              - generic [ref=e157] [cursor=pointer]: Pulp Devitalizer
+              - generic [ref=e160] [cursor=pointer]: Waxes
+              - generic [ref=e163] [cursor=pointer]: Articulating Paper
+              - generic [ref=e166] [cursor=pointer]: Root Canal Sealers
+              - generic [ref=e169] [cursor=pointer]: Bite Registration
+              - generic [ref=e172] [cursor=pointer]: Plastic Filling instruments
+              - generic [ref=e175] [cursor=pointer]: Blood Collection Tube
+              - generic [ref=e178] [cursor=pointer]: Sutures &amp; Neddles
+              - generic [ref=e181] [cursor=pointer]: Sutures &amp; Needle
+              - generic [ref=e184] [cursor=pointer]: Surgicals
+              - generic [ref=e187] [cursor=pointer]: Implant
+              - generic [ref=e190] [cursor=pointer]: Wrapping Sheets
+              - generic [ref=e193] [cursor=pointer]: Implantology
+              - generic [ref=e196] [cursor=pointer]: Water Distiller
+              - generic [ref=e199] [cursor=pointer]: Bone Grafts and Membranes
+              - generic [ref=e202] [cursor=pointer]: Cotisen
+              - generic [ref=e205] [cursor=pointer]: Bones grafts and Membrane
+              - generic [ref=e208] [cursor=pointer]: Sterilization Steam/ETO Documentation Lebels
+              - generic [ref=e211] [cursor=pointer]: Fluorides
+              - generic [ref=e214] [cursor=pointer]: Mouthwashes
+              - generic [ref=e217] [cursor=pointer]: Dehydrating Solution
+              - generic [ref=e220] [cursor=pointer]: Temporary Luting Cements
+              - generic [ref=e223] [cursor=pointer]: Resin Cements
+              - generic [ref=e226] [cursor=pointer]: Condensation Silicone
+              - generic [ref=e229] [cursor=pointer]: Rubber Base Material
+              - generic [ref=e232] [cursor=pointer]: Orthopedic
+              - generic [ref=e235] [cursor=pointer]: Diabetics Care
+              - generic [ref=e238] [cursor=pointer]: Dental
+              - generic [ref=e241] [cursor=pointer]: New
+              - generic [ref=e244] [cursor=pointer]: All Products
+              - generic [ref=e247] [cursor=pointer]: Others
+              - generic [ref=e250] [cursor=pointer]: Dental Accessories
+              - generic [ref=e253] [cursor=pointer]: Bibs Apron And Drapes
+              - generic [ref=e256] [cursor=pointer]: Dispensers
+              - generic [ref=e259] [cursor=pointer]: Denture box
+              - generic [ref=e262] [cursor=pointer]: Customize Product
+              - generic [ref=e265] [cursor=pointer]: Customized
+              - generic [ref=e268] [cursor=pointer]: Customized Denture Box
+              - generic [ref=e271] [cursor=pointer]: ORTHO
+              - generic [ref=e274] [cursor=pointer]: Tips
+              - generic [ref=e277] [cursor=pointer]: Protective Accessories
+              - generic [ref=e280] [cursor=pointer]: Surgeon's Gown
+              - generic [ref=e283] [cursor=pointer]: Barrier And Sterilization
+              - generic [ref=e286] [cursor=pointer]: Face Mask
+              - generic [ref=e289] [cursor=pointer]: KITS
+              - generic [ref=e292] [cursor=pointer]: Trays
+              - generic [ref=e295] [cursor=pointer]: Sterilization Product
+              - generic [ref=e298] [cursor=pointer]: Chemical Indicators
+              - generic [ref=e301] [cursor=pointer]: Biological Indicators
+              - generic [ref=e304] [cursor=pointer]: Self-contained
+              - generic [ref=e307] [cursor=pointer]: Self-contained
+              - generic [ref=e310] [cursor=pointer]: Spore Strips
+              - generic [ref=e313] [cursor=pointer]: Thermodisinfection and washing control
+              - generic [ref=e316] [cursor=pointer]: Accessories
+              - generic [ref=e319] [cursor=pointer]: Incubators and devices
+              - generic [ref=e322] [cursor=pointer]: Surgical Dressings
+              - generic [ref=e325] [cursor=pointer]: Endodontics
+              - generic [ref=e328] [cursor=pointer]: Paedodontics
+              - generic [ref=e331] [cursor=pointer]: Oral Surgery
+              - generic [ref=e334] [cursor=pointer]: Restorative
+              - generic [ref=e337] [cursor=pointer]: Caries Detectors
+              - generic [ref=e340] [cursor=pointer]: Prevest Denpro
+              - generic [ref=e343] [cursor=pointer]: New Arrivals
+              - generic [ref=e346] [cursor=pointer]: Orthodontics
+              - generic [ref=e349] [cursor=pointer]: Prosthodontics
+              - generic [ref=e352] [cursor=pointer]: General Dentistry
+              - generic [ref=e355] [cursor=pointer]: Haemostats
+              - generic [ref=e358] [cursor=pointer]: Core build up materials
+              - generic [ref=e361] [cursor=pointer]: Bleaching Products
+              - generic [ref=e364] [cursor=pointer]: Post &amp; Core
+              - generic [ref=e367] [cursor=pointer]: Desensitizers
+              - generic [ref=e370] [cursor=pointer]: Cements
+              - generic [ref=e373] [cursor=pointer]: Disposable
+              - generic [ref=e376] [cursor=pointer]: Cleaning and Shaping
+              - generic [ref=e379] [cursor=pointer]: Etchant
+              - generic [ref=e382] [cursor=pointer]: Periodontics
+              - generic [ref=e385] [cursor=pointer]: Students Section
+              - generic [ref=e388] [cursor=pointer]: Conservative Products
+              - generic [ref=e391] [cursor=pointer]: Default
+              - generic [ref=e394] [cursor=pointer]: Finishing Kits
+              - generic [ref=e397] [cursor=pointer]: Shofu
+              - generic [ref=e400] [cursor=pointer]: Polishing pastes
+              - generic [ref=e403] [cursor=pointer]: Polishing Kits
+              - generic [ref=e406] [cursor=pointer]: Crown Preparation Kits
+              - generic [ref=e409] [cursor=pointer]: Bonds Etchants
+              - generic [ref=e412] [cursor=pointer]: Pit &amp; Fissure
+              - generic [ref=e415] [cursor=pointer]: Packable
+              - generic [ref=e418] [cursor=pointer]: Flowable
+              - generic [ref=e421] [cursor=pointer]: Glass Ionomer Cements
+              - generic [ref=e424] [cursor=pointer]: Disinfectant and Antiseptic
+              - generic [ref=e427] [cursor=pointer]: Instruments Kit
+              - generic [ref=e430] [cursor=pointer]: Bracket Positioning Guage
+              - generic [ref=e433] [cursor=pointer]: Crown Removers
+          - generic [ref=e434]:
+            - heading "Brands" [level=4] [ref=e435]
+            - generic [ref=e436]:
+              - generic [ref=e439] [cursor=pointer]: 2Gm
+              - generic [ref=e442] [cursor=pointer]: 3M
+              - generic [ref=e445] [cursor=pointer]: 3m Espe
+              - generic [ref=e448] [cursor=pointer]: 3m Unitek
+              - generic [ref=e451] [cursor=pointer]: A-Care
+              - generic [ref=e454] [cursor=pointer]: AAA Dental
+              - generic [ref=e457] [cursor=pointer]: AGKEM
+              - generic [ref=e460] [cursor=pointer]: AMS
+              - generic [ref=e463] [cursor=pointer]: API
+              - generic [ref=e466] [cursor=pointer]: Advanced Biotech
+              - generic [ref=e469] [cursor=pointer]: Alphadent
+              - generic [ref=e472] [cursor=pointer]: Ammdent
+              - generic [ref=e475] [cursor=pointer]: Anabond Stedman
+              - generic [ref=e478] [cursor=pointer]: Angelus
+              - generic [ref=e481] [cursor=pointer]: Apple Dental
+              - generic [ref=e484] [cursor=pointer]: Aquapick
+              - generic [ref=e487] [cursor=pointer]: Avue
+              - generic [ref=e490] [cursor=pointer]: B-Ostin
+              - generic [ref=e493] [cursor=pointer]: Bausch
+              - generic [ref=e496] [cursor=pointer]: Being Foshan
+              - generic [ref=e499] [cursor=pointer]: Bionova
+              - generic [ref=e502] [cursor=pointer]: Browne
+              - generic [ref=e505] [cursor=pointer]: Capri
+              - generic [ref=e508] [cursor=pointer]: Carestream
+              - generic [ref=e511] [cursor=pointer]: Cavex
+              - generic [ref=e514] [cursor=pointer]: Chemdye
+              - generic [ref=e517] [cursor=pointer]: Cintape
+              - generic [ref=e520] [cursor=pointer]: Classic
+              - generic [ref=e523] [cursor=pointer]: Colgate
+              - generic [ref=e526] [cursor=pointer]: Coltene Whaledent
+              - generic [ref=e529] [cursor=pointer]: Cotisen
+              - generic [ref=e532] [cursor=pointer]: D-Tech
+              - generic [ref=e535] [cursor=pointer]: DMG
+              - generic [ref=e538] [cursor=pointer]: DPI
+              - generic [ref=e541] [cursor=pointer]: Denmax Medical
+              - generic [ref=e544] [cursor=pointer]: Dentalfilm
+              - generic [ref=e547] [cursor=pointer]: Dentaurum
+              - generic [ref=e550] [cursor=pointer]: Dentsply
+              - generic [ref=e553] [cursor=pointer]: Dentsply Sirona
+              - generic [ref=e556] [cursor=pointer]: Detax
+              - generic [ref=e559] [cursor=pointer]: Diadent
+              - generic [ref=e562] [cursor=pointer]: Dispodent
+              - generic [ref=e565] [cursor=pointer]: Dynamic Techno Medicals
+              - generic [ref=e568] [cursor=pointer]: Eighteeth
+              - generic [ref=e571] [cursor=pointer]: EndoKing
+              - generic [ref=e574] [cursor=pointer]: Ethicon
+              - generic [ref=e577] [cursor=pointer]: FGM
+              - generic [ref=e580] [cursor=pointer]: GC
+              - generic [ref=e583] [cursor=pointer]: GDC
+              - generic [ref=e586] [cursor=pointer]: GKE - Cleaning Sterilization
+              - generic [ref=e589] [cursor=pointer]: Goodwill
+              - generic [ref=e592] [cursor=pointer]: Green Guava
+              - generic [ref=e595] [cursor=pointer]: H &amp; W
+              - generic [ref=e598] [cursor=pointer]: HMD
+              - generic [ref=e601] [cursor=pointer]: Hu-friedy
+              - generic [ref=e604] [cursor=pointer]: ICPA
+              - generic [ref=e607] [cursor=pointer]: Indoco Remedies
+              - generic [ref=e610] [cursor=pointer]: Integron
+              - generic [ref=e613] [cursor=pointer]: Ivoclar Vivadent
+              - generic [ref=e616] [cursor=pointer]: Kalabhai
+              - generic [ref=e619] [cursor=pointer]: Kedo Files
+              - generic [ref=e622] [cursor=pointer]: Kids-e-Dental
+              - generic [ref=e625] [cursor=pointer]: Koden
+              - generic [ref=e628] [cursor=pointer]: Kovident
+              - generic [ref=e631] [cursor=pointer]: Kulzer
+              - generic [ref=e634] [cursor=pointer]: Lascod
+              - generic [ref=e637] [cursor=pointer]: Life-line Medical
+              - generic [ref=e640] [cursor=pointer]: MAARC
+              - generic [ref=e643] [cursor=pointer]: MB
+              - generic [ref=e646] [cursor=pointer]: Mailyard
+              - generic [ref=e649] [cursor=pointer]: Mani
+              - generic [ref=e652] [cursor=pointer]: Meta Biomed
+              - generic [ref=e655] [cursor=pointer]: NSK
+              - generic [ref=e658] [cursor=pointer]: Neoendo
+              - generic [ref=e661] [cursor=pointer]: ORACURA
+              - generic [ref=e664] [cursor=pointer]: ORO
+              - generic [ref=e667] [cursor=pointer]: Polodent
+              - generic [ref=e670] [cursor=pointer]: Prevest Denpro
+              - generic [ref=e673] [cursor=pointer]: Prima Dental
+              - generic [ref=e676] [cursor=pointer]: Prime Dental
+              - generic [ref=e679] [cursor=pointer]: Printex
+              - generic [ref=e682] [cursor=pointer]: Riverside
+              - generic [ref=e685] [cursor=pointer]: Romsons
+              - generic [ref=e688] [cursor=pointer]: SDI
+              - generic [ref=e691] [cursor=pointer]: STIM INTERDENTAL
+              - generic [ref=e694] [cursor=pointer]: SafeEndo
+              - generic [ref=e697] [cursor=pointer]: Samit
+              - generic [ref=e700] [cursor=pointer]: Seil Global
+              - generic [ref=e703] [cursor=pointer]: Septodont
+              - generic [ref=e706] [cursor=pointer]: Shofu
+              - generic [ref=e709] [cursor=pointer]: Steris
+              - generic [ref=e712] [cursor=pointer]: SuperEndo
+              - generic [ref=e715] [cursor=pointer]: Suraksha
+              - generic [ref=e718] [cursor=pointer]: Sure Endo
+              - generic [ref=e721] [cursor=pointer]: Surgicare
+              - generic [ref=e724] [cursor=pointer]: Surgicom
+              - generic [ref=e727] [cursor=pointer]: TOR VM
+              - generic [ref=e730] [cursor=pointer]: Ultradent
+              - generic [ref=e733] [cursor=pointer]: VOCO
+              - generic [ref=e736] [cursor=pointer]: Vatech
+              - generic [ref=e739] [cursor=pointer]: Vincismile - USA
+              - generic [ref=e742] [cursor=pointer]: Vishal Dentocare
+              - generic [ref=e745] [cursor=pointer]: Vita
+              - generic [ref=e748] [cursor=pointer]: Waldent
+              - generic [ref=e751] [cursor=pointer]: Wizdent
+              - generic [ref=e754] [cursor=pointer]: Woodpecker
+              - generic [ref=e757] [cursor=pointer]: Zhermack
+          - generic [ref=e758]:
+            - heading "Price Range" [level=4] [ref=e759]
+            - slider [ref=e760] [cursor=pointer]: "50000"
+            - generic [ref=e761]:
+              - generic [ref=e762]: ₹0
+              - generic [ref=e763]: ₹50,000
+          - generic [ref=e764]:
+            - heading "Minimum Rating" [level=4] [ref=e765]
+            - generic [ref=e766]:
+              - generic [ref=e767] [cursor=pointer]:
+                - radio "     & Up" [ref=e768]
+                - generic [ref=e769]:
+                  - generic [ref=e770]: 
+                  - generic [ref=e771]: 
+                  - generic [ref=e772]: 
+                  - generic [ref=e773]: 
+                  - generic [ref=e774]: 
+                - generic [ref=e775]: "& Up"
+              - generic [ref=e776] [cursor=pointer]:
+                - radio "     & Up" [ref=e777]
+                - generic [ref=e778]:
+                  - generic [ref=e779]: 
+                  - generic [ref=e780]: 
+                  - generic [ref=e781]: 
+                  - generic [ref=e782]: 
+                  - generic [ref=e783]: 
+                - generic [ref=e784]: "& Up"
+              - generic [ref=e785] [cursor=pointer]:
+                - radio "     & Up" [ref=e786]
+                - generic [ref=e787]:
+                  - generic [ref=e788]: 
+                  - generic [ref=e789]: 
+                  - generic [ref=e790]: 
+                  - generic [ref=e791]: 
+                  - generic [ref=e792]: 
+                - generic [ref=e793]: "& Up"
+              - generic [ref=e794] [cursor=pointer]:
+                - radio "     & Up" [ref=e795]
+                - generic [ref=e796]:
+                  - generic [ref=e797]: 
+                  - generic [ref=e798]: 
+                  - generic [ref=e799]: 
+                  - generic [ref=e800]: 
+                  - generic [ref=e801]: 
+                - generic [ref=e802]: "& Up"
+      - generic [ref=e803]:
+        - generic [ref=e804]:
+          - generic [ref=e805]:
+            - text: 
+            - generic [ref=e806]: 23 Products
+          - generic [ref=e808]:
+            - generic [ref=e809]: "Sort:"
+            - button "Featured " [ref=e811] [cursor=pointer]:
+              - generic [ref=e812]: Featured
+              - generic [ref=e813]: 
+        - generic [ref=e814]:
+          - generic [ref=e891] [cursor=pointer]:
+            - button "" [ref=e893]:
+              - generic [ref=e894]: 
+            - img "Modelling Wax – High-Precision Wax for Prosthetics &amp; Restorations-Denmax Dental" [ref=e898]
+            - generic [ref=e899]:
+              - generic [ref=e900]: Dental
+              - heading "Modelling Wax – High-Precision Wax for Prosthetics &amp; Restorations-Denmax Dental" [level=4] [ref=e901]
+              - generic [ref=e902]:
+                - generic [ref=e903]: "5.0"
+                - generic [ref=e904]: 
+                - text: "0"
+              - generic [ref=e905]:
+                - generic [ref=e906]:
+                  - generic [ref=e907]: ₹180
+                  - generic [ref=e908]: ₹250
+                - button "+" [ref=e909]:
+                  - generic [ref=e910]: +
+          - generic [ref=e1271] [cursor=pointer]:
+            - button "" [ref=e1273]:
+              - generic [ref=e1274]: 
+            - img "Kovident EndoPro Endomotor" [ref=e1278]
+            - generic [ref=e1279]:
+              - generic [ref=e1280]: Dental
+              - heading "Kovident EndoPro Endomotor" [level=4] [ref=e1281]
+              - generic [ref=e1282]:
+                - generic [ref=e1283]: "5.0"
+                - generic [ref=e1284]: 
+                - text: "0"
+              - generic [ref=e1285]:
+                - generic [ref=e1286]:
+                  - generic [ref=e1287]: ₹9,800
+                  - generic [ref=e1288]: ₹10,900
+                - button "+" [ref=e1289]:
+                  - generic [ref=e1290]: +
+          - generic [ref=e1291] [cursor=pointer]:
+            - button "" [ref=e1293]:
+              - generic [ref=e1294]: 
+            - img "Kovident EndoApex EndoMotor" [ref=e1298]
+            - generic [ref=e1299]:
+              - generic [ref=e1300]: Dental
+              - heading "Kovident EndoApex EndoMotor" [level=4] [ref=e1301]
+              - generic [ref=e1302]:
+                - generic [ref=e1303]: "5.0"
+                - generic [ref=e1304]: 
+                - text: "0"
+              - generic [ref=e1305]:
+                - generic [ref=e1306]:
+                  - generic [ref=e1307]: ₹19,999
+                  - generic [ref=e1308]: ₹25,000
+                - button "+" [ref=e1309]:
+                  - generic [ref=e1310]: +
+          - generic [ref=e1311] [cursor=pointer]:
+            - button "" [ref=e1313]:
+              - generic [ref=e1314]: 
+            - img "Kovident Intraoral Camera" [ref=e1318]
+            - generic [ref=e1319]:
+              - generic [ref=e1320]: Dental
+              - heading "Kovident Intraoral Camera" [level=4] [ref=e1321]
+              - generic [ref=e1322]:
+                - generic [ref=e1323]: "5.0"
+                - generic [ref=e1324]: 
+                - text: "0"
+              - generic [ref=e1325]:
+                - generic [ref=e1326]:
+                  - generic [ref=e1327]: ₹21,000
+                  - generic [ref=e1328]: ₹32,000
+                - button "+" [ref=e1329]:
+                  - generic [ref=e1330]: +
+          - generic [ref=e1331] [cursor=pointer]:
+            - button "" [ref=e1333]:
+              - generic [ref=e1334]: 
+            - img "Vincismile TrusFil X - Blend Universal Restorative Composite" [ref=e1338]
+            - generic [ref=e1339]:
+              - generic [ref=e1340]: Dental
+              - heading "Vincismile TrusFil X - Blend Universal Restorative Composite" [level=4] [ref=e1341]
+              - generic [ref=e1342]:
+                - generic [ref=e1343]: "5.0"
+                - generic [ref=e1344]: 
+                - text: "0"
+              - generic [ref=e1345]:
+                - generic [ref=e1346]:
+                  - generic [ref=e1347]: ₹1,400
+                  - generic [ref=e1348]: ₹2,500
+                - button "+" [ref=e1349]:
+                  - generic [ref=e1350]: +
+          - generic [ref=e1351] [cursor=pointer]:
+            - button "" [ref=e1353]:
+              - generic [ref=e1354]: 
+            - img "Stim Denture Brush (Pack Of 12)" [ref=e1358]
+            - generic [ref=e1359]:
+              - generic [ref=e1360]: Dental
+              - heading "Stim Denture Brush (Pack Of 12)" [level=4] [ref=e1361]
+              - generic [ref=e1362]:
+                - generic [ref=e1363]: "5.0"
+                - generic [ref=e1364]: 
+                - text: "0"
+              - generic [ref=e1365]:
+                - generic [ref=e1366]:
+                  - generic [ref=e1367]: ₹756
+                  - generic [ref=e1368]: ₹840
+                - button "+" [ref=e1369]:
+                  - generic [ref=e1370]: +
+          - generic [ref=e1371] [cursor=pointer]:
+            - button "" [ref=e1373]:
+              - generic [ref=e1374]: 
+            - img "Stim Unique Brush (Pack Of 12)" [ref=e1378]
+            - generic [ref=e1379]:
+              - generic [ref=e1380]: Dental
+              - heading "Stim Unique Brush (Pack Of 12)" [level=4] [ref=e1381]
+              - generic [ref=e1382]:
+                - generic [ref=e1383]: "5.0"
+                - generic [ref=e1384]: 
+                - text: "0"
+              - generic [ref=e1385]:
+                - generic [ref=e1386]:
+                  - generic [ref=e1387]: ₹675
+                  - generic [ref=e1388]: ₹1,080
+                - button "+" [ref=e1389]:
+                  - generic [ref=e1390]: +
+          - generic [ref=e1391] [cursor=pointer]:
+            - button "" [ref=e1393]:
+              - generic [ref=e1394]: 
+            - img "Stim Floss Holder (Pack Of 12)" [ref=e1398]
+            - generic [ref=e1399]:
+              - generic [ref=e1400]: Dental
+              - heading "Stim Floss Holder (Pack Of 12)" [level=4] [ref=e1401]
+              - generic [ref=e1402]:
+                - generic [ref=e1403]: "5.0"
+                - generic [ref=e1404]: 
+                - text: "0"
+              - generic [ref=e1405]:
+                - generic [ref=e1406]:
+                  - generic [ref=e1407]: ₹961
+                  - generic [ref=e1408]: ₹1,200
+                - button "+" [ref=e1409]:
+                  - generic [ref=e1410]: +
+          - generic [ref=e1411] [cursor=pointer]:
+            - button "" [ref=e1413]:
+              - generic [ref=e1414]: 
+            - img "Stim Ortho MB Brush (Pack Of 12)" [ref=e1418]
+            - generic [ref=e1419]:
+              - generic [ref=e1420]: Dental
+              - heading "Stim Ortho MB Brush (Pack Of 12)" [level=4] [ref=e1421]
+              - generic [ref=e1422]:
+                - generic [ref=e1423]: "5.0"
+                - generic [ref=e1424]: 
+                - text: "0"
+              - generic [ref=e1425]:
+                - generic [ref=e1426]:
+                  - generic [ref=e1427]: ₹1,080
+                  - generic [ref=e1428]: ₹1,176
+                - button "+" [ref=e1429]:
+                  - generic [ref=e1430]: +
+          - generic [ref=e1431] [cursor=pointer]:
+            - button "" [ref=e1433]:
+              - generic [ref=e1434]: 
+            - img "Stim Proxa Interdental Angular Tight Gap Size - 0" [ref=e1438]
+            - generic [ref=e1439]:
+              - generic [ref=e1440]: Dental
+              - heading "Stim Proxa Interdental Angular Tight Gap Size - 0" [level=4] [ref=e1441]
+              - generic [ref=e1442]:
+                - generic [ref=e1443]: "5.0"
+                - generic [ref=e1444]: 
+                - text: "0"
+              - generic [ref=e1445]:
+                - generic [ref=e1446]:
+                  - generic [ref=e1447]: ₹1,895
+                  - generic [ref=e1448]: ₹2,160
+                - button "+" [ref=e1449]:
+                  - generic [ref=e1450]: +
+          - generic [ref=e1451] [cursor=pointer]:
+            - button "" [ref=e1453]:
+              - generic [ref=e1454]: 
+            - img "Stim Proxa Interdental Angular Brushes" [ref=e1458]
+            - generic [ref=e1459]:
+              - generic [ref=e1460]: Dental
+              - heading "Stim Proxa Interdental Angular Brushes" [level=4] [ref=e1461]
+              - generic [ref=e1462]:
+                - generic [ref=e1463]: "5.0"
+                - generic [ref=e1464]: 
+                - text: "0"
+              - generic [ref=e1465]:
+                - generic [ref=e1466]:
+                  - generic [ref=e1467]: ₹1,495
+                  - text: "0"
+                - button "+" [ref=e1469]:
+                  - generic [ref=e1470]: +
+          - generic [ref=e1471] [cursor=pointer]:
+            - button "" [ref=e1473]:
+              - generic [ref=e1474]: 
+            - img "Stim Silky Brush (Pack of 12)" [ref=e1478]
+            - generic [ref=e1479]:
+              - generic [ref=e1480]: Dental
+              - heading "Stim Silky Brush (Pack of 12)" [level=4] [ref=e1481]
+              - generic [ref=e1482]:
+                - generic [ref=e1483]: "5.0"
+                - generic [ref=e1484]: 
+                - text: "0"
+              - generic [ref=e1485]:
+                - generic [ref=e1486]:
+                  - generic [ref=e1487]: ₹675
+                  - generic [ref=e1488]: ₹1,200
+                - button "+" [ref=e1489]:
+                  - generic [ref=e1490]: +
+          - generic [ref=e1491] [cursor=pointer]:
+            - button "" [ref=e1493]:
+              - generic [ref=e1494]: 
+            - img "Stim Floss (Pack of 12)" [ref=e1498]
+            - generic [ref=e1499]:
+              - generic [ref=e1500]: Dental
+              - heading "Stim Floss (Pack of 12)" [level=4] [ref=e1501]
+              - generic [ref=e1502]:
+                - generic [ref=e1503]: "5.0"
+                - generic [ref=e1504]: 
+                - text: "0"
+              - generic [ref=e1505]:
+                - generic [ref=e1506]:
+                  - generic [ref=e1507]: ₹1,445
+                  - generic [ref=e1508]: ₹1,800
+                - button "+" [ref=e1509]:
+                  - generic [ref=e1510]: +
+          - generic [ref=e1511] [cursor=pointer]:
+            - button "" [ref=e1513]:
+              - generic [ref=e1514]: 
+            - img "Stim Interdental Refills (Pack Of 12)" [ref=e1518]
+            - generic [ref=e1519]:
+              - generic [ref=e1520]: Dental
+              - heading "Stim Interdental Refills (Pack Of 12)" [level=4] [ref=e1521]
+              - generic [ref=e1522]:
+                - generic [ref=e1523]: "5.0"
+                - generic [ref=e1524]: 
+                - text: "0"
+              - generic [ref=e1525]:
+                - generic [ref=e1526]:
+                  - generic [ref=e1527]: ₹1,890
+                  - text: "0"
+                - button "+" [ref=e1529]:
+                  - generic [ref=e1530]: +
+          - generic [ref=e1531] [cursor=pointer]:
+            - button "" [ref=e1533]:
+              - generic [ref=e1534]: 
+            - img "Stim Ri-namel - Toothpaste for Repairing Enamel (Pack of 10)" [ref=e1538]
+            - generic [ref=e1539]:
+              - generic [ref=e1540]: Dental
+              - heading "Stim Ri-namel - Toothpaste for Repairing Enamel (Pack of 10)" [level=4] [ref=e1541]
+              - generic [ref=e1542]:
+                - generic [ref=e1543]: "5.0"
+                - generic [ref=e1544]: 
+                - text: "0"
+              - generic [ref=e1545]:
+                - generic [ref=e1546]:
+                  - generic [ref=e1547]: ₹1,420
+                  - generic [ref=e1548]: ₹2,000
+                - button "+" [ref=e1549]:
+                  - generic [ref=e1550]: +
+          - generic [ref=e1551] [cursor=pointer]:
+            - button "" [ref=e1553]:
+              - generic [ref=e1554]: 
+            - img "Stim Flosser Pack Of 10 Box (1 Box Contains 40Pcs)" [ref=e1558]
+            - generic [ref=e1559]:
+              - generic [ref=e1560]: Dental
+              - heading "Stim Flosser Pack Of 10 Box (1 Box Contains 40Pcs)" [level=4] [ref=e1561]
+              - generic [ref=e1562]:
+                - generic [ref=e1563]: "5.0"
+                - generic [ref=e1564]: 
+                - text: "0"
+              - generic [ref=e1565]:
+                - generic [ref=e1566]:
+                  - generic [ref=e1567]: ₹900
+                  - generic [ref=e1568]: ₹1,100
+                - button "+" [ref=e1569]:
+                  - generic [ref=e1570]: +
+          - generic [ref=e1571] [cursor=pointer]:
+            - button "" [ref=e1573]:
+              - generic [ref=e1574]: 
+            - img "Safe Endo - Bioactive 3D" [ref=e1578]
+            - generic [ref=e1579]:
+              - generic [ref=e1580]: Dental
+              - heading "Safe Endo - Bioactive 3D" [level=4] [ref=e1581]
+              - generic [ref=e1582]:
+                - generic [ref=e1583]: "5.0"
+                - generic [ref=e1584]: 
+                - text: "0"
+              - generic [ref=e1585]:
+                - generic [ref=e1586]:
+                  - generic [ref=e1587]: ₹3,100
+                  - generic [ref=e1588]: ₹3,600
+                - button "+" [ref=e1589]:
+                  - generic [ref=e1590]: +
+          - generic [ref=e1591] [cursor=pointer]:
+            - button "" [ref=e1593]:
+              - generic [ref=e1594]: 
+            - img "Prevest - Cerafill Putty (Bioceramic Material for Permanent Root Repair)" [ref=e1598]
+            - generic [ref=e1599]:
+              - generic [ref=e1600]: Dental
+              - heading "Prevest - Cerafill Putty (Bioceramic Material for Permanent Root Repair)" [level=4] [ref=e1601]
+              - generic [ref=e1602]:
+                - generic [ref=e1603]: "5.0"
+                - generic [ref=e1604]: 
+                - text: "0"
+              - generic [ref=e1605]:
+                - generic [ref=e1606]:
+                  - generic [ref=e1607]: ₹2,000
+                  - generic [ref=e1608]: ₹2,812
+                - button "+" [ref=e1609]:
+                  - generic [ref=e1610]: +
+          - generic [ref=e1611] [cursor=pointer]:
+            - button "" [ref=e1613]:
+              - generic [ref=e1614]: 
+            - img "Colgate - PerioGard Toothpaste (90 g)" [ref=e1618]
+            - generic [ref=e1619]:
+              - generic [ref=e1620]: Dental
+              - heading "Colgate - PerioGard Toothpaste (90 g)" [level=4] [ref=e1621]
+              - generic [ref=e1622]:
+                - generic [ref=e1623]: "5.0"
+                - generic [ref=e1624]: 
+                - text: "0"
+              - generic [ref=e1625]:
+                - generic [ref=e1626]:
+                  - generic [ref=e1627]: ₹178
+                  - text: "0"
+                - button "+" [ref=e1629]:
+                  - generic [ref=e1630]: +
+          - generic [ref=e1631] [cursor=pointer]:
+            - button "" [ref=e1633]:
+              - generic [ref=e1634]: 
+            - img "Colgate PerioGard Gum Care Mouthwash Liquid - 250ml" [ref=e1638]
+            - generic [ref=e1639]:
+              - generic [ref=e1640]: Dental
+              - heading "Colgate PerioGard Gum Care Mouthwash Liquid - 250ml" [level=4] [ref=e1641]
+              - generic [ref=e1642]:
+                - generic [ref=e1643]: "5.0"
+                - generic [ref=e1644]: 
+                - text: "0"
+              - generic [ref=e1645]:
+                - generic [ref=e1646]:
+                  - generic [ref=e1647]: ₹200
+                  - text: "0"
+                - button "+" [ref=e1649]:
+                  - generic [ref=e1650]: +
+          - generic [ref=e1651] [cursor=pointer]:
+            - button "" [ref=e1653]:
+              - generic [ref=e1654]: 
+            - img "Colgate Periogard Gum Expert Toothbrush" [ref=e1658]
+            - generic [ref=e1659]:
+              - generic [ref=e1660]: Dental
+              - heading "Colgate Periogard Gum Expert Toothbrush" [level=4] [ref=e1661]
+              - generic [ref=e1662]:
+                - generic [ref=e1663]: "5.0"
+                - generic [ref=e1664]: 
+                - text: "0"
+              - generic [ref=e1665]:
+                - generic [ref=e1666]:
+                  - generic [ref=e1667]: ₹112
+                  - text: "0"
+                - button "+" [ref=e1669]:
+                  - generic [ref=e1670]: +
+          - generic [ref=e1671] [cursor=pointer]:
+            - button "" [ref=e1673]:
+              - generic [ref=e1674]: 
+            - img "Sterilux -UV Chamber Insta-UV (12 Stainless Steel Trays)" [ref=e1678]
+            - generic [ref=e1679]:
+              - generic [ref=e1680]: Sterilization Product
+              - heading "Sterilux -UV Chamber Insta-UV (12 Stainless Steel Trays)" [level=4] [ref=e1681]
+              - generic [ref=e1682]:
+                - generic [ref=e1683]: "5.0"
+                - generic [ref=e1684]: 
+                - text: "0"
+              - generic [ref=e1685]:
+                - generic [ref=e1686]:
+                  - generic [ref=e1687]: ₹5,800
+                  - generic [ref=e1688]: ₹7,500
+                - button "+" [ref=e1689]:
+                  - generic [ref=e1690]: +
+          - generic [ref=e1691] [cursor=pointer]:
+            - button "" [ref=e1693]:
+              - generic [ref=e1694]: 
+            - img "CD40 Plasma Chemical Indicator Strip" [ref=e1698]
+            - generic [ref=e1699]:
+              - generic [ref=e1700]: All Products
+              - heading "CD40 Plasma Chemical Indicator Strip" [level=4] [ref=e1701]
+              - generic [ref=e1702]:
+                - generic [ref=e1703]: "5.0"
+                - generic [ref=e1704]: 
+                - text: "0"
+              - generic [ref=e1705]:
+                - generic [ref=e1706]:
+                  - generic [ref=e1707]: ₹2,500
+                  - text: "0"
+                - button "+" [ref=e1709]:
+                  - generic [ref=e1710]: +
+        - generic [ref=e1773]:
+          - button "" [disabled] [ref=e1774]:
+            - generic [ref=e1775]: 
+          - button "" [disabled] [ref=e1776]:
+            - generic [ref=e1777]: 
+          - button "1" [ref=e1778] [cursor=pointer]
+          - button "2" [ref=e1779] [cursor=pointer]
+          - button "3" [ref=e1780] [cursor=pointer]
+          - button "4" [ref=e1781] [cursor=pointer]
+          - button "5" [ref=e1782] [cursor=pointer]
+          - button "" [ref=e1783] [cursor=pointer]:
+            - generic [ref=e1784]: 
+          - button "" [ref=e1785] [cursor=pointer]:
+            - generic [ref=e1786]: 
+        - generic [ref=e1787]: Page 1 of 116 • Showing 24 of 2761 products
+  - text:     
+  - contentinfo [ref=e1711]:
+    - generic [ref=e1712]:
+      - generic [ref=e1713]:
+        - generic [ref=e1714]:
+          - generic [ref=e1715]: 
+          - generic [ref=e1716]:
+            - heading "Subscribe for Updates" [level=4] [ref=e1717]
+            - paragraph [ref=e1718]: Get the latest dental product offers directly.
+        - generic [ref=e1719]:
+          - textbox "Enter your email address..." [ref=e1720]
+          - button "Subscribe" [ref=e1721] [cursor=pointer]
+      - generic [ref=e1722]:
+        - generic [ref=e1723]:
+          - heading "Contact Us" [level=5] [ref=e1724]
+          - list [ref=e1725]:
+            - listitem [ref=e1726]:
+              - generic [ref=e1727]: 
+              - text: 123 Health Plaza, Dental Park, New Delhi, India.
+            - listitem [ref=e1728]:
+              - generic [ref=e1729]: 
+              - text: +91 98765 43210
+            - listitem [ref=e1730]:
+              - generic [ref=e1731]: 
+              - text: sales@alphadentkart.com
+        - generic [ref=e1732]:
+          - heading "Information" [level=5] [ref=e1733]
+          - list [ref=e1734]:
+            - listitem [ref=e1735]: About Alpha Dentkart
+            - listitem [ref=e1736]: Shipping Policy
+            - listitem [ref=e1737]:
+              - link "Privacy Policy" [ref=e1738] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=e1739]:
+              - link "Terms of Service" [ref=e1740] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=e1741]: Contact Support
+        - generic [ref=e1742]:
+          - heading "Account" [level=5] [ref=e1743]
+          - list [ref=e1744]:
+            - listitem [ref=e1745]: My Dashboard
+            - listitem [ref=e1746]: Order History
+            - listitem [ref=e1747]: Track Order
+            - listitem [ref=e1748]: Wish List
+            - listitem [ref=e1749]: Return Policy
+        - generic [ref=e1750]:
+          - heading "Top Brands" [level=5] [ref=e1751]
+          - generic [ref=e1752]:
+            - generic [ref=e1753] [cursor=pointer]: 3M
+            - generic [ref=e1754] [cursor=pointer]: Dentsply
+            - generic [ref=e1755] [cursor=pointer]: GC
+            - generic [ref=e1756] [cursor=pointer]: Kerr
+            - generic [ref=e1757] [cursor=pointer]: Woodpecker
+            - generic [ref=e1758] [cursor=pointer]: Shofu
+            - generic [ref=e1759] [cursor=pointer]: Ivoclar
+            - generic [ref=e1760] [cursor=pointer]: Coltene
+      - generic [ref=e1761]:
+        - paragraph [ref=e1762]: © 2023 Alpha Dentkart. All Rights Reserved.
+        - generic [ref=e1763]:
+          - generic [ref=e1764]: 
+          - generic [ref=e1765]: 
+          - generic [ref=e1766]: 
+  - generic [ref=e1767]:
+    - paragraph [ref=e1768]:
+      - text: 🍪 We use essential cookies for authentication and optional analytics cookies to improve your experience. By clicking "Accept", you consent to our use of cookies. Read our
+      - link "Privacy Policy" [ref=e1769] [cursor=pointer]:
+        - /url: /privacy-policy
+      - text: .
+    - generic [ref=e1770]:
+      - button "Decline" [ref=e1771] [cursor=pointer]
+      - button "Accept" [ref=e1772] [cursor=pointer]

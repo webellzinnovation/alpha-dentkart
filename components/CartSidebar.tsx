@@ -10,6 +10,7 @@ interface CartSidebarProps {
   onStartShopping: () => void;
   user?: User; // User data for payment (optional)
   onCheckout?: () => void; // New prop for navigation
+  onGuestCheckout?: () => void; // Guest checkout
   onLogin?: () => void;
 }
 
@@ -22,6 +23,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   onStartShopping,
   user,
   onCheckout,
+  onGuestCheckout,
   onLogin
 }) => {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -145,6 +147,14 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
               <span>Checkout</span>
               <i className="fas fa-arrow-right text-xs"></i>
             </button>
+            {!user && onGuestCheckout && (
+              <button
+                onClick={() => { onClose(); onGuestCheckout(); }}
+                className="w-full mt-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-2.5 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
+              >
+                Continue as Guest
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -1,0 +1,203 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: 
+        - text: India (INR)
+      - generic [ref=e9]:
+        - generic [ref=e10]: 
+        - text: Free Shipping > ₹2000
+    - generic [ref=e11]:
+      - generic [ref=e12] [cursor=pointer]: Daily Deals
+      - generic [ref=e13] [cursor=pointer]: Support
+  - banner [ref=e14]:
+    - generic [ref=e15]:
+      - text:   
+      - generic [ref=e16]:
+        - img "Alpha DentKart" [ref=e19] [cursor=pointer]
+        - generic [ref=e20]:
+          - button "All Categories " [ref=e23] [cursor=pointer]:
+            - generic [ref=e24]: All Categories
+            - generic [ref=e25]: 
+          - textbox "Search products..." [ref=e26]
+          - button "" [ref=e27] [cursor=pointer]:
+            - generic [ref=e28]: 
+        - generic [ref=e29]:
+          - link " Need Help?" [ref=e30] [cursor=pointer]:
+            - /url: https://wa.me/
+            - generic [ref=e32]: 
+            - generic [ref=e34]: Need Help?
+          - generic [ref=e35] [cursor=pointer]:
+            - generic [ref=e37]: 
+            - generic [ref=e38]:
+              - generic [ref=e39]: My Account
+              - generic [ref=e40]: Log In
+          - generic [ref=e41] [cursor=pointer]:
+            - generic [ref=e42]:
+              - generic [ref=e43]: 
+              - generic [ref=e44]: "0"
+            - generic [ref=e45]:
+              - generic [ref=e46]: Wishlist
+              - generic [ref=e47]: 0 Items
+          - generic [ref=e48] [cursor=pointer]:
+            - generic [ref=e49]:
+              - generic [ref=e50]: 
+              - generic [ref=e51]: "0"
+            - generic [ref=e52]:
+              - generic [ref=e53]: Cart
+              - generic [ref=e54]: ₹0.00
+    - text: 
+    - navigation [ref=e55]:
+      - list [ref=e57]:
+        - generic [ref=e58]:
+          - listitem [ref=e59]:
+            - button " SHOP BY CATEGORY" [ref=e60] [cursor=pointer]:
+              - generic [ref=e61]: 
+              - text: SHOP BY CATEGORY
+            - text:                                                                                                                                                                                                                                 
+          - listitem [ref=e62]:
+            - generic [ref=e63] [cursor=pointer]: Home
+          - listitem [ref=e64]:
+            - generic [ref=e65] [cursor=pointer]: Shop
+          - listitem [ref=e66]:
+            - generic [ref=e67] [cursor=pointer]: Brands
+          - listitem [ref=e68]:
+            - generic [ref=e69] [cursor=pointer]:
+              - generic [ref=e70]: 
+              - text: New Arrivals
+        - listitem [ref=e71]:
+          - button " Recently Viewed" [ref=e72] [cursor=pointer]:
+            - generic [ref=e73]: 
+            - text: Recently Viewed
+  - text:              
+  - generic [ref=e74]:
+    - generic [ref=e75]:
+      - heading " Your Cart (0)" [level=2] [ref=e76]:
+        - generic [ref=e77]: 
+        - text: Your Cart (0)
+      - button "" [ref=e78] [cursor=pointer]:
+        - generic [ref=e79]: 
+    - generic [ref=e81]:
+      - generic [ref=e83]: 
+      - heading "Your cart is empty" [level=3] [ref=e84]
+      - paragraph [ref=e85]: Looks like you haven't added anything to your cart yet.
+      - button "Start Shopping" [ref=e86] [cursor=pointer]
+  - button "" [ref=e87] [cursor=pointer]:
+    - generic [ref=e88]: 
+  - generic:
+    - generic:
+      - generic:
+        - generic: 
+      - generic:
+        - heading "Alphadentbot AI" [level=3]
+        - paragraph: Restricted
+    - generic:
+      - generic:
+        - generic: 
+      - generic:
+        - heading "Login Required" [level=4]
+        - paragraph: Please sign in to chat with Alphadentbot and get personalized product recommendations.
+      - button "Sign In to Chat"
+  - main [ref=e89]:
+    - generic [ref=e92]:
+      - generic [ref=e93]:
+        - generic [ref=e95]: 
+        - heading "Welcome Back" [level=2] [ref=e96]
+        - paragraph [ref=e97]: Sign in to access your dashboard
+      - generic [ref=e98]:
+        - generic [ref=e99]:
+          - generic [ref=e100]:
+            - generic [ref=e101]: Email address
+            - generic [ref=e102]:
+              - generic:
+                - generic: 
+              - textbox "Email address" [ref=e103]
+          - generic [ref=e104]:
+            - generic [ref=e105]: Password
+            - generic [ref=e106]:
+              - generic:
+                - generic: 
+              - textbox "Password" [ref=e107]
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - checkbox "Remember me" [ref=e110]
+            - generic [ref=e111]: Remember me
+          - link "Forgot password?" [ref=e113] [cursor=pointer]:
+            - /url: "#"
+        - button " Sign in" [ref=e115] [cursor=pointer]:
+          - generic [ref=e117]: 
+          - text: Sign in
+        - paragraph [ref=e119]:
+          - text: Don't have an account?
+          - button "Sign Up" [ref=e120] [cursor=pointer]
+  - text:     
+  - contentinfo [ref=e121]:
+    - generic [ref=e122]:
+      - generic [ref=e123]:
+        - generic [ref=e124]:
+          - generic [ref=e125]: 
+          - generic [ref=e126]:
+            - heading "Subscribe for Updates" [level=4] [ref=e127]
+            - paragraph [ref=e128]: Get the latest dental product offers directly.
+        - generic [ref=e129]:
+          - textbox "Enter your email address..." [ref=e130]
+          - button "Subscribe" [ref=e131] [cursor=pointer]
+      - generic [ref=e132]:
+        - generic [ref=e133]:
+          - heading "Contact Us" [level=5] [ref=e134]
+          - list [ref=e135]:
+            - listitem [ref=e136]:
+              - generic [ref=e137]: 
+              - text: 123 Health Plaza, Dental Park, New Delhi, India.
+            - listitem [ref=e138]:
+              - generic [ref=e139]: 
+              - text: +91 98765 43210
+            - listitem [ref=e140]:
+              - generic [ref=e141]: 
+              - text: sales@alphadentkart.com
+        - generic [ref=e142]:
+          - heading "Information" [level=5] [ref=e143]
+          - list [ref=e144]:
+            - listitem [ref=e145]: About Alpha Dentkart
+            - listitem [ref=e146]: Shipping Policy
+            - listitem [ref=e147]:
+              - link "Privacy Policy" [ref=e148] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=e149]:
+              - link "Terms of Service" [ref=e150] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=e151]: Contact Support
+        - generic [ref=e152]:
+          - heading "Account" [level=5] [ref=e153]
+          - list [ref=e154]:
+            - listitem [ref=e155]: My Dashboard
+            - listitem [ref=e156]: Order History
+            - listitem [ref=e157]: Track Order
+            - listitem [ref=e158]: Wish List
+            - listitem [ref=e159]: Return Policy
+        - generic [ref=e160]:
+          - heading "Top Brands" [level=5] [ref=e161]
+          - generic [ref=e162]:
+            - generic [ref=e163] [cursor=pointer]: 3M
+            - generic [ref=e164] [cursor=pointer]: Dentsply
+            - generic [ref=e165] [cursor=pointer]: GC
+            - generic [ref=e166] [cursor=pointer]: Kerr
+            - generic [ref=e167] [cursor=pointer]: Woodpecker
+            - generic [ref=e168] [cursor=pointer]: Shofu
+            - generic [ref=e169] [cursor=pointer]: Ivoclar
+            - generic [ref=e170] [cursor=pointer]: Coltene
+      - generic [ref=e171]:
+        - paragraph [ref=e172]: © 2023 Alpha Dentkart. All Rights Reserved.
+        - generic [ref=e173]:
+          - generic [ref=e174]: 
+          - generic [ref=e175]: 
+          - generic [ref=e176]: 
+  - generic [ref=e177]:
+    - paragraph [ref=e178]:
+      - text: 🍪 We use essential cookies for authentication and optional analytics cookies to improve your experience. By clicking "Accept", you consent to our use of cookies. Read our
+      - link "Privacy Policy" [ref=e179] [cursor=pointer]:
+        - /url: /privacy-policy
+      - text: .
+    - generic [ref=e180]:
+      - button "Decline" [ref=e181] [cursor=pointer]
+      - button "Accept" [ref=e182] [cursor=pointer]

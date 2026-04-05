@@ -32,13 +32,13 @@ const returns_1 = __importDefault(require("./routes/returns"));
 const adminStats_1 = __importDefault(require("./routes/adminStats"));
 const chatSessionRoutes_1 = __importDefault(require("./routes/chatSessionRoutes"));
 const users_1 = __importDefault(require("./routes/users"));
-const pushNotifications_1 = __importDefault(require("./routes/pushNotifications"));
 // import { authLimiter } from '../middleware/rateLimiter'; // specific one
 const errorHandler_1 = require("./middleware/errorHandler");
 const rateLimiter_1 = require("./middleware/rateLimiter");
 const sanitize_1 = require("./middleware/sanitize");
 const requestLogger_1 = require("./middleware/requestLogger");
 const auditLogger_1 = require("./middleware/auditLogger");
+const csrf_1 = require("./middleware/csrf");
 const logger_1 = __importDefault(require("./utils/logger"));
 const errorTracker_1 = require("./utils/errorTracker");
 // Load environment variables
@@ -87,6 +87,8 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cookie_parser_1.default)());
+app.use(csrf_1.generateCsrfToken);
+app.use(csrf_1.validateCsrfToken);
 app.use(sanitize_1.sanitizeInput);
 app.use(requestLogger_1.requestLogger);
 // Initialize error tracker
@@ -111,6 +113,11 @@ app.get('/health', (req, res) => {
         database: 'Firebase Firestore',
         apiVersion: 'v1',
     });
+});
+// CSRF token endpoint (expose token to frontend)
+app.get('/api/v1/csrf-token', (req, res) => {
+    const token = req.cookies['csrf-token'];
+    res.json({ csrfToken: token || null });
 });
 // Audit logger for all API write operations
 app.use('/api', auditLogger_1.auditLogger);
@@ -139,7 +146,6 @@ app.use('/api/v1/returns', returns_1.default);
 app.use('/api/v1/admin-stats', adminStats_1.default);
 app.use('/api/v1/chat-sessions', chatSessionRoutes_1.default);
 app.use('/api/v1/users', users_1.default);
-app.use('/api/v1/push-notifications', pushNotifications_1.default);
 // Backward-compatible redirect: /api/* → /api/v1/*
 // This ensures existing frontend code continues to work
 app.use('/api/:resource', (req, res, next) => {

@@ -1,5 +1,6 @@
 // Frontend Coupon Service for Alpha Dentkart
 // Handles coupon validation, application, and management
+import { useState, useEffect } from 'react';
 
 export interface Coupon {
     id: string;
@@ -321,13 +322,13 @@ class CouponService {
             }
         ].filter(coupon => {
             // Only show coupons applicable to cart value
-            if (coupon.type === 'percentage' && cartTotal >= (coupon.minimumAmount || 0)) {
+            if ((coupon as any).type === 'percentage' && cartTotal >= ((coupon as any).minimumAmount || 0)) {
                 return true;
             }
-            if (coupon.type === 'fixed' && cartTotal >= (coupon.minimumAmount || 0)) {
+            if ((coupon as any).type === 'fixed' && cartTotal >= ((coupon as any).minimumAmount || 0)) {
                 return true;
             }
-            if (coupon.type === 'free_shipping' && cartTotal >= 2000) {
+            if ((coupon as any).type === 'free_shipping' && cartTotal >= 2000) {
                 return true;
             }
             return false;
@@ -340,11 +341,11 @@ export const couponService = new CouponService();
 
 // React hook for coupon management
 export const useCoupons = (userId?: string) => {
-    const [coupons, setCoupons] = React.useState<Coupon[]>([]);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
+    const [coupons, setCoupons] = useState<Coupon[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (userId) {
             loadUserCoupons();
         }

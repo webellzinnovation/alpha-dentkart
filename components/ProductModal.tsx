@@ -130,7 +130,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
           </div>
 
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-6 line-clamp-3">
-            {product.description}
+            {product.description ? product.description.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim() : ''}
           </p>
 
           {/* Attributes */}

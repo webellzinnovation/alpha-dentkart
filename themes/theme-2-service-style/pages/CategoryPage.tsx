@@ -23,7 +23,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({
     const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
     // Get unique brands
-    const brands = Array.from(new Set(products.map(p => p.brand)));
+    const brands: string[] = Array.from(new Set(products.map(p => p.brand).filter((b): b is string => !!b)));
 
     // Filter and sort products
     const filteredProducts = products.filter(p => {

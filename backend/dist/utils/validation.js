@@ -22,6 +22,7 @@ exports.createOrderSchema = zod_1.z.object({
     total: zod_1.z.number().min(0),
     shippingAddress: zod_1.z.object({
         name: zod_1.z.string(),
+        email: zod_1.z.string().email().optional(),
         street: zod_1.z.string(),
         city: zod_1.z.string(),
         state: zod_1.z.string(),

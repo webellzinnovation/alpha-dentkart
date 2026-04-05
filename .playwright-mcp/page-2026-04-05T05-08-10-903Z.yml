@@ -1,0 +1,355 @@
+- generic [ref=e14]:
+  - generic [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: 
+        - text: India (INR)
+      - generic [ref=e20]:
+        - generic [ref=e21]: 
+        - text: Free Shipping > ₹2000
+    - generic [ref=e22]:
+      - generic [ref=e23] [cursor=pointer]: Daily Deals
+      - generic [ref=e24] [cursor=pointer]: Support
+  - banner [ref=e25]:
+    - generic [ref=e26]:
+      - text:   
+      - generic [ref=e27]:
+        - img "Alpha DentKart" [ref=e30] [cursor=pointer]
+        - generic [ref=e31]:
+          - button "All Categories " [ref=e34] [cursor=pointer]:
+            - generic [ref=e35]: All Categories
+            - generic [ref=e36]: 
+          - textbox "Search products..." [ref=e37]
+          - button "" [ref=e38] [cursor=pointer]:
+            - generic [ref=e39]: 
+        - generic [ref=e40]:
+          - link " Need Help?" [ref=e41] [cursor=pointer]:
+            - /url: https://wa.me/
+            - generic [ref=e43]: 
+            - generic [ref=e45]: Need Help?
+          - generic [ref=e46] [cursor=pointer]:
+            - generic [ref=e48]: 
+            - generic [ref=e49]:
+              - generic [ref=e50]: My Account
+              - generic [ref=e51]: Log In
+          - generic [ref=e52] [cursor=pointer]:
+            - generic [ref=e53]:
+              - generic [ref=e54]: 
+              - generic [ref=e55]: "0"
+            - generic [ref=e56]:
+              - generic [ref=e57]: Wishlist
+              - generic [ref=e58]: 0 Items
+          - generic [ref=e59] [cursor=pointer]:
+            - generic [ref=e60]:
+              - generic [ref=e61]: 
+              - generic [ref=e62]: "0"
+            - generic [ref=e63]:
+              - generic [ref=e64]: Cart
+              - generic [ref=e65]: ₹0.00
+    - text: 
+    - navigation [ref=e66]:
+      - list [ref=e68]:
+        - generic [ref=e69]:
+          - listitem [ref=e70]:
+            - button " SHOP BY CATEGORY" [ref=e71] [cursor=pointer]:
+              - generic [ref=e72]: 
+              - text: SHOP BY CATEGORY
+            - text:                                                                                                                                                                                                                                 
+          - listitem [ref=e73]:
+            - generic [ref=e74] [cursor=pointer]: Home
+          - listitem [ref=e75]:
+            - generic [ref=e76] [cursor=pointer]: Shop
+          - listitem [ref=e77]:
+            - generic [ref=e78] [cursor=pointer]: Brands
+          - listitem [ref=e79]:
+            - generic [ref=e80] [cursor=pointer]:
+              - generic [ref=e81]: 
+              - text: New Arrivals
+        - listitem [ref=e82]:
+          - button " Recently Viewed 2" [ref=e1437] [cursor=pointer]:
+            - generic [ref=e84]: 
+            - text: Recently Viewed
+            - generic [ref=e85]: "2"
+  - text:              
+  - generic [ref=e86]:
+    - generic [ref=e87]:
+      - heading " Your Cart (0)" [level=2] [ref=e88]:
+        - generic [ref=e89]: 
+        - text: Your Cart (0)
+      - button "" [ref=e90] [cursor=pointer]:
+        - generic [ref=e91]: 
+    - generic [ref=e93]:
+      - generic [ref=e95]: 
+      - heading "Your cart is empty" [level=3] [ref=e96]
+      - paragraph [ref=e97]: Looks like you haven't added anything to your cart yet.
+      - button "Start Shopping" [ref=e98] [cursor=pointer]
+  - button "" [ref=e99] [cursor=pointer]:
+    - generic [ref=e100]: 
+  - generic:
+    - generic:
+      - generic:
+        - generic: 
+      - generic:
+        - heading "Alphadentbot AI" [level=3]
+        - paragraph: Restricted
+    - generic:
+      - generic:
+        - generic: 
+      - generic:
+        - heading "Login Required" [level=4]
+        - paragraph: Please sign in to chat with Alphadentbot and get personalized product recommendations.
+      - button "Sign In to Chat"
+  - main [ref=e101]:
+    - generic [ref=e1439]:
+      - generic [ref=e1440]:
+        - generic [ref=e1441] [cursor=pointer]: Home
+        - generic [ref=e1442]: 
+        - generic [ref=e1443] [cursor=pointer]: All Products
+        - generic [ref=e1444]: 
+        - generic [ref=e1445]: CD40 Plasma Chemical Indicator Strip
+      - generic [ref=e1446]:
+        - generic [ref=e1447]:
+          - generic [ref=e1448]:
+            - img "CD40 Plasma Chemical Indicator Strip" [ref=e1449] [cursor=pointer]
+            - button "Previous image" [ref=e1450] [cursor=pointer]:
+              - generic [ref=e1451]: 
+            - button "Next image" [ref=e1452] [cursor=pointer]:
+              - generic [ref=e1453]: 
+          - generic [ref=e1454]:
+            - button "View 1" [ref=e1455] [cursor=pointer]:
+              - img "View 1" [ref=e1456]
+            - button "View 2" [ref=e1457] [cursor=pointer]:
+              - img "View 2" [ref=e1458]
+            - button "View 3" [ref=e1459] [cursor=pointer]:
+              - img "View 3" [ref=e1460]
+            - button "View 4" [ref=e1461] [cursor=pointer]:
+              - img "View 4" [ref=e1462]
+            - button "View 5" [ref=e1463] [cursor=pointer]:
+              - img "View 5" [ref=e1464]
+        - generic [ref=e1465]:
+          - heading "CD40 Plasma Chemical Indicator Strip" [level=1] [ref=e1466]
+          - generic [ref=e1467]:
+            - generic [ref=e1468]:
+              - generic [ref=e1469]:
+                - generic [ref=e1470]: 
+                - generic [ref=e1471]: 
+                - generic [ref=e1472]: 
+                - generic [ref=e1473]: 
+                - generic [ref=e1474]: 
+              - generic [ref=e1475]: 0 (0 reviews)
+            - generic [ref=e1476]: "|"
+            - generic [ref=e1477]: Chemdye
+            - generic [ref=e1478]: "|"
+            - generic [ref=e1479]:
+              - generic [ref=e1480]: 
+              - text: In Stock
+          - generic [ref=e1481]:
+            - generic [ref=e1482]: ₹2,500
+            - generic [ref=e1483]: ₹6,500
+            - generic [ref=e1484]: 62% OFF
+          - generic [ref=e1486]:
+            - generic [ref=e1487]: "Size: 250"
+            - generic [ref=e1488]:
+              - button "250" [ref=e1489] [cursor=pointer]
+              - button "500" [ref=e1490] [cursor=pointer]
+          - generic [ref=e1491]:
+            - generic [ref=e1492]:
+              - button "" [ref=e1493] [cursor=pointer]:
+                - generic [ref=e1494]: 
+              - generic [ref=e1495]: "1"
+              - button "+" [ref=e1496] [cursor=pointer]:
+                - generic [ref=e1497]: +
+            - button " Add to Cart" [ref=e1498] [cursor=pointer]:
+              - generic [ref=e1499]: 
+              - text: Add to Cart
+            - button "" [ref=e1500] [cursor=pointer]:
+              - generic [ref=e1501]: 
+          - generic [ref=e1502]:
+            - generic [ref=e1503]:
+              - generic [ref=e1504]: 
+              - generic [ref=e1505]: Free Delivery over ₹2000
+            - generic [ref=e1506]:
+              - generic [ref=e1507]: 
+              - generic [ref=e1508]: 2 Year Warranty
+            - generic [ref=e1509]:
+              - generic [ref=e1510]: 
+              - generic [ref=e1511]: 7 Days Return Policy
+            - generic [ref=e1512]:
+              - generic [ref=e1513]: 
+              - generic [ref=e1514]: 24/7 Expert Support
+          - generic [ref=e1515]:
+            - heading " Delivery Estimation" [level=4] [ref=e1516]:
+              - generic [ref=e1517]: 
+              - text: Delivery Estimation
+            - generic [ref=e1518]:
+              - textbox "Enter pincode" [ref=e1519]
+              - button "Check" [disabled] [ref=e1520]
+          - generic [ref=e1521]:
+            - generic [ref=e1522]:
+              - button "Description & Features " [ref=e1523] [cursor=pointer]:
+                - generic [ref=e1524]: Description & Features
+                - generic [ref=e1525]: 
+              - generic [ref=e1529]:
+                - generic [ref=e1530]: "Our CD40 / Multi-variable Chemical Indicator Strips are specifically designed for Plasma or Vaporized Hydrogen Peroxide sterilization processes. They perform optimally under specific conditions: a duration of 6 minutes, temperature of 50 °C, and a concentration of 2.3 mg/l H2O2. Product-Description-CD40-TRAZANTO-Rev.4 COA-CD30.08-B50599_"
+                - generic [ref=e1531]:
+                  - heading "Key Features:" [level=5] [ref=e1532]
+                  - list
+            - generic [ref=e1533]:
+              - button "Specifications " [ref=e1534] [cursor=pointer]:
+                - generic [ref=e1535]: Specifications
+                - generic [ref=e1536]: 
+              - generic [ref=e1538]:
+                - generic [ref=e1539]:
+                  - generic [ref=e1540]: Dimensions
+                  - generic [ref=e1541]: ×× cm
+                - generic [ref=e1543]: SKU
+                - generic [ref=e1544]:
+                  - generic [ref=e1545]: Weight
+                  - generic [ref=e1546]: 0.350 kg
+            - generic [ref=e1547]:
+              - button "Reviews (0) " [ref=e1548] [cursor=pointer]:
+                - generic [ref=e1549]: Reviews (0)
+                - generic [ref=e1550]: 
+              - generic [ref=e1552]:
+                - generic [ref=e1553]:
+                  - generic [ref=e1554]: 
+                  - generic [ref=e1555]: 
+                  - generic [ref=e1556]: 
+                  - generic [ref=e1557]: 
+                  - generic [ref=e1558]: 
+                - heading "0 out of 5" [level=4] [ref=e1559]
+                - paragraph [ref=e1560]: Based on 0 customer ratings
+                - button "Write a Review" [ref=e1561] [cursor=pointer]
+      - generic [ref=e1562]:
+        - heading "You Might Also Like" [level=3] [ref=e1563]
+        - generic [ref=e1564]:
+          - generic [ref=e1565] [cursor=pointer]:
+            - button "" [ref=e1567]:
+              - generic [ref=e1568]: 
+            - img "Riverside Type 5 Steam Integrator Strips (Pack of 400)" [ref=e1571]
+            - generic [ref=e1572]:
+              - generic [ref=e1573]: All Products
+              - heading "Riverside Type 5 Steam Integrator Strips (Pack of 400)" [level=4] [ref=e1574]
+              - generic [ref=e1575]:
+                - generic [ref=e1576]: "5.0"
+                - generic [ref=e1577]: 
+                - text: "0"
+              - generic [ref=e1578]:
+                - generic [ref=e1579]:
+                  - generic [ref=e1580]: ₹3,500
+                  - generic [ref=e1581]: ₹11,600
+                - button "+" [ref=e1582]:
+                  - generic [ref=e1583]: +
+          - generic [ref=e1584] [cursor=pointer]:
+            - button "" [ref=e1586]:
+              - generic [ref=e1587]: 
+            - img "Riverside Bowie Dick Test Strips (Pack of 200)" [ref=e1590]
+            - generic [ref=e1591]:
+              - generic [ref=e1592]: All Products
+              - heading "Riverside Bowie Dick Test Strips (Pack of 200)" [level=4] [ref=e1593]
+              - generic [ref=e1594]:
+                - generic [ref=e1595]: "5.0"
+                - generic [ref=e1596]: 
+                - text: "0"
+              - generic [ref=e1597]:
+                - generic [ref=e1598]:
+                  - generic [ref=e1599]: ₹9,000
+                  - generic [ref=e1600]: ₹34,000
+                - button "+" [ref=e1601]:
+                  - generic [ref=e1602]: +
+          - generic [ref=e1603] [cursor=pointer]:
+            - button "" [ref=e1605]:
+              - generic [ref=e1606]: 
+            - img "Dental Alginate Mixing Scoop And Jar -Premium Quality" [ref=e1609]
+            - generic [ref=e1610]:
+              - generic [ref=e1611]: All Products
+              - heading "Dental Alginate Mixing Scoop And Jar -Premium Quality" [level=4] [ref=e1612]
+              - generic [ref=e1613]:
+                - generic [ref=e1614]: "5.0"
+                - generic [ref=e1615]: 
+                - text: "0"
+              - generic [ref=e1616]:
+                - generic [ref=e1617]:
+                  - generic [ref=e1618]: ₹100
+                  - generic [ref=e1619]: ₹150
+                - button "+" [ref=e1620]:
+                  - generic [ref=e1621]: +
+          - generic [ref=e1622] [cursor=pointer]:
+            - button "" [ref=e1624]:
+              - generic [ref=e1625]: 
+            - img "Denture Box with Tray – Secure &amp; Hygienic Storage for Dentures &amp; Retainers-Denmax Dental" [ref=e1628]
+            - generic [ref=e1629]:
+              - generic [ref=e1630]: All Products
+              - heading "Denture Box with Tray – Secure &amp; Hygienic Storage for Dentures &amp; Retainers-Denmax Dental" [level=4] [ref=e1631]
+              - generic [ref=e1632]:
+                - generic [ref=e1633]: "5.0"
+                - generic [ref=e1634]: 
+                - text: "0"
+              - generic [ref=e1635]:
+                - generic [ref=e1636]:
+                  - generic [ref=e1637]: ₹90
+                  - generic [ref=e1638]: ₹150
+                - button "+" [ref=e1639]:
+                  - generic [ref=e1640]: +
+  - text:     
+  - contentinfo [ref=e1381]:
+    - generic [ref=e1382]:
+      - generic [ref=e1383]:
+        - generic [ref=e1384]:
+          - generic [ref=e1385]: 
+          - generic [ref=e1386]:
+            - heading "Subscribe for Updates" [level=4] [ref=e1387]
+            - paragraph [ref=e1388]: Get the latest dental product offers directly.
+        - generic [ref=e1389]:
+          - textbox "Enter your email address..." [ref=e1390]
+          - button "Subscribe" [ref=e1391] [cursor=pointer]
+      - generic [ref=e1392]:
+        - generic [ref=e1393]:
+          - heading "Contact Us" [level=5] [ref=e1394]
+          - list [ref=e1395]:
+            - listitem [ref=e1396]:
+              - generic [ref=e1397]: 
+              - text: 123 Health Plaza, Dental Park, New Delhi, India.
+            - listitem [ref=e1398]:
+              - generic [ref=e1399]: 
+              - text: +91 98765 43210
+            - listitem [ref=e1400]:
+              - generic [ref=e1401]: 
+              - text: sales@alphadentkart.com
+        - generic [ref=e1402]:
+          - heading "Information" [level=5] [ref=e1403]
+          - list [ref=e1404]:
+            - listitem [ref=e1405]: About Alpha Dentkart
+            - listitem [ref=e1406]: Shipping Policy
+            - listitem [ref=e1407]:
+              - link "Privacy Policy" [ref=e1408] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=e1409]:
+              - link "Terms of Service" [ref=e1410] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=e1411]: Contact Support
+        - generic [ref=e1412]:
+          - heading "Account" [level=5] [ref=e1413]
+          - list [ref=e1414]:
+            - listitem [ref=e1415]: My Dashboard
+            - listitem [ref=e1416]: Order History
+            - listitem [ref=e1417]: Track Order
+            - listitem [ref=e1418]: Wish List
+            - listitem [ref=e1419]: Return Policy
+        - generic [ref=e1420]:
+          - heading "Top Brands" [level=5] [ref=e1421]
+          - generic [ref=e1422]:
+            - generic [ref=e1423] [cursor=pointer]: 3M
+            - generic [ref=e1424] [cursor=pointer]: Dentsply
+            - generic [ref=e1425] [cursor=pointer]: GC
+            - generic [ref=e1426] [cursor=pointer]: Kerr
+            - generic [ref=e1427] [cursor=pointer]: Woodpecker
+            - generic [ref=e1428] [cursor=pointer]: Shofu
+            - generic [ref=e1429] [cursor=pointer]: Ivoclar
+            - generic [ref=e1430] [cursor=pointer]: Coltene
+      - generic [ref=e1431]:
+        - paragraph [ref=e1432]: © 2023 Alpha Dentkart. All Rights Reserved.
+        - generic [ref=e1433]:
+          - generic [ref=e1434]: 
+          - generic [ref=e1435]: 
+          - generic [ref=e1436]: 

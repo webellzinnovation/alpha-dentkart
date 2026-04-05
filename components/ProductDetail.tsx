@@ -2,6 +2,20 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
+import { DeliveryEstimator } from './DeliveryEstimator';
+
+const stripHtml = (html: string) => {
+  if (!html) return '';
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#\d+;/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
 
 interface ProductDetailProps {
   product: Product;
@@ -70,7 +84,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     if (product.attributes) {
       const defaults: Record<string, string> = {};
       product.attributes.forEach(attr => {
-        defaults[attr.name] = attr.options[0];
+        if (attr.options && attr.options.length > 0) {
+          defaults[attr.name] = attr.options[0];
+        }
       });
       setSelectedAttributes(defaults);
     } else {
@@ -329,7 +345,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
           </div>
 
           {/* Service Badges */}
-          <div className="grid grid-cols-2 gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-8 border-b border-gray-100 dark:border-gray-700">
+          <div className="grid grid-cols-2 gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-2">
               <i className="fas fa-truck text-primary"></i>
               <span>Free Delivery over ₹2000</span>
@@ -347,6 +363,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               <span>24/7 Expert Support</span>
             </div>
           </div>
+
+          {/* Delivery Estimator */}
+          <DeliveryEstimator />
 
           {/* Accordion Sections */}
           <div className="space-y-2">
@@ -366,14 +385,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
                     <div className="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                       <div className="mb-4 whitespace-pre-line">
                         {product.description ? (
-                          product.description
-                            // Add line breaks before common section headers
+                          stripHtml(product.description)
                             .replace(/(\s+)(Indications?:|Features?:|Composition:|Key Specifications?|Technical Datu|Curing Time:|Depth of Cure:|Compressive Strength:|Flexural Strength:|Storage Conditions?|Shelf Life)/gi, '\n\n$2')
-                            // Add line break after "Of anterior and posterior teeth" if followed by more text
                             .replace(/(Of anterior and posterior teeth)(\s+)([A-Z])/g, '$1\n\n$3')
-                            // Add line breaks before bullet points
                             .replace(/(\s+)(•)/g, '\n$2')
-                            // Clean up multiple consecutive line breaks
                             .replace(/\n{3,}/g, '\n\n')
                             .trim()
                         ) : (

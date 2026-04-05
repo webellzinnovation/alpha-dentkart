@@ -73,11 +73,11 @@ function sanitizePublicSettings(settings: any) {
 // Get store settings
 export const getSettings = async (req: Request, res: Response) => {
     try {
-        if (!isFirebaseInitialized()) {
+        if (!isFirebaseInitialized) {
             res.set('Cache-Control', 'public, max-age=300, s-maxage=900');
             return res.json({ settings: sanitizePublicSettings(mockSettings) });
         }
-        const doc = await withTimeout(db.doc(SETTINGS_DOC).get());
+        const doc = await withTimeout(db.doc(SETTINGS_DOC).get(), 10000);
         if (!doc.exists) {
             // Return default settings if none exist
             res.set('Cache-Control', 'public, max-age=300, s-maxage=900');
@@ -94,11 +94,11 @@ export const getSettings = async (req: Request, res: Response) => {
 
 export const getAdminSettings = async (req: Request, res: Response) => {
     try {
-        if (!isFirebaseInitialized()) {
+        if (!isFirebaseInitialized) {
             res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
             return res.json({ settings: mockSettings });
         }
-        const doc = await withTimeout(db.doc(SETTINGS_DOC).get());
+        const doc = await withTimeout(db.doc(SETTINGS_DOC).get(), 10000);
         if (!doc.exists) {
             res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
             return res.json({ settings: null });
@@ -119,8 +119,8 @@ export const updateSettings = async (req: Request, res: Response) => {
         await withTimeout(db.doc(SETTINGS_DOC).set(
             { ...updates, updatedAt: new Date().toISOString() },
             { merge: true }
-        ));
-        const updated = await withTimeout(db.doc(SETTINGS_DOC).get());
+        ), 10000);
+        const updated = await withTimeout(db.doc(SETTINGS_DOC).get(), 10000);
         res.json({ settings: updated.data(), message: 'Settings saved successfully' });
     } catch (error: any) {
         logger.error('Error updating settings:', error);

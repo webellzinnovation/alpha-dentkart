@@ -14,10 +14,12 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       proxy: {
         '/api': {
-          target: 'http://localhost:5001',
+          target: 'http://localhost:3001',
           changeOrigin: true,
           secure: false,
-          timeout: 60000, // 60 second proxy timeout
+          timeout: 60000,
+          cookieDomainRewrite: 'localhost',
+          cookiePathRewrite: '/',
         }
       }
     },

@@ -1,0 +1,1101 @@
+- generic [ref=e14]:
+  - generic [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: 
+        - text: India (INR)
+      - generic [ref=e20]:
+        - generic [ref=e21]: 
+        - text: Free Shipping > ₹2000
+    - generic [ref=e22]:
+      - generic [ref=e23] [cursor=pointer]: Daily Deals
+      - generic [ref=e24] [cursor=pointer]: Support
+  - banner [ref=e25]:
+    - generic [ref=e26]:
+      - text:   
+      - generic [ref=e27]:
+        - img "Alpha DentKart" [ref=e30] [cursor=pointer]
+        - generic [ref=e31]:
+          - button "All Categories " [ref=e34] [cursor=pointer]:
+            - generic [ref=e35]: All Categories
+            - generic [ref=e36]: 
+          - textbox "Search products..." [ref=e37]
+          - button "" [ref=e38] [cursor=pointer]:
+            - generic [ref=e39]: 
+        - generic [ref=e40]:
+          - link " Need Help?" [ref=e41] [cursor=pointer]:
+            - /url: https://wa.me/
+            - generic [ref=e43]: 
+            - generic [ref=e45]: Need Help?
+          - generic [ref=e46] [cursor=pointer]:
+            - generic [ref=e48]: 
+            - generic [ref=e49]:
+              - generic [ref=e50]: My Account
+              - generic [ref=e51]: Log In
+          - generic [ref=e52] [cursor=pointer]:
+            - generic [ref=e53]:
+              - generic [ref=e54]: 
+              - generic [ref=e55]: "0"
+            - generic [ref=e56]:
+              - generic [ref=e57]: Wishlist
+              - generic [ref=e58]: 0 Items
+          - generic [ref=e59] [cursor=pointer]:
+            - generic [ref=e60]:
+              - generic [ref=e61]: 
+              - generic [ref=e62]: "0"
+            - generic [ref=e63]:
+              - generic [ref=e64]: Cart
+              - generic [ref=e65]: ₹0.00
+    - text: 
+    - navigation [ref=e66]:
+      - list [ref=e68]:
+        - generic [ref=e69]:
+          - listitem [ref=e70]:
+            - button " SHOP BY CATEGORY" [ref=e71] [cursor=pointer]:
+              - generic [ref=e72]: 
+              - text: SHOP BY CATEGORY
+            - text:                                                                                                                                                                                                                                 
+          - listitem [ref=e73]:
+            - generic [ref=e74] [cursor=pointer]: Home
+          - listitem [ref=e75]:
+            - generic [ref=e76] [cursor=pointer]: Shop
+          - listitem [ref=e77]:
+            - generic [ref=e78] [cursor=pointer]: Brands
+          - listitem [ref=e79]:
+            - generic [ref=e80] [cursor=pointer]:
+              - generic [ref=e81]: 
+              - text: New Arrivals
+        - listitem [ref=e82]:
+          - button " Recently Viewed" [ref=e83] [cursor=pointer]:
+            - generic [ref=e84]: 
+            - text: Recently Viewed
+  - text:              
+  - generic [ref=e85]:
+    - generic [ref=e86]:
+      - heading " Your Cart (0)" [level=2] [ref=e87]:
+        - generic [ref=e88]: 
+        - text: Your Cart (0)
+      - button "" [ref=e89] [cursor=pointer]:
+        - generic [ref=e90]: 
+    - generic [ref=e92]:
+      - generic [ref=e94]: 
+      - heading "Your cart is empty" [level=3] [ref=e95]
+      - paragraph [ref=e96]: Looks like you haven't added anything to your cart yet.
+      - button "Start Shopping" [ref=e97] [cursor=pointer]
+  - button "" [ref=e98] [cursor=pointer]:
+    - generic [ref=e99]: 
+  - generic:
+    - generic:
+      - generic:
+        - generic: 
+      - generic:
+        - heading "Alphadentbot AI" [level=3]
+        - paragraph: Restricted
+    - generic:
+      - generic:
+        - generic: 
+      - generic:
+        - heading "Login Required" [level=4]
+        - paragraph: Please sign in to chat with Alphadentbot and get personalized product recommendations.
+      - button "Sign In to Chat"
+  - main [ref=e100]:
+    - generic [ref=e101]:
+      - generic [ref=e103]:
+        - generic [ref=e105]:
+          - generic [ref=e106]:
+            - generic [ref=e107]: NEW ARRIVAL
+            - heading "Test" [level=2] [ref=e108]
+          - paragraph [ref=e109]: Discover the future of professional dental care.
+          - button "Shop Now " [ref=e111] [cursor=pointer]:
+            - text: Shop Now
+            - generic [ref=e112]: 
+        - img "Test" [ref=e113]
+      - generic [ref=e119]:
+        - generic [ref=e120]:
+          - button "2Gm 2Gm" [ref=e121] [cursor=pointer]:
+            - img "2Gm" [ref=e123]
+            - generic [ref=e124]: 2Gm
+          - button "3M 3M" [ref=e125] [cursor=pointer]:
+            - img "3M" [ref=e127]
+            - generic [ref=e128]: 3M
+          - button "3m Espe 3m Espe" [ref=e129] [cursor=pointer]:
+            - img "3m Espe" [ref=e131]
+            - generic [ref=e132]: 3m Espe
+          - button "3m Unitek 3m Unitek" [ref=e133] [cursor=pointer]:
+            - img "3m Unitek" [ref=e135]
+            - generic [ref=e136]: 3m Unitek
+          - button "A-Care A-Care" [ref=e137] [cursor=pointer]:
+            - img "A-Care" [ref=e139]
+            - generic [ref=e140]: A-Care
+          - button "AAA Dental AAA Dental" [ref=e141] [cursor=pointer]:
+            - img "AAA Dental" [ref=e143]
+            - generic [ref=e144]: AAA Dental
+          - button "AGKEM AGKEM" [ref=e145] [cursor=pointer]:
+            - img "AGKEM" [ref=e147]
+            - generic [ref=e148]: AGKEM
+          - button "AMS AMS" [ref=e149] [cursor=pointer]:
+            - img "AMS" [ref=e151]
+            - generic [ref=e152]: AMS
+          - button "API API" [ref=e153] [cursor=pointer]:
+            - img "API" [ref=e155]
+            - generic [ref=e156]: API
+          - button "Advanced Biotech Advanced Biotech" [ref=e157] [cursor=pointer]:
+            - img "Advanced Biotech" [ref=e159]
+            - generic [ref=e160]: Advanced Biotech
+          - button "Alphadent Alphadent" [ref=e161] [cursor=pointer]:
+            - img "Alphadent" [ref=e163]
+            - generic [ref=e164]: Alphadent
+          - button "Ammdent Ammdent" [ref=e165] [cursor=pointer]:
+            - img "Ammdent" [ref=e167]
+            - generic [ref=e168]: Ammdent
+          - button "Anabond Stedman Anabond Stedman" [ref=e169] [cursor=pointer]:
+            - img "Anabond Stedman" [ref=e171]
+            - generic [ref=e172]: Anabond Stedman
+          - button "Angelus Angelus" [ref=e173] [cursor=pointer]:
+            - img "Angelus" [ref=e175]
+            - generic [ref=e176]: Angelus
+          - button "Apple Dental Apple Dental" [ref=e177] [cursor=pointer]:
+            - img "Apple Dental" [ref=e179]
+            - generic [ref=e180]: Apple Dental
+          - button "Aquapick Aquapick" [ref=e181] [cursor=pointer]:
+            - img "Aquapick" [ref=e183]
+            - generic [ref=e184]: Aquapick
+          - button "Avue Avue" [ref=e185] [cursor=pointer]:
+            - img "Avue" [ref=e187]
+            - generic [ref=e188]: Avue
+          - button "B-Ostin B-Ostin" [ref=e189] [cursor=pointer]:
+            - img "B-Ostin" [ref=e191]
+            - generic [ref=e192]: B-Ostin
+          - button "Bausch Bausch" [ref=e193] [cursor=pointer]:
+            - img "Bausch" [ref=e195]
+            - generic [ref=e196]: Bausch
+          - button "Being Foshan Being Foshan" [ref=e197] [cursor=pointer]:
+            - img "Being Foshan" [ref=e199]
+            - generic [ref=e200]: Being Foshan
+          - button "Bionova Bionova" [ref=e201] [cursor=pointer]:
+            - img "Bionova" [ref=e203]
+            - generic [ref=e204]: Bionova
+          - button "Browne Browne" [ref=e205] [cursor=pointer]:
+            - img "Browne" [ref=e207]
+            - generic [ref=e208]: Browne
+          - button "Capri Capri" [ref=e209] [cursor=pointer]:
+            - img "Capri" [ref=e211]
+            - generic [ref=e212]: Capri
+          - button "Carestream Carestream" [ref=e213] [cursor=pointer]:
+            - img "Carestream" [ref=e215]
+            - generic [ref=e216]: Carestream
+          - button "Cavex Cavex" [ref=e217] [cursor=pointer]:
+            - img "Cavex" [ref=e219]
+            - generic [ref=e220]: Cavex
+          - button "Chemdye Chemdye" [ref=e221] [cursor=pointer]:
+            - img "Chemdye" [ref=e223]
+            - generic [ref=e224]: Chemdye
+          - button "Cintape Cintape" [ref=e225] [cursor=pointer]:
+            - img "Cintape" [ref=e227]
+            - generic [ref=e228]: Cintape
+          - button "Classic Classic" [ref=e229] [cursor=pointer]:
+            - img "Classic" [ref=e231]
+            - generic [ref=e232]: Classic
+          - button "Colgate Colgate" [ref=e233] [cursor=pointer]:
+            - img "Colgate" [ref=e235]
+            - generic [ref=e236]: Colgate
+          - button "Coltene Whaledent Coltene Whaledent" [ref=e237] [cursor=pointer]:
+            - img "Coltene Whaledent" [ref=e239]
+            - generic [ref=e240]: Coltene Whaledent
+          - button "Cotisen Cotisen" [ref=e241] [cursor=pointer]:
+            - img "Cotisen" [ref=e243]
+            - generic [ref=e244]: Cotisen
+          - button "D-Tech D-Tech" [ref=e245] [cursor=pointer]:
+            - img "D-Tech" [ref=e247]
+            - generic [ref=e248]: D-Tech
+          - button "DMG DMG" [ref=e249] [cursor=pointer]:
+            - img "DMG" [ref=e251]
+            - generic [ref=e252]: DMG
+          - button "DPI DPI" [ref=e253] [cursor=pointer]:
+            - img "DPI" [ref=e255]
+            - generic [ref=e256]: DPI
+          - button "Denmax Medical Denmax Medical" [ref=e257] [cursor=pointer]:
+            - img "Denmax Medical" [ref=e259]
+            - generic [ref=e260]: Denmax Medical
+          - button "Dentalfilm Dentalfilm" [ref=e261] [cursor=pointer]:
+            - img "Dentalfilm" [ref=e263]
+            - generic [ref=e264]: Dentalfilm
+          - button "Dentaurum Dentaurum" [ref=e265] [cursor=pointer]:
+            - img "Dentaurum" [ref=e267]
+            - generic [ref=e268]: Dentaurum
+          - button "Dentsply Dentsply" [ref=e269] [cursor=pointer]:
+            - img "Dentsply" [ref=e271]
+            - generic [ref=e272]: Dentsply
+          - button "Dentsply Sirona Dentsply Sirona" [ref=e273] [cursor=pointer]:
+            - img "Dentsply Sirona" [ref=e275]
+            - generic [ref=e276]: Dentsply Sirona
+          - button "Detax Detax" [ref=e277] [cursor=pointer]:
+            - img "Detax" [ref=e279]
+            - generic [ref=e280]: Detax
+          - button "Diadent Diadent" [ref=e281] [cursor=pointer]:
+            - img "Diadent" [ref=e283]
+            - generic [ref=e284]: Diadent
+          - button "Dispodent Dispodent" [ref=e285] [cursor=pointer]:
+            - img "Dispodent" [ref=e287]
+            - generic [ref=e288]: Dispodent
+          - button "Dynamic Techno Medicals Dynamic Techno Medicals" [ref=e289] [cursor=pointer]:
+            - img "Dynamic Techno Medicals" [ref=e291]
+            - generic [ref=e292]: Dynamic Techno Medicals
+          - button "Eighteeth Eighteeth" [ref=e293] [cursor=pointer]:
+            - img "Eighteeth" [ref=e295]
+            - generic [ref=e296]: Eighteeth
+          - button "EndoKing EndoKing" [ref=e297] [cursor=pointer]:
+            - img "EndoKing" [ref=e299]
+            - generic [ref=e300]: EndoKing
+          - button "Ethicon Ethicon" [ref=e301] [cursor=pointer]:
+            - img "Ethicon" [ref=e303]
+            - generic [ref=e304]: Ethicon
+          - button "FGM FGM" [ref=e305] [cursor=pointer]:
+            - img "FGM" [ref=e307]
+            - generic [ref=e308]: FGM
+          - button "GC GC" [ref=e309] [cursor=pointer]:
+            - img "GC" [ref=e311]
+            - generic [ref=e312]: GC
+          - button "GDC GDC" [ref=e313] [cursor=pointer]:
+            - img "GDC" [ref=e315]
+            - generic [ref=e316]: GDC
+          - button "GKE - Cleaning Sterilization GKE - Cleaning Sterilization" [ref=e317] [cursor=pointer]:
+            - img "GKE - Cleaning Sterilization" [ref=e319]
+            - generic [ref=e320]: GKE - Cleaning Sterilization
+          - button "Goodwill Goodwill" [ref=e321] [cursor=pointer]:
+            - img "Goodwill" [ref=e323]
+            - generic [ref=e324]: Goodwill
+          - button "Green Guava Green Guava" [ref=e325] [cursor=pointer]:
+            - img "Green Guava" [ref=e327]
+            - generic [ref=e328]: Green Guava
+          - button "H &amp; W H &amp; W" [ref=e329] [cursor=pointer]:
+            - img "H &amp; W" [ref=e331]
+            - generic [ref=e332]: H &amp; W
+          - button "HMD HMD" [ref=e333] [cursor=pointer]:
+            - img "HMD" [ref=e335]
+            - generic [ref=e336]: HMD
+          - button "Hu-friedy Hu-friedy" [ref=e337] [cursor=pointer]:
+            - img "Hu-friedy" [ref=e339]
+            - generic [ref=e340]: Hu-friedy
+          - button "ICPA ICPA" [ref=e341] [cursor=pointer]:
+            - img "ICPA" [ref=e343]
+            - generic [ref=e344]: ICPA
+          - button "Indoco Remedies Indoco Remedies" [ref=e345] [cursor=pointer]:
+            - img "Indoco Remedies" [ref=e347]
+            - generic [ref=e348]: Indoco Remedies
+          - button "Integron Integron" [ref=e349] [cursor=pointer]:
+            - img "Integron" [ref=e351]
+            - generic [ref=e352]: Integron
+          - button "Ivoclar Vivadent Ivoclar Vivadent" [ref=e353] [cursor=pointer]:
+            - img "Ivoclar Vivadent" [ref=e355]
+            - generic [ref=e356]: Ivoclar Vivadent
+          - button "Kalabhai Kalabhai" [ref=e357] [cursor=pointer]:
+            - img "Kalabhai" [ref=e359]
+            - generic [ref=e360]: Kalabhai
+          - button "Kedo Files Kedo Files" [ref=e361] [cursor=pointer]:
+            - img "Kedo Files" [ref=e363]
+            - generic [ref=e364]: Kedo Files
+          - button "Kids-e-Dental Kids-e-Dental" [ref=e365] [cursor=pointer]:
+            - img "Kids-e-Dental" [ref=e367]
+            - generic [ref=e368]: Kids-e-Dental
+          - button "Koden Koden" [ref=e369] [cursor=pointer]:
+            - img "Koden" [ref=e371]
+            - generic [ref=e372]: Koden
+          - button "Kovident Kovident" [ref=e373] [cursor=pointer]:
+            - img "Kovident" [ref=e375]
+            - generic [ref=e376]: Kovident
+          - button "Kulzer Kulzer" [ref=e377] [cursor=pointer]:
+            - img "Kulzer" [ref=e379]
+            - generic [ref=e380]: Kulzer
+          - button "Lascod Lascod" [ref=e381] [cursor=pointer]:
+            - img "Lascod" [ref=e383]
+            - generic [ref=e384]: Lascod
+          - button "Life-line Medical Life-line Medical" [ref=e385] [cursor=pointer]:
+            - img "Life-line Medical" [ref=e387]
+            - generic [ref=e388]: Life-line Medical
+          - button "MAARC MAARC" [ref=e389] [cursor=pointer]:
+            - img "MAARC" [ref=e391]
+            - generic [ref=e392]: MAARC
+          - button "MB MB" [ref=e393] [cursor=pointer]:
+            - img "MB" [ref=e395]
+            - generic [ref=e396]: MB
+          - button "Mailyard Mailyard" [ref=e397] [cursor=pointer]:
+            - img "Mailyard" [ref=e399]
+            - generic [ref=e400]: Mailyard
+          - button "Mani Mani" [ref=e401] [cursor=pointer]:
+            - img "Mani" [ref=e403]
+            - generic [ref=e404]: Mani
+          - button "Meta Biomed Meta Biomed" [ref=e405] [cursor=pointer]:
+            - img "Meta Biomed" [ref=e407]
+            - generic [ref=e408]: Meta Biomed
+          - button "NSK NSK" [ref=e409] [cursor=pointer]:
+            - img "NSK" [ref=e411]
+            - generic [ref=e412]: NSK
+          - button "Neoendo Neoendo" [ref=e413] [cursor=pointer]:
+            - img "Neoendo" [ref=e415]
+            - generic [ref=e416]: Neoendo
+          - button "ORACURA ORACURA" [ref=e417] [cursor=pointer]:
+            - img "ORACURA" [ref=e419]
+            - generic [ref=e420]: ORACURA
+          - button "ORO ORO" [ref=e421] [cursor=pointer]:
+            - img "ORO" [ref=e423]
+            - generic [ref=e424]: ORO
+          - button "Polodent Polodent" [ref=e425] [cursor=pointer]:
+            - img "Polodent" [ref=e427]
+            - generic [ref=e428]: Polodent
+          - button "Prevest Denpro Prevest Denpro" [ref=e429] [cursor=pointer]:
+            - img "Prevest Denpro" [ref=e431]
+            - generic [ref=e432]: Prevest Denpro
+          - button "Prima Dental Prima Dental" [ref=e433] [cursor=pointer]:
+            - img "Prima Dental" [ref=e435]
+            - generic [ref=e436]: Prima Dental
+          - button "Prime Dental Prime Dental" [ref=e437] [cursor=pointer]:
+            - img "Prime Dental" [ref=e439]
+            - generic [ref=e440]: Prime Dental
+          - button "Printex Printex" [ref=e441] [cursor=pointer]:
+            - img "Printex" [ref=e443]
+            - generic [ref=e444]: Printex
+          - button "Riverside Riverside" [ref=e445] [cursor=pointer]:
+            - img "Riverside" [ref=e447]
+            - generic [ref=e448]: Riverside
+          - button "Romsons Romsons" [ref=e449] [cursor=pointer]:
+            - img "Romsons" [ref=e451]
+            - generic [ref=e452]: Romsons
+          - button "SDI SDI" [ref=e453] [cursor=pointer]:
+            - img "SDI" [ref=e455]
+            - generic [ref=e456]: SDI
+          - button "STIM INTERDENTAL STIM INTERDENTAL" [ref=e457] [cursor=pointer]:
+            - img "STIM INTERDENTAL" [ref=e459]
+            - generic [ref=e460]: STIM INTERDENTAL
+          - button "SafeEndo SafeEndo" [ref=e461] [cursor=pointer]:
+            - img "SafeEndo" [ref=e463]
+            - generic [ref=e464]: SafeEndo
+          - button "Samit Samit" [ref=e465] [cursor=pointer]:
+            - img "Samit" [ref=e467]
+            - generic [ref=e468]: Samit
+          - button "Seil Global Seil Global" [ref=e469] [cursor=pointer]:
+            - img "Seil Global" [ref=e471]
+            - generic [ref=e472]: Seil Global
+          - button "Septodont Septodont" [ref=e473] [cursor=pointer]:
+            - img "Septodont" [ref=e475]
+            - generic [ref=e476]: Septodont
+          - button "Shofu Shofu" [ref=e477] [cursor=pointer]:
+            - img "Shofu" [ref=e479]
+            - generic [ref=e480]: Shofu
+          - button "Steris Steris" [ref=e481] [cursor=pointer]:
+            - img "Steris" [ref=e483]
+            - generic [ref=e484]: Steris
+          - button "SuperEndo SuperEndo" [ref=e485] [cursor=pointer]:
+            - img "SuperEndo" [ref=e487]
+            - generic [ref=e488]: SuperEndo
+          - button "Suraksha Suraksha" [ref=e489] [cursor=pointer]:
+            - img "Suraksha" [ref=e491]
+            - generic [ref=e492]: Suraksha
+          - button "Sure Endo Sure Endo" [ref=e493] [cursor=pointer]:
+            - img "Sure Endo" [ref=e495]
+            - generic [ref=e496]: Sure Endo
+          - button "Surgicare Surgicare" [ref=e497] [cursor=pointer]:
+            - img "Surgicare" [ref=e499]
+            - generic [ref=e500]: Surgicare
+          - button "Surgicom Surgicom" [ref=e501] [cursor=pointer]:
+            - img "Surgicom" [ref=e503]
+            - generic [ref=e504]: Surgicom
+          - button "TOR VM TOR VM" [ref=e505] [cursor=pointer]:
+            - img "TOR VM" [ref=e507]
+            - generic [ref=e508]: TOR VM
+          - button "Ultradent Ultradent" [ref=e509] [cursor=pointer]:
+            - img "Ultradent" [ref=e511]
+            - generic [ref=e512]: Ultradent
+          - button "VOCO VOCO" [ref=e513] [cursor=pointer]:
+            - img "VOCO" [ref=e515]
+            - generic [ref=e516]: VOCO
+          - button "Vatech Vatech" [ref=e517] [cursor=pointer]:
+            - img "Vatech" [ref=e519]
+            - generic [ref=e520]: Vatech
+          - button "Vincismile - USA Vincismile - USA" [ref=e521] [cursor=pointer]:
+            - img "Vincismile - USA" [ref=e523]
+            - generic [ref=e524]: Vincismile - USA
+          - button "Vishal Dentocare Vishal Dentocare" [ref=e525] [cursor=pointer]:
+            - img "Vishal Dentocare" [ref=e527]
+            - generic [ref=e528]: Vishal Dentocare
+          - button "Vita Vita" [ref=e529] [cursor=pointer]:
+            - img "Vita" [ref=e531]
+            - generic [ref=e532]: Vita
+          - button "Waldent Waldent" [ref=e533] [cursor=pointer]:
+            - img "Waldent" [ref=e535]
+            - generic [ref=e536]: Waldent
+          - button "Wizdent Wizdent" [ref=e537] [cursor=pointer]:
+            - img "Wizdent" [ref=e539]
+            - generic [ref=e540]: Wizdent
+          - button "Woodpecker Woodpecker" [ref=e541] [cursor=pointer]:
+            - img "Woodpecker" [ref=e543]
+            - generic [ref=e544]: Woodpecker
+          - button "Zhermack Zhermack" [ref=e545] [cursor=pointer]:
+            - img "Zhermack" [ref=e547]
+            - generic [ref=e548]: Zhermack
+        - generic [ref=e549]:
+          - button "2Gm 2Gm" [ref=e550] [cursor=pointer]:
+            - img "2Gm" [ref=e552]
+            - generic [ref=e553]: 2Gm
+          - button "3M 3M" [ref=e554] [cursor=pointer]:
+            - img "3M" [ref=e556]
+            - generic [ref=e557]: 3M
+          - button "3m Espe 3m Espe" [ref=e558] [cursor=pointer]:
+            - img "3m Espe" [ref=e560]
+            - generic [ref=e561]: 3m Espe
+          - button "3m Unitek 3m Unitek" [ref=e562] [cursor=pointer]:
+            - img "3m Unitek" [ref=e564]
+            - generic [ref=e565]: 3m Unitek
+          - button "A-Care A-Care" [ref=e566] [cursor=pointer]:
+            - img "A-Care" [ref=e568]
+            - generic [ref=e569]: A-Care
+          - button "AAA Dental AAA Dental" [ref=e570] [cursor=pointer]:
+            - img "AAA Dental" [ref=e572]
+            - generic [ref=e573]: AAA Dental
+          - button "AGKEM AGKEM" [ref=e574] [cursor=pointer]:
+            - img "AGKEM" [ref=e576]
+            - generic [ref=e577]: AGKEM
+          - button "AMS AMS" [ref=e578] [cursor=pointer]:
+            - img "AMS" [ref=e580]
+            - generic [ref=e581]: AMS
+          - button "API API" [ref=e582] [cursor=pointer]:
+            - img "API" [ref=e584]
+            - generic [ref=e585]: API
+          - button "Advanced Biotech Advanced Biotech" [ref=e586] [cursor=pointer]:
+            - img "Advanced Biotech" [ref=e588]
+            - generic [ref=e589]: Advanced Biotech
+          - button "Alphadent Alphadent" [ref=e590] [cursor=pointer]:
+            - img "Alphadent" [ref=e592]
+            - generic [ref=e593]: Alphadent
+          - button "Ammdent Ammdent" [ref=e594] [cursor=pointer]:
+            - img "Ammdent" [ref=e596]
+            - generic [ref=e597]: Ammdent
+          - button "Anabond Stedman Anabond Stedman" [ref=e598] [cursor=pointer]:
+            - img "Anabond Stedman" [ref=e600]
+            - generic [ref=e601]: Anabond Stedman
+          - button "Angelus Angelus" [ref=e602] [cursor=pointer]:
+            - img "Angelus" [ref=e604]
+            - generic [ref=e605]: Angelus
+          - button "Apple Dental Apple Dental" [ref=e606] [cursor=pointer]:
+            - img "Apple Dental" [ref=e608]
+            - generic [ref=e609]: Apple Dental
+          - button "Aquapick Aquapick" [ref=e610] [cursor=pointer]:
+            - img "Aquapick" [ref=e612]
+            - generic [ref=e613]: Aquapick
+          - button "Avue Avue" [ref=e614] [cursor=pointer]:
+            - img "Avue" [ref=e616]
+            - generic [ref=e617]: Avue
+          - button "B-Ostin B-Ostin" [ref=e618] [cursor=pointer]:
+            - img "B-Ostin" [ref=e620]
+            - generic [ref=e621]: B-Ostin
+          - button "Bausch Bausch" [ref=e622] [cursor=pointer]:
+            - img "Bausch" [ref=e624]
+            - generic [ref=e625]: Bausch
+          - button "Being Foshan Being Foshan" [ref=e626] [cursor=pointer]:
+            - img "Being Foshan" [ref=e628]
+            - generic [ref=e629]: Being Foshan
+          - button "Bionova Bionova" [ref=e630] [cursor=pointer]:
+            - img "Bionova" [ref=e632]
+            - generic [ref=e633]: Bionova
+          - button "Browne Browne" [ref=e634] [cursor=pointer]:
+            - img "Browne" [ref=e636]
+            - generic [ref=e637]: Browne
+          - button "Capri Capri" [ref=e638] [cursor=pointer]:
+            - img "Capri" [ref=e640]
+            - generic [ref=e641]: Capri
+          - button "Carestream Carestream" [ref=e642] [cursor=pointer]:
+            - img "Carestream" [ref=e644]
+            - generic [ref=e645]: Carestream
+          - button "Cavex Cavex" [ref=e646] [cursor=pointer]:
+            - img "Cavex" [ref=e648]
+            - generic [ref=e649]: Cavex
+          - button "Chemdye Chemdye" [ref=e650] [cursor=pointer]:
+            - img "Chemdye" [ref=e652]
+            - generic [ref=e653]: Chemdye
+          - button "Cintape Cintape" [ref=e654] [cursor=pointer]:
+            - img "Cintape" [ref=e656]
+            - generic [ref=e657]: Cintape
+          - button "Classic Classic" [ref=e658] [cursor=pointer]:
+            - img "Classic" [ref=e660]
+            - generic [ref=e661]: Classic
+          - button "Colgate Colgate" [ref=e662] [cursor=pointer]:
+            - img "Colgate" [ref=e664]
+            - generic [ref=e665]: Colgate
+          - button "Coltene Whaledent Coltene Whaledent" [ref=e666] [cursor=pointer]:
+            - img "Coltene Whaledent" [ref=e668]
+            - generic [ref=e669]: Coltene Whaledent
+          - button "Cotisen Cotisen" [ref=e670] [cursor=pointer]:
+            - img "Cotisen" [ref=e672]
+            - generic [ref=e673]: Cotisen
+          - button "D-Tech D-Tech" [ref=e674] [cursor=pointer]:
+            - img "D-Tech" [ref=e676]
+            - generic [ref=e677]: D-Tech
+          - button "DMG DMG" [ref=e678] [cursor=pointer]:
+            - img "DMG" [ref=e680]
+            - generic [ref=e681]: DMG
+          - button "DPI DPI" [ref=e682] [cursor=pointer]:
+            - img "DPI" [ref=e684]
+            - generic [ref=e685]: DPI
+          - button "Denmax Medical Denmax Medical" [ref=e686] [cursor=pointer]:
+            - img "Denmax Medical" [ref=e688]
+            - generic [ref=e689]: Denmax Medical
+          - button "Dentalfilm Dentalfilm" [ref=e690] [cursor=pointer]:
+            - img "Dentalfilm" [ref=e692]
+            - generic [ref=e693]: Dentalfilm
+          - button "Dentaurum Dentaurum" [ref=e694] [cursor=pointer]:
+            - img "Dentaurum" [ref=e696]
+            - generic [ref=e697]: Dentaurum
+          - button "Dentsply Dentsply" [ref=e698] [cursor=pointer]:
+            - img "Dentsply" [ref=e700]
+            - generic [ref=e701]: Dentsply
+          - button "Dentsply Sirona Dentsply Sirona" [ref=e702] [cursor=pointer]:
+            - img "Dentsply Sirona" [ref=e704]
+            - generic [ref=e705]: Dentsply Sirona
+          - button "Detax Detax" [ref=e706] [cursor=pointer]:
+            - img "Detax" [ref=e708]
+            - generic [ref=e709]: Detax
+          - button "Diadent Diadent" [ref=e710] [cursor=pointer]:
+            - img "Diadent" [ref=e712]
+            - generic [ref=e713]: Diadent
+          - button "Dispodent Dispodent" [ref=e714] [cursor=pointer]:
+            - img "Dispodent" [ref=e716]
+            - generic [ref=e717]: Dispodent
+          - button "Dynamic Techno Medicals Dynamic Techno Medicals" [ref=e718] [cursor=pointer]:
+            - img "Dynamic Techno Medicals" [ref=e720]
+            - generic [ref=e721]: Dynamic Techno Medicals
+          - button "Eighteeth Eighteeth" [ref=e722] [cursor=pointer]:
+            - img "Eighteeth" [ref=e724]
+            - generic [ref=e725]: Eighteeth
+          - button "EndoKing EndoKing" [ref=e726] [cursor=pointer]:
+            - img "EndoKing" [ref=e728]
+            - generic [ref=e729]: EndoKing
+          - button "Ethicon Ethicon" [ref=e730] [cursor=pointer]:
+            - img "Ethicon" [ref=e732]
+            - generic [ref=e733]: Ethicon
+          - button "FGM FGM" [ref=e734] [cursor=pointer]:
+            - img "FGM" [ref=e736]
+            - generic [ref=e737]: FGM
+          - button "GC GC" [ref=e738] [cursor=pointer]:
+            - img "GC" [ref=e740]
+            - generic [ref=e741]: GC
+          - button "GDC GDC" [ref=e742] [cursor=pointer]:
+            - img "GDC" [ref=e744]
+            - generic [ref=e745]: GDC
+          - button "GKE - Cleaning Sterilization GKE - Cleaning Sterilization" [ref=e746] [cursor=pointer]:
+            - img "GKE - Cleaning Sterilization" [ref=e748]
+            - generic [ref=e749]: GKE - Cleaning Sterilization
+          - button "Goodwill Goodwill" [ref=e750] [cursor=pointer]:
+            - img "Goodwill" [ref=e752]
+            - generic [ref=e753]: Goodwill
+          - button "Green Guava Green Guava" [ref=e754] [cursor=pointer]:
+            - img "Green Guava" [ref=e756]
+            - generic [ref=e757]: Green Guava
+          - button "H &amp; W H &amp; W" [ref=e758] [cursor=pointer]:
+            - img "H &amp; W" [ref=e760]
+            - generic [ref=e761]: H &amp; W
+          - button "HMD HMD" [ref=e762] [cursor=pointer]:
+            - img "HMD" [ref=e764]
+            - generic [ref=e765]: HMD
+          - button "Hu-friedy Hu-friedy" [ref=e766] [cursor=pointer]:
+            - img "Hu-friedy" [ref=e768]
+            - generic [ref=e769]: Hu-friedy
+          - button "ICPA ICPA" [ref=e770] [cursor=pointer]:
+            - img "ICPA" [ref=e772]
+            - generic [ref=e773]: ICPA
+          - button "Indoco Remedies Indoco Remedies" [ref=e774] [cursor=pointer]:
+            - img "Indoco Remedies" [ref=e776]
+            - generic [ref=e777]: Indoco Remedies
+          - button "Integron Integron" [ref=e778] [cursor=pointer]:
+            - img "Integron" [ref=e780]
+            - generic [ref=e781]: Integron
+          - button "Ivoclar Vivadent Ivoclar Vivadent" [ref=e782] [cursor=pointer]:
+            - img "Ivoclar Vivadent" [ref=e784]
+            - generic [ref=e785]: Ivoclar Vivadent
+          - button "Kalabhai Kalabhai" [ref=e786] [cursor=pointer]:
+            - img "Kalabhai" [ref=e788]
+            - generic [ref=e789]: Kalabhai
+          - button "Kedo Files Kedo Files" [ref=e790] [cursor=pointer]:
+            - img "Kedo Files" [ref=e792]
+            - generic [ref=e793]: Kedo Files
+          - button "Kids-e-Dental Kids-e-Dental" [ref=e794] [cursor=pointer]:
+            - img "Kids-e-Dental" [ref=e796]
+            - generic [ref=e797]: Kids-e-Dental
+          - button "Koden Koden" [ref=e798] [cursor=pointer]:
+            - img "Koden" [ref=e800]
+            - generic [ref=e801]: Koden
+          - button "Kovident Kovident" [ref=e802] [cursor=pointer]:
+            - img "Kovident" [ref=e804]
+            - generic [ref=e805]: Kovident
+          - button "Kulzer Kulzer" [ref=e806] [cursor=pointer]:
+            - img "Kulzer" [ref=e808]
+            - generic [ref=e809]: Kulzer
+          - button "Lascod Lascod" [ref=e810] [cursor=pointer]:
+            - img "Lascod" [ref=e812]
+            - generic [ref=e813]: Lascod
+          - button "Life-line Medical Life-line Medical" [ref=e814] [cursor=pointer]:
+            - img "Life-line Medical" [ref=e816]
+            - generic [ref=e817]: Life-line Medical
+          - button "MAARC MAARC" [ref=e818] [cursor=pointer]:
+            - img "MAARC" [ref=e820]
+            - generic [ref=e821]: MAARC
+          - button "MB MB" [ref=e822] [cursor=pointer]:
+            - img "MB" [ref=e824]
+            - generic [ref=e825]: MB
+          - button "Mailyard Mailyard" [ref=e826] [cursor=pointer]:
+            - img "Mailyard" [ref=e828]
+            - generic [ref=e829]: Mailyard
+          - button "Mani Mani" [ref=e830] [cursor=pointer]:
+            - img "Mani" [ref=e832]
+            - generic [ref=e833]: Mani
+          - button "Meta Biomed Meta Biomed" [ref=e834] [cursor=pointer]:
+            - img "Meta Biomed" [ref=e836]
+            - generic [ref=e837]: Meta Biomed
+          - button "NSK NSK" [ref=e838] [cursor=pointer]:
+            - img "NSK" [ref=e840]
+            - generic [ref=e841]: NSK
+          - button "Neoendo Neoendo" [ref=e842] [cursor=pointer]:
+            - img "Neoendo" [ref=e844]
+            - generic [ref=e845]: Neoendo
+          - button "ORACURA ORACURA" [ref=e846] [cursor=pointer]:
+            - img "ORACURA" [ref=e848]
+            - generic [ref=e849]: ORACURA
+          - button "ORO ORO" [ref=e850] [cursor=pointer]:
+            - img "ORO" [ref=e852]
+            - generic [ref=e853]: ORO
+          - button "Polodent Polodent" [ref=e854] [cursor=pointer]:
+            - img "Polodent" [ref=e856]
+            - generic [ref=e857]: Polodent
+          - button "Prevest Denpro Prevest Denpro" [ref=e858] [cursor=pointer]:
+            - img "Prevest Denpro" [ref=e860]
+            - generic [ref=e861]: Prevest Denpro
+          - button "Prima Dental Prima Dental" [ref=e862] [cursor=pointer]:
+            - img "Prima Dental" [ref=e864]
+            - generic [ref=e865]: Prima Dental
+          - button "Prime Dental Prime Dental" [ref=e866] [cursor=pointer]:
+            - img "Prime Dental" [ref=e868]
+            - generic [ref=e869]: Prime Dental
+          - button "Printex Printex" [ref=e870] [cursor=pointer]:
+            - img "Printex" [ref=e872]
+            - generic [ref=e873]: Printex
+          - button "Riverside Riverside" [ref=e874] [cursor=pointer]:
+            - img "Riverside" [ref=e876]
+            - generic [ref=e877]: Riverside
+          - button "Romsons Romsons" [ref=e878] [cursor=pointer]:
+            - img "Romsons" [ref=e880]
+            - generic [ref=e881]: Romsons
+          - button "SDI SDI" [ref=e882] [cursor=pointer]:
+            - img "SDI" [ref=e884]
+            - generic [ref=e885]: SDI
+          - button "STIM INTERDENTAL STIM INTERDENTAL" [ref=e886] [cursor=pointer]:
+            - img "STIM INTERDENTAL" [ref=e888]
+            - generic [ref=e889]: STIM INTERDENTAL
+          - button "SafeEndo SafeEndo" [ref=e890] [cursor=pointer]:
+            - img "SafeEndo" [ref=e892]
+            - generic [ref=e893]: SafeEndo
+          - button "Samit Samit" [ref=e894] [cursor=pointer]:
+            - img "Samit" [ref=e896]
+            - generic [ref=e897]: Samit
+          - button "Seil Global Seil Global" [ref=e898] [cursor=pointer]:
+            - img "Seil Global" [ref=e900]
+            - generic [ref=e901]: Seil Global
+          - button "Septodont Septodont" [ref=e902] [cursor=pointer]:
+            - img "Septodont" [ref=e904]
+            - generic [ref=e905]: Septodont
+          - button "Shofu Shofu" [ref=e906] [cursor=pointer]:
+            - img "Shofu" [ref=e908]
+            - generic [ref=e909]: Shofu
+          - button "Steris Steris" [ref=e910] [cursor=pointer]:
+            - img "Steris" [ref=e912]
+            - generic [ref=e913]: Steris
+          - button "SuperEndo SuperEndo" [ref=e914] [cursor=pointer]:
+            - img "SuperEndo" [ref=e916]
+            - generic [ref=e917]: SuperEndo
+          - button "Suraksha Suraksha" [ref=e918] [cursor=pointer]:
+            - img "Suraksha" [ref=e920]
+            - generic [ref=e921]: Suraksha
+          - button "Sure Endo Sure Endo" [ref=e922] [cursor=pointer]:
+            - img "Sure Endo" [ref=e924]
+            - generic [ref=e925]: Sure Endo
+          - button "Surgicare Surgicare" [ref=e926] [cursor=pointer]:
+            - img "Surgicare" [ref=e928]
+            - generic [ref=e929]: Surgicare
+          - button "Surgicom Surgicom" [ref=e930] [cursor=pointer]:
+            - img "Surgicom" [ref=e932]
+            - generic [ref=e933]: Surgicom
+          - button "TOR VM TOR VM" [ref=e934] [cursor=pointer]:
+            - img "TOR VM" [ref=e936]
+            - generic [ref=e937]: TOR VM
+          - button "Ultradent Ultradent" [ref=e938] [cursor=pointer]:
+            - img "Ultradent" [ref=e940]
+            - generic [ref=e941]: Ultradent
+          - button "VOCO VOCO" [ref=e942] [cursor=pointer]:
+            - img "VOCO" [ref=e944]
+            - generic [ref=e945]: VOCO
+          - button "Vatech Vatech" [ref=e946] [cursor=pointer]:
+            - img "Vatech" [ref=e948]
+            - generic [ref=e949]: Vatech
+          - button "Vincismile - USA Vincismile - USA" [ref=e950] [cursor=pointer]:
+            - img "Vincismile - USA" [ref=e952]
+            - generic [ref=e953]: Vincismile - USA
+          - button "Vishal Dentocare Vishal Dentocare" [ref=e954] [cursor=pointer]:
+            - img "Vishal Dentocare" [ref=e956]
+            - generic [ref=e957]: Vishal Dentocare
+          - button "Vita Vita" [ref=e958] [cursor=pointer]:
+            - img "Vita" [ref=e960]
+            - generic [ref=e961]: Vita
+          - button "Waldent Waldent" [ref=e962] [cursor=pointer]:
+            - img "Waldent" [ref=e964]
+            - generic [ref=e965]: Waldent
+          - button "Wizdent Wizdent" [ref=e966] [cursor=pointer]:
+            - img "Wizdent" [ref=e968]
+            - generic [ref=e969]: Wizdent
+          - button "Woodpecker Woodpecker" [ref=e970] [cursor=pointer]:
+            - img "Woodpecker" [ref=e972]
+            - generic [ref=e973]: Woodpecker
+          - button "Zhermack Zhermack" [ref=e974] [cursor=pointer]:
+            - img "Zhermack" [ref=e976]
+            - generic [ref=e977]: Zhermack
+    - generic [ref=e978]:
+      - generic [ref=e979]:
+        - generic [ref=e980]:
+          - heading "Shop by Category" [level=3] [ref=e981]
+          - paragraph [ref=e982]: Professional Excellence
+        - button "View All " [ref=e983] [cursor=pointer]:
+          - text: View All
+          - generic [ref=e984]: 
+      - generic [ref=e985]:
+        - generic [ref=e986]:
+          - generic [ref=e987] [cursor=pointer]:
+            - img "Equipments" [ref=e990]
+            - generic [ref=e991]: Equipments
+          - generic [ref=e992] [cursor=pointer]:
+            - img "Instruments" [ref=e995]
+            - generic [ref=e996]: Instruments
+          - generic [ref=e997] [cursor=pointer]:
+            - img "Articulating Paper" [ref=e1000]
+            - generic [ref=e1001]: Articulating Paper
+          - generic [ref=e1002] [cursor=pointer]:
+            - img "All Products" [ref=e1005]
+            - generic [ref=e1006]: All Products
+          - generic [ref=e1007] [cursor=pointer]:
+            - img "Bibs Apron And Drapes" [ref=e1010]
+            - generic [ref=e1011]: Bibs Apron And Drapes
+          - generic [ref=e1012] [cursor=pointer]:
+            - img "Barrier And Sterilization" [ref=e1015]
+            - generic [ref=e1016]: Barrier And Sterilization
+          - generic [ref=e1017] [cursor=pointer]:
+            - img "Sterilization Product" [ref=e1020]
+            - generic [ref=e1021]: Sterilization Product
+          - generic [ref=e1022] [cursor=pointer]:
+            - img "Endodontics" [ref=e1025]
+            - generic [ref=e1026]: Endodontics
+          - generic [ref=e1027] [cursor=pointer]:
+            - img "Paedodontics" [ref=e1030]
+            - generic [ref=e1031]: Paedodontics
+          - generic [ref=e1032] [cursor=pointer]:
+            - img "Restorative" [ref=e1035]
+            - generic [ref=e1036]: Restorative
+          - generic [ref=e1037] [cursor=pointer]:
+            - img "Oral Surgery" [ref=e1040]
+            - generic [ref=e1041]: Oral Surgery
+          - generic [ref=e1042] [cursor=pointer]:
+            - img "Orthodontics" [ref=e1045]
+            - generic [ref=e1046]: Orthodontics
+          - generic [ref=e1047] [cursor=pointer]:
+            - img "Prosthodontics" [ref=e1050]
+            - generic [ref=e1051]: Prosthodontics
+          - generic [ref=e1052] [cursor=pointer]:
+            - img "General Dentistry" [ref=e1055]
+            - generic [ref=e1056]: General Dentistry
+          - generic [ref=e1057] [cursor=pointer]:
+            - img "Bleaching Products" [ref=e1060]
+            - generic [ref=e1061]: Bleaching Products
+          - generic [ref=e1062] [cursor=pointer]:
+            - img "Periodontics" [ref=e1065]
+            - generic [ref=e1066]: Periodontics
+          - generic [ref=e1067] [cursor=pointer]:
+            - img "Students Section" [ref=e1070]
+            - generic [ref=e1071]: Students Section
+          - generic [ref=e1072] [cursor=pointer]:
+            - img "Bonds Etchants" [ref=e1075]
+            - generic [ref=e1076]: Bonds Etchants
+        - generic [ref=e1077]:
+          - generic [ref=e1078] [cursor=pointer]:
+            - img "Equipments" [ref=e1081]
+            - generic [ref=e1082]: Equipments
+          - generic [ref=e1083] [cursor=pointer]:
+            - img "Instruments" [ref=e1086]
+            - generic [ref=e1087]: Instruments
+          - generic [ref=e1088] [cursor=pointer]:
+            - img "Articulating Paper" [ref=e1091]
+            - generic [ref=e1092]: Articulating Paper
+          - generic [ref=e1093] [cursor=pointer]:
+            - img "All Products" [ref=e1096]
+            - generic [ref=e1097]: All Products
+          - generic [ref=e1098] [cursor=pointer]:
+            - img "Bibs Apron And Drapes" [ref=e1101]
+            - generic [ref=e1102]: Bibs Apron And Drapes
+          - generic [ref=e1103] [cursor=pointer]:
+            - img "Barrier And Sterilization" [ref=e1106]
+            - generic [ref=e1107]: Barrier And Sterilization
+          - generic [ref=e1108] [cursor=pointer]:
+            - img "Sterilization Product" [ref=e1111]
+            - generic [ref=e1112]: Sterilization Product
+          - generic [ref=e1113] [cursor=pointer]:
+            - img "Endodontics" [ref=e1116]
+            - generic [ref=e1117]: Endodontics
+          - generic [ref=e1118] [cursor=pointer]:
+            - img "Paedodontics" [ref=e1121]
+            - generic [ref=e1122]: Paedodontics
+          - generic [ref=e1123] [cursor=pointer]:
+            - img "Restorative" [ref=e1126]
+            - generic [ref=e1127]: Restorative
+          - generic [ref=e1128] [cursor=pointer]:
+            - img "Oral Surgery" [ref=e1131]
+            - generic [ref=e1132]: Oral Surgery
+          - generic [ref=e1133] [cursor=pointer]:
+            - img "Orthodontics" [ref=e1136]
+            - generic [ref=e1137]: Orthodontics
+          - generic [ref=e1138] [cursor=pointer]:
+            - img "Prosthodontics" [ref=e1141]
+            - generic [ref=e1142]: Prosthodontics
+          - generic [ref=e1143] [cursor=pointer]:
+            - img "General Dentistry" [ref=e1146]
+            - generic [ref=e1147]: General Dentistry
+          - generic [ref=e1148] [cursor=pointer]:
+            - img "Bleaching Products" [ref=e1151]
+            - generic [ref=e1152]: Bleaching Products
+          - generic [ref=e1153] [cursor=pointer]:
+            - img "Periodontics" [ref=e1156]
+            - generic [ref=e1157]: Periodontics
+          - generic [ref=e1158] [cursor=pointer]:
+            - img "Students Section" [ref=e1161]
+            - generic [ref=e1162]: Students Section
+          - generic [ref=e1163] [cursor=pointer]:
+            - img "Bonds Etchants" [ref=e1166]
+            - generic [ref=e1167]: Bonds Etchants
+    - generic [ref=e1168]:
+      - generic [ref=e1170]:
+        - button "New Arrivals" [ref=e1171] [cursor=pointer]
+        - button "Top Selling" [ref=e1172] [cursor=pointer]
+        - button "Featured" [ref=e1173] [cursor=pointer]
+      - generic [ref=e1174]:
+        - generic [ref=e1176] [cursor=pointer]:
+          - button "" [ref=e1178]:
+            - generic [ref=e1179]: 
+          - img "CD40 Plasma Chemical Indicator Strip" [ref=e1183]
+          - generic [ref=e1184]:
+            - generic [ref=e1185]: All Products
+            - heading "CD40 Plasma Chemical Indicator Strip" [level=4] [ref=e1186]
+            - generic [ref=e1187]:
+              - generic [ref=e1188]: "5.0"
+              - generic [ref=e1189]: 
+              - text: "0"
+            - generic [ref=e1190]:
+              - generic [ref=e1191]:
+                - generic [ref=e1192]: ₹2,500
+                - generic [ref=e1193]: ₹2,500
+              - button "+" [ref=e1194]:
+                - generic [ref=e1195]: +
+        - generic [ref=e1197] [cursor=pointer]:
+          - button "" [ref=e1199]:
+            - generic [ref=e1200]: 
+          - img "Sterilux -UV Chamber Insta-UV (12 Stainless Steel Trays)" [ref=e1204]
+          - generic [ref=e1205]:
+            - generic [ref=e1206]: Sterilization Product
+            - heading "Sterilux -UV Chamber Insta-UV (12 Stainless Steel Trays)" [level=4] [ref=e1207]
+            - generic [ref=e1208]:
+              - generic [ref=e1209]: "5.0"
+              - generic [ref=e1210]: 
+              - text: "0"
+            - generic [ref=e1211]:
+              - generic [ref=e1212]:
+                - generic [ref=e1213]: ₹5,800
+                - generic [ref=e1214]: ₹7,500
+              - button "+" [ref=e1215]:
+                - generic [ref=e1216]: +
+        - generic [ref=e1218] [cursor=pointer]:
+          - button "" [ref=e1220]:
+            - generic [ref=e1221]: 
+          - img "Colgate Periogard Gum Expert Toothbrush" [ref=e1225]
+          - generic [ref=e1226]:
+            - generic [ref=e1227]: Dental
+            - heading "Colgate Periogard Gum Expert Toothbrush" [level=4] [ref=e1228]
+            - generic [ref=e1229]:
+              - generic [ref=e1230]: "5.0"
+              - generic [ref=e1231]: 
+              - text: "0"
+            - generic [ref=e1232]:
+              - generic [ref=e1233]:
+                - generic [ref=e1234]: ₹112
+                - generic [ref=e1235]: ₹112
+              - button "+" [ref=e1236]:
+                - generic [ref=e1237]: +
+        - generic [ref=e1239] [cursor=pointer]:
+          - button "" [ref=e1241]:
+            - generic [ref=e1242]: 
+          - img "Colgate PerioGard Gum Care Mouthwash Liquid - 250ml" [ref=e1246]
+          - generic [ref=e1247]:
+            - generic [ref=e1248]: Dental
+            - heading "Colgate PerioGard Gum Care Mouthwash Liquid - 250ml" [level=4] [ref=e1249]
+            - generic [ref=e1250]:
+              - generic [ref=e1251]: "5.0"
+              - generic [ref=e1252]: 
+              - text: "0"
+            - generic [ref=e1253]:
+              - generic [ref=e1254]:
+                - generic [ref=e1255]: ₹200
+                - generic [ref=e1256]: ₹200
+              - button "+" [ref=e1257]:
+                - generic [ref=e1258]: +
+        - generic [ref=e1260] [cursor=pointer]:
+          - button "" [ref=e1262]:
+            - generic [ref=e1263]: 
+          - img "Colgate - PerioGard Toothpaste (90 g)" [ref=e1267]
+          - generic [ref=e1268]:
+            - generic [ref=e1269]: Dental
+            - heading "Colgate - PerioGard Toothpaste (90 g)" [level=4] [ref=e1270]
+            - generic [ref=e1271]:
+              - generic [ref=e1272]: "5.0"
+              - generic [ref=e1273]: 
+              - text: "0"
+            - generic [ref=e1274]:
+              - generic [ref=e1275]:
+                - generic [ref=e1276]: ₹178
+                - generic [ref=e1277]: ₹178
+              - button "+" [ref=e1278]:
+                - generic [ref=e1279]: +
+        - generic [ref=e1281] [cursor=pointer]:
+          - button "" [ref=e1283]:
+            - generic [ref=e1284]: 
+          - img "Prevest - Cerafill Putty (Bioceramic Material for Permanent Root Repair)" [ref=e1288]
+          - generic [ref=e1289]:
+            - generic [ref=e1290]: Dental
+            - heading "Prevest - Cerafill Putty (Bioceramic Material for Permanent Root Repair)" [level=4] [ref=e1291]
+            - generic [ref=e1292]:
+              - generic [ref=e1293]: "5.0"
+              - generic [ref=e1294]: 
+              - text: "0"
+            - generic [ref=e1295]:
+              - generic [ref=e1296]:
+                - generic [ref=e1297]: ₹2,000
+                - generic [ref=e1298]: ₹2,812
+              - button "+" [ref=e1299]:
+                - generic [ref=e1300]: +
+    - generic [ref=e1302]:
+      - generic [ref=e1303]:
+        - generic [ref=e1304]:
+          - generic [ref=e1305]: Clinic Essential
+          - heading "High Speed Airotor Handpiece" [level=3] [ref=e1306]
+          - paragraph [ref=e1307]: FROM ₹7,500
+        - img "High Speed Airotor Handpiece" [ref=e1308]
+      - generic [ref=e1309]:
+        - generic [ref=e1310]:
+          - generic [ref=e1311]: Bundle Deal
+          - heading "Composite Restoration Kit" [level=3] [ref=e1312]
+          - paragraph [ref=e1313]: FROM ₹16,900
+        - img "Composite Restoration Kit" [ref=e1314]
+      - generic [ref=e1315]:
+        - generic [ref=e1316]:
+          - generic [ref=e1317]: New Arrival
+          - heading "Digital Apex Locator V5" [level=3] [ref=e1318]
+          - paragraph [ref=e1319]: FROM ₹12,500
+        - img "Digital Apex Locator V5" [ref=e1320]
+    - generic [ref=e1322]:
+      - generic [ref=e1323]:
+        - generic [ref=e1325]: 
+        - generic [ref=e1326]:
+          - heading "Fast Delivery" [level=5] [ref=e1327]
+          - paragraph [ref=e1328]: Priority shipping
+      - generic [ref=e1329]:
+        - generic [ref=e1331]: 
+        - generic [ref=e1332]:
+          - heading "Genuine" [level=5] [ref=e1333]
+          - paragraph [ref=e1334]: 100% Authentic
+      - generic [ref=e1335]:
+        - generic [ref=e1337]: 
+        - generic [ref=e1338]:
+          - heading "Support" [level=5] [ref=e1339]
+          - paragraph [ref=e1340]: Expert help
+      - generic [ref=e1341]:
+        - generic [ref=e1343]: 
+        - generic [ref=e1344]:
+          - heading "Secure" [level=5] [ref=e1345]
+          - paragraph [ref=e1346]: Safe payments
+    - generic [ref=e1348]:
+      - heading "2Gm" [level=2] [ref=e1349] [cursor=pointer]
+      - heading "3M" [level=2] [ref=e1350] [cursor=pointer]
+      - heading "3m Espe" [level=2] [ref=e1351] [cursor=pointer]
+      - heading "3m Unitek" [level=2] [ref=e1352] [cursor=pointer]
+      - heading "A-Care" [level=2] [ref=e1353] [cursor=pointer]
+  - text:     
+  - contentinfo [ref=e1354]:
+    - generic [ref=e1355]:
+      - generic [ref=e1356]:
+        - generic [ref=e1357]:
+          - generic [ref=e1358]: 
+          - generic [ref=e1359]:
+            - heading "Subscribe for Updates" [level=4] [ref=e1360]
+            - paragraph [ref=e1361]: Get the latest dental product offers directly.
+        - generic [ref=e1362]:
+          - textbox "Enter your email address..." [ref=e1363]
+          - button "Subscribe" [ref=e1364] [cursor=pointer]
+      - generic [ref=e1365]:
+        - generic [ref=e1366]:
+          - heading "Contact Us" [level=5] [ref=e1367]
+          - list [ref=e1368]:
+            - listitem [ref=e1369]:
+              - generic [ref=e1370]: 
+              - text: 123 Health Plaza, Dental Park, New Delhi, India.
+            - listitem [ref=e1371]:
+              - generic [ref=e1372]: 
+              - text: +91 98765 43210
+            - listitem [ref=e1373]:
+              - generic [ref=e1374]: 
+              - text: sales@alphadentkart.com
+        - generic [ref=e1375]:
+          - heading "Information" [level=5] [ref=e1376]
+          - list [ref=e1377]:
+            - listitem [ref=e1378]: About Alpha Dentkart
+            - listitem [ref=e1379]: Shipping Policy
+            - listitem [ref=e1380]:
+              - link "Privacy Policy" [ref=e1381] [cursor=pointer]:
+                - /url: /privacy-policy
+            - listitem [ref=e1382]:
+              - link "Terms of Service" [ref=e1383] [cursor=pointer]:
+                - /url: /terms-of-service
+            - listitem [ref=e1384]: Contact Support
+        - generic [ref=e1385]:
+          - heading "Account" [level=5] [ref=e1386]
+          - list [ref=e1387]:
+            - listitem [ref=e1388]: My Dashboard
+            - listitem [ref=e1389]: Order History
+            - listitem [ref=e1390]: Track Order
+            - listitem [ref=e1391]: Wish List
+            - listitem [ref=e1392]: Return Policy
+        - generic [ref=e1393]:
+          - heading "Top Brands" [level=5] [ref=e1394]
+          - generic [ref=e1395]:
+            - generic [ref=e1396] [cursor=pointer]: 3M
+            - generic [ref=e1397] [cursor=pointer]: Dentsply
+            - generic [ref=e1398] [cursor=pointer]: GC
+            - generic [ref=e1399] [cursor=pointer]: Kerr
+            - generic [ref=e1400] [cursor=pointer]: Woodpecker
+            - generic [ref=e1401] [cursor=pointer]: Shofu
+            - generic [ref=e1402] [cursor=pointer]: Ivoclar
+            - generic [ref=e1403] [cursor=pointer]: Coltene
+      - generic [ref=e1404]:
+        - paragraph [ref=e1405]: © 2023 Alpha Dentkart. All Rights Reserved.
+        - generic [ref=e1406]:
+          - generic [ref=e1407]: 
+          - generic [ref=e1408]: 
+          - generic [ref=e1409]: 
+  - generic [ref=e1410]:
+    - paragraph [ref=e1411]:
+      - text: 🍪 We use essential cookies for authentication and optional analytics cookies to improve your experience. By clicking "Accept", you consent to our use of cookies. Read our
+      - link "Privacy Policy" [ref=e1412] [cursor=pointer]:
+        - /url: /privacy-policy
+      - text: .
+    - generic [ref=e1413]:
+      - button "Decline" [ref=e1414] [cursor=pointer]
+      - button "Accept" [ref=e1415] [cursor=pointer]

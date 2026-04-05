@@ -33,7 +33,7 @@ router.post('/', auth_1.authenticateToken, async (req, res) => {
 router.get('/', auth_1.authenticateToken, async (req, res) => {
     try {
         const userId = req.user?.id;
-        const cartDoc = await (0, firebase_1.withTimeout)(firebase_1.db.collection('carts').doc(userId).get());
+        const cartDoc = await (0, firebase_1.withTimeout)(firebase_1.db.collection('carts').doc(userId).get(), 10000);
         if (!cartDoc.exists) {
             return res.json({ items: [] });
         }
@@ -54,7 +54,7 @@ router.post('/merge', auth_1.authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Invalid local items' });
         }
         const cartRef = firebase_1.db.collection('carts').doc(userId);
-        const cartDoc = await (0, firebase_1.withTimeout)(cartRef.get());
+        const cartDoc = await (0, firebase_1.withTimeout)(cartRef.get(), 10000);
         let serverItems = [];
         if (cartDoc.exists) {
             const cartData = cartDoc.data();
@@ -91,7 +91,7 @@ router.post('/merge', auth_1.authenticateToken, async (req, res) => {
 router.delete('/', auth_1.authenticateToken, async (req, res) => {
     try {
         const userId = req.user?.id;
-        await (0, firebase_1.withTimeout)(firebase_1.db.collection('carts').doc(userId).delete());
+        await (0, firebase_1.withTimeout)(firebase_1.db.collection('carts').doc(userId).delete(), 10000);
         logger_1.default.info('Cart cleared', { userId });
         res.json({ success: true, message: 'Cart cleared' });
     }

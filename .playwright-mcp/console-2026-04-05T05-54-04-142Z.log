@@ -1,0 +1,328 @@
+[     396ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[     859ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[     869ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[     870ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[     930ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/dashboard:149
+[     932ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[     933ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[     935ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[     936ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[     980ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[     983ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[     984ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1010ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[    1011ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1012ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    3398ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:134
+[    3398ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:135
+[    3405ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    3406ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    3470ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:134
+[    3471ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:135
+[    3477ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    3478ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    4001ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx:155
+[    4001ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx:196
+[    4003ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:262
+[    4005ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    4006ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    4235ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    4236ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    4797ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx:155
+[    4797ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx:196
+[    4797ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:262
+[    4799ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    4800ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    4822ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    4823ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    4905ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/orders/me:0
+[    4907ms] [ERROR] Failed to fetch user orders: AxiosError @ http://localhost:3000/App.tsx:683
+[    4993ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/orders/me:0
+[    4994ms] [ERROR] Failed to fetch user orders: AxiosError @ http://localhost:3000/App.tsx:683
+[    5444ms] TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3705:24)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3739:39)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19818:15)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+[    5460ms] TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3705:24)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3739:39)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19818:15)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+[    5463ms] [ERROR] The above error occurred in the <Dashboard> component:
+
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx:11:29)
+    at div
+    at Suspense
+    at main
+    at div
+    at App (http://localhost:3000/App.tsx:51:20)
+    at ThemeProvider (http://localhost:3000/contexts/ThemeContext.tsx:5:33)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=97706f7e:7102:13)
+    at BrowserRouter (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=97706f7e:10272:3)
+    at ErrorBoundary (http://localhost:3000/components/ErrorBoundary.tsx:3:1)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14079
+[    5463ms] [ERROR] ErrorBoundary caught an error: TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19806:22)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19190:13)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19169:15)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18786:28) {componentStack: 
+    at Dashboard (http://localhost:3000/component…/localhost:3000/components/ErrorBoundary.tsx:3:1)} @ http://localhost:3000/components/ErrorBoundary.tsx:8
+[    5463ms] [ERROR] Error stack: TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19806:22)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19190:13)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19169:15)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18786:28) @ http://localhost:3000/components/ErrorBoundary.tsx:9
+[ 1340216ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[ 1340217ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[ 1340219ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[ 1340221ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[ 1340225ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[ 1340226ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[ 1340569ms] [WARNING] CSRF token fetch warning (non-critical): TypeError: Failed to fetch
+    at loadAppData (http://localhost:3000/App.tsx:123:15)
+    at http://localhost:3000/App.tsx:280:5
+    at commitHookEffectListMount (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:16963:34)
+    at invokePassiveEffectMountInDEV (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18374:19)
+    at invokeEffectsInDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19754:19)
+    at commitDoubleInvokeEffectsInDEV (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19739:15)
+    at flushPassiveEffectsImpl (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19556:13)
+    at flushPassiveEffects (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19500:22)
+    at commitRootImpl (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19469:13)
+    at commitRoot (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19330:13) @ http://localhost:3000/App.tsx:124
+[ 1340569ms] [WARNING] CSRF token fetch warning (non-critical): TypeError: Failed to fetch
+    at loadAppData (http://localhost:3000/App.tsx:123:15)
+    at http://localhost:3000/App.tsx:280:5
+    at commitHookEffectListMount (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:16963:34)
+    at commitPassiveMountOnFiber (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18206:19)
+    at commitPassiveMountEffects_complete (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18179:17)
+    at commitPassiveMountEffects_begin (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18169:15)
+    at commitPassiveMountEffects (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18159:11)
+    at flushPassiveEffectsImpl (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19543:11)
+    at flushPassiveEffects (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19500:22)
+    at commitRootImpl (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19469:13) @ http://localhost:3000/App.tsx:124
+[ 1340587ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[ 1340858ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[ 1340872ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1340874ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1340906ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/dashboard:149
+[ 1340910ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775368587955:93
+[ 1340912ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775368587955:93
+[ 1340913ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1340914ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1340926ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775368587955:130
+[ 1340929ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1340930ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1340938ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775368587955:130
+[ 1340939ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1340940ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1341542ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775368587955:134
+[ 1341542ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775368587955:135
+[ 1341545ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1341546ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1341556ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775368587955:134
+[ 1341556ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775368587955:135
+[ 1341559ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1341560ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1342078ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx?t=1775368587955:155
+[ 1342079ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx?t=1775368587955:196
+[ 1342079ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775368587955:262
+[ 1342080ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1342081ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1342168ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1342168ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1342416ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/orders/me:0
+[ 1342417ms] [ERROR] Failed to fetch user orders: AxiosError @ http://localhost:3000/App.tsx?t=1775368587955:683
+[ 1342480ms] TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3705:24)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3739:39)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19818:15)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+[ 1342487ms] TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3705:24)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3739:39)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19818:15)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+[ 1342489ms] [ERROR] The above error occurred in the <Dashboard> component:
+
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:11:29)
+    at div
+    at Suspense
+    at main
+    at div
+    at App (http://localhost:3000/App.tsx?t=1775368587955:51:20)
+    at ThemeProvider (http://localhost:3000/contexts/ThemeContext.tsx:5:33)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=97706f7e:7102:13)
+    at BrowserRouter (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=97706f7e:10272:3)
+    at ErrorBoundary (http://localhost:3000/components/ErrorBoundary.tsx:3:1)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14079
+[ 1342489ms] [ERROR] ErrorBoundary caught an error: TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19806:22)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19190:13)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19169:15)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18786:28) {componentStack: 
+    at Dashboard (http://localhost:3000/component…/localhost:3000/components/ErrorBoundary.tsx:3:1)} @ http://localhost:3000/components/ErrorBoundary.tsx:8
+[ 1342489ms] [ERROR] Error stack: TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19806:22)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19190:13)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19169:15)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18786:28) @ http://localhost:3000/components/ErrorBoundary.tsx:9
+[ 1342645ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx?t=1775368587955:155
+[ 1342646ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx?t=1775368587955:196
+[ 1342646ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775368587955:262
+[ 1346636ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[ 1346805ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[ 1346813ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346813ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346841ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/:149
+[ 1346843ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775368587955:93
+[ 1346844ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775368587955:93
+[ 1346846ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346847ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346859ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775368587955:130
+[ 1346862ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346865ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346869ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775368587955:130
+[ 1346871ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346871ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346901ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775368587955:134
+[ 1346901ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775368587955:135
+[ 1346905ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1346906ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1347090ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775368587955:134
+[ 1347090ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775368587955:135
+[ 1347099ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1347099ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1347402ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx?t=1775368587955:155
+[ 1347402ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx?t=1775368587955:196
+[ 1347402ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775368587955:262
+[ 1347403ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1347405ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1347714ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1347714ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1347750ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/orders/me:0
+[ 1347750ms] [ERROR] Failed to fetch user orders: AxiosError @ http://localhost:3000/App.tsx?t=1775368587955:683
+[ 1347986ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx?t=1775368587955:155
+[ 1347987ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx?t=1775368587955:196
+[ 1347987ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775368587955:262
+[ 1347988ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1347989ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1348020ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1348021ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1348040ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/orders/me:0
+[ 1348041ms] [ERROR] Failed to fetch user orders: AxiosError @ http://localhost:3000/App.tsx?t=1775368587955:683
+[ 1349221ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1349221ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1349293ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1349294ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1349307ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1349308ms] [LOG] App Render: {currentView: dashboard, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx?t=1775368587955:1344
+[ 1349347ms] TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3705:24)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3739:39)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19818:15)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+[ 1349355ms] TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at HTMLUnknownElement.callCallback2 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3680:22)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3705:24)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:3739:39)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19818:15)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+[ 1349357ms] [ERROR] The above error occurred in the <Dashboard> component:
+
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:11:29)
+    at div
+    at Suspense
+    at main
+    at div
+    at App (http://localhost:3000/App.tsx?t=1775368587955:51:20)
+    at ThemeProvider (http://localhost:3000/contexts/ThemeContext.tsx:5:33)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=97706f7e:7102:13)
+    at BrowserRouter (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=97706f7e:10272:3)
+    at ErrorBoundary (http://localhost:3000/components/ErrorBoundary.tsx:3:1)
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14079
+[ 1349357ms] [ERROR] ErrorBoundary caught an error: TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19806:22)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19190:13)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19169:15)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18786:28) {componentStack: 
+    at Dashboard (http://localhost:3000/component…/localhost:3000/components/ErrorBoundary.tsx:3:1)} @ http://localhost:3000/components/ErrorBoundary.tsx:8
+[ 1349357ms] [ERROR] Error stack: TypeError: Cannot read properties of undefined (reading 'length')
+    at Dashboard (http://localhost:3000/components/Dashboard.tsx?t=1775368587955:311:134)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:11596:26)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14630:28)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:14881:23)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:15966:22)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19806:22)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19251:20)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19190:13)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:19169:15)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:18786:28) @ http://localhost:3000/components/ErrorBoundary.tsx:9

@@ -3,6 +3,12 @@ import React, { useState } from 'react';
 import { User, Address, Order } from '../types';
 import { AlertCircle, Package, User as UserIcon, LogOut, MapPin, ChevronRight, Settings, Camera, ShieldCheck } from 'lucide-react';
 import VerificationManager from './VerificationManager';
+import OrderTracking from './OrderTracking';
+import { InvoiceViewer } from './InvoiceViewer';
+import { CancelOrderModal } from './CancelOrderModal';
+import { ReturnRequestModal } from './ReturnRequestModal';
+import { QuickReorder } from './QuickReorder';
+import { SavedPaymentMethods } from './SavedPaymentMethods';
 
 interface DashboardProps {
     user: User;
@@ -11,7 +17,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUser }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'addresses' | 'profile'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'returns' | 'addresses' | 'profile'>('overview');
     const [selectedUserType, setSelectedUserType] = useState<User['userType']>(user.userType || 'regular');
 
     // Address Modal State
@@ -34,6 +40,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
     const [trackingData, setTrackingData] = useState<any>(null);
     const [isTrackingLoading, setIsTrackingLoading] = useState(false);
 
+    // Invoice Modal State
+    const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
+
+    // Cancel Order Modal State
+    const [cancelOrder, setCancelOrder] = useState<Order | null>(null);
+
+    // Return Request Modal State
+    const [returnOrder, setReturnOrder] = useState<Order | null>(null);
+
     // Delete Confirmation State
     const [deleteConfirmation, setDeleteConfirmation] = useState<{
         isOpen: boolean;
@@ -47,16 +62,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
         onConfirm: () => { },
     });
 
-    const statusColors = {
-        Processing: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-        Shipped: 'bg-blue-100 text-blue-800 border-blue-200',
-        Delivered: 'bg-green-100 text-green-800 border-green-200',
-        Cancelled: 'bg-red-100 text-red-800 border-red-200',
+    const statusColors: Record<string, string> = {
+        Processing: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+        Shipped: 'bg-blue-100 text-blue-700 border-blue-200',
+        Delivered: 'bg-green-100 text-green-700 border-green-200',
+        Cancelled: 'bg-red-100 text-red-700 border-red-200',
+        Pending: 'bg-gray-100 text-gray-700 border-gray-200',
+        Returned: 'bg-orange-100 text-orange-700 border-orange-200',
     };
+    const getStatusColor = (status: string) => statusColors[status] || 'bg-gray-100 text-gray-700 border-gray-200';
 
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: 'fas fa-chart-pie' },
         { id: 'orders', label: 'My Orders', icon: 'fas fa-box-open' },
+        { id: 'returns', label: 'My Returns', icon: 'fas fa-undo' },
         { id: 'addresses', label: 'Addresses', icon: 'fas fa-map-marker-alt' },
         { id: 'profile', label: 'Profile Settings', icon: 'fas fa-user-cog' },
     ];
@@ -121,7 +140,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
 
     const OrderTracker = ({ status }: { status: string }) => {
         const steps = ['Placed', 'Processing', 'Shipped', 'Delivered'];
-        const currentStep = steps.indexOf(status);
+        const stepIndex = steps.indexOf(status);
+        const currentStep = stepIndex >= 0 ? stepIndex : 0;
+        const isUnknown = stepIndex < 0;
+
+        if (isUnknown) {
+            return (
+                <div className="py-4">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                        status === 'Failed' ? 'bg-orange-100 text-orange-700' :
+                        'bg-gray-100 text-gray-700'
+                    }`}>
+                        {status}
+                    </span>
+                </div>
+            );
+        }
 
         return (
             <div className="w-full py-6">
@@ -139,7 +174,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                         const isActive = idx === currentStep;
 
                         return (
-                            <div key={step} className="flex flex-col items-center gap-2 bg-white dark:bg-surface-dark px-2">
+                            <div key={idx} className="flex flex-col items-center gap-2 bg-white dark:bg-surface-dark px-2">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${isCompleted ? 'bg-green-500 border-green-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'}`}>
                                     {isCompleted ? <i className="fas fa-check"></i> : idx + 1}
                                 </div>
@@ -152,7 +187,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
         );
     };
 
-    const latestOrder = user.orders[0];
+    const latestOrder = user.orders?.[0];
 
     return (
         <div className="container mx-auto py-8 relative">
@@ -201,7 +236,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                     <i className="fas fa-tooth text-[12rem] absolute -right-10 -top-10 transform rotate-12"></i>
                                 </div>
                                 <div className="relative z-10">
-                                    <h2 className="text-3xl font-bold mb-2">Welcome back, {user.name.split(' ')[0]}!</h2>
+                                    <h2 className="text-3xl font-bold mb-2">Welcome back, {user.name?.split(' ')[0] || 'User'}!</h2>
                                     <p className="text-indigo-100 max-w-md">Track your orders, manage addresses, and check out new arrivals tailored for your clinic.</p>
                                 </div>
                             </div>
@@ -211,7 +246,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-gray-500 text-sm font-medium mb-1">Total Orders</p>
-                                            <h3 className="text-3xl font-black text-gray-900 dark:text-white">{user.orders.length}</h3>
+                                            <h3 className="text-3xl font-black text-gray-900 dark:text-white">{user.orders?.length || 0}</h3>
                                         </div>
                                         <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-2xl flex items-center justify-center">
                                             <i className="fas fa-shopping-bag text-xl"></i>
@@ -222,7 +257,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="text-gray-500 text-sm font-medium mb-1">Saved Addresses</p>
-                                            <h3 className="text-3xl font-black text-gray-900 dark:text-white">{user.addresses.length}</h3>
+                                            <h3 className="text-3xl font-black text-gray-900 dark:text-white">{user.addresses?.length || 0}</h3>
                                         </div>
                                         <div className="w-12 h-12 bg-green-50 dark:bg-green-900/30 text-green-500 rounded-2xl flex items-center justify-center">
                                             <i className="fas fa-map-marked-alt text-xl"></i>
@@ -242,6 +277,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                 </div>
                             </div>
 
+                            {/* Quick Reorder */}
+                            <QuickReorder
+                                onAddToCart={() => {}}
+                                onProductClick={() => {}}
+                            />
+
+                            {/* Saved Payment Methods */}
+                            <SavedPaymentMethods />
+
                             {/* Latest Order Tracking */}
                             {latestOrder && (
                                 <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -250,7 +294,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                             <h3 className="font-bold text-lg text-gray-900 dark:text-white">Track Order #{latestOrder.id}</h3>
                                             <p className="text-sm text-gray-500">Expected Delivery: {latestOrder.status === 'Delivered' ? 'Delivered' : 'Oct 24, 2023'}</p>
                                         </div>
-                                        <button className="text-primary text-sm font-medium hover:underline">View Invoice</button>
+                                        <button onClick={() => setInvoiceOrder(latestOrder)} className="text-primary text-sm font-medium hover:underline">View Invoice</button>
                                     </div>
                                     <OrderTracker status={latestOrder.status} />
                                 </div>
@@ -272,12 +316,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                            {user.orders.slice(0, 3).map(order => (
+                                            {user.orders?.slice(0, 3).map(order => (
                                                 <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
                                                     <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{order.date}</td>
                                                     <td className="px-6 py-4">
-                                                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColors[order.status]}`}>
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
                                                             {order.status}
                                                         </span>
                                                     </td>
@@ -296,7 +340,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                         <div className="space-y-6 animate-fade-in">
                             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">My Orders</h2>
                             <div className="space-y-4">
-                                {user.orders.map(order => (
+                                {user.orders?.map(order => (
                                     <div key={order.id} className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden group hover:shadow-md transition-shadow">
                                         <div className="p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 flex flex-wrap justify-between items-center gap-4">
                                             <div className="flex gap-8 text-sm">
@@ -313,8 +357,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                                     <p className="font-medium text-gray-900 dark:text-white">{order.id}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex gap-3">
-                                                <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">Invoice</button>
+                                            <div className="flex gap-3 flex-wrap">
+                                                <button onClick={() => setInvoiceOrder(order)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">Invoice</button>
+                                                {['Processing', 'Pending'].includes(order.status) && (
+                                                    <button
+                                                        onClick={() => setCancelOrder(order)}
+                                                        className="px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                                {order.status === 'Delivered' && (
+                                                    <button
+                                                        onClick={() => setReturnOrder(order)}
+                                                        className="px-4 py-2 border border-orange-300 dark:border-orange-600 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                                    >
+                                                        Return
+                                                    </button>
+                                                )}
                                                 {(order.status === 'Shipped' || order.status === 'Delivered') && order.trackingNumber ? (
                                                     <button 
                                                         onClick={() => { setTrackingOrder(order); }}
@@ -324,7 +384,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                                         Track Order
                                                     </button>
                                                 ) : (
-                                                    <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-pink-700 shadow-lg shadow-primary/20">
+                                                    <button onClick={() => setTrackingOrder(order)} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-pink-700 shadow-lg shadow-primary/20">
                                                         Track Order
                                                     </button>
                                                 )}
@@ -332,7 +392,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                         </div>
                                         <div className="p-6">
                                             <div className="flex flex-wrap items-center gap-3 mb-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${statusColors[order.status]}`}>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getStatusColor(order.status)}`}>
                                                     {order.status}
                                                 </span>
                                                 {order.status === 'Shipped' && order.trackingNumber && (
@@ -345,7 +405,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                                 )}
                                             </div>
                                             <div className="space-y-4">
-                                                {order.items.map((item, idx) => (
+                                                {order.items?.map((item, idx) => (
                                                     <div key={idx} className="flex justify-between items-center text-sm border-b border-gray-50 dark:border-gray-700/50 pb-4 last:border-0 last:pb-0">
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
@@ -363,6 +423,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Returns Tab */}
+                    {activeTab === 'returns' && (
+                        <div className="space-y-6 animate-fade-in">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">My Returns</h2>
+                            <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+                                <i className="fas fa-undo text-4xl text-gray-300 mb-4"></i>
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">No Return Requests</h3>
+                                <p className="text-gray-500 text-sm mb-4">You haven't made any return requests yet.</p>
+                                <p className="text-xs text-gray-400">Returns can be initiated from the My Orders tab for delivered orders within 15 days.</p>
                             </div>
                         </div>
                     )}
@@ -953,6 +1026,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                 </div>
                             )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invoice Modal */}
+            {invoiceOrder && (
+                <InvoiceViewer
+                    orderId={invoiceOrder.id}
+                    onClose={() => setInvoiceOrder(null)}
+                />
+            )}
+
+            {/* Cancel Order Modal */}
+            {cancelOrder && (
+                <CancelOrderModal
+                    orderId={cancelOrder.id}
+                    orderStatus={cancelOrder.status}
+                    onClose={() => setCancelOrder(null)}
+                    onSuccess={() => {
+                        setCancelOrder(null);
+                        alert('Order cancelled successfully. Refund will be processed within 5-7 business days.');
+                    }}
+                />
+            )}
+
+            {/* Return Request Modal */}
+            {returnOrder && (
+                <ReturnRequestModal
+                    orderId={returnOrder.id}
+                    items={returnOrder.items}
+                    onClose={() => setReturnOrder(null)}
+                    onSuccess={() => {
+                        setReturnOrder(null);
+                        alert('Return request submitted successfully. You will receive a confirmation email.');
+                    }}
+                />
+            )}
+
+            {/* Order Tracking Modal */}
+            {trackingOrder && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setTrackingOrder(null)}>
+                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <OrderTracking orderId={trackingOrder.id} onClose={() => setTrackingOrder(null)} />
                     </div>
                 </div>
             )}

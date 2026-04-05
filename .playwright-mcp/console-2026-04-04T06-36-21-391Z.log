@@ -1,0 +1,222 @@
+[     635ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[    1505ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[    1523ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[    1524ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[    1592ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/login:149
+[    1596ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[    1598ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[    1599ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[    1600ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[    1620ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[    1625ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[    1628ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[    1630ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[    1741ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:128
+[    1741ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:129
+[    1752ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:128
+[    1752ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:129
+[    1761ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[    1762ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[    2200ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[    2539ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[    2561ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx:149
+[    2562ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx:190
+[    2562ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:256
+[    2563ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[    2563ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[    2824ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[    2825ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[    3543ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx:149
+[    3543ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx:190
+[    3544ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:256
+[    3545ms] [LOG] 📊 CLS: 0.027868591845756758 @ http://localhost:3000/login:205
+[    3552ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[    3552ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[    3571ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[    3571ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  683791ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3000/@vite/client:963
+[  686745ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[  689137ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[  689152ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  689153ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  689213ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/login:149
+[  689219ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[  689220ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[  689221ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  689222ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  689234ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[  689238ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[  689241ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  689243ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  689953ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3000/@vite/client:963
+[  690822ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[  695826ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[  695841ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  695841ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  695917ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/login:149
+[  695920ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[  695924ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[  695926ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  695926ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  695941ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[  695945ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[  695947ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  695948ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  701276ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:128
+[  701276ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:129
+[  701285ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  701285ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  701304ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:128
+[  701304ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:129
+[  701308ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  701309ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  701636ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[  701789ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx:149
+[  701790ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx:190
+[  701790ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:256
+[  701791ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  701792ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  701989ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  701989ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  702057ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[  702348ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx:149
+[  702348ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx:190
+[  702348ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:256
+[  702349ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  702350ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  702364ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  702365ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  702633ms] [LOG] 📊 CLS: 0.027868591845756758 @ http://localhost:3000/login:205
+[  887040ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887042ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887067ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775285467995:92
+[  887068ms] [LOG] 📦 Cache hit: 48 products loaded instantly @ http://localhost:3000/App.tsx?t=1775285467995:99
+[  887071ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887072ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887090ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775285467995:124
+[  887093ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887093ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887287ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775285467995:128
+[  887287ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775285467995:129
+[  887313ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887315ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887683ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[  887865ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx?t=1775285467995:149
+[  887866ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx?t=1775285467995:190
+[  887866ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775285467995:256
+[  887867ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887868ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887882ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  887883ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285467995:1291
+[  920530ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3000/@vite/client:963
+[  922452ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[  925469ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[  925489ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925490ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925546ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/login:149
+[  925556ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[  925556ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[  925558ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925559ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925572ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[  925575ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[  925577ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925578ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925652ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:128
+[  925652ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:129
+[  925658ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925659ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925686ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:128
+[  925687ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:129
+[  925693ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  925694ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[  926001ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[  926322ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[  926522ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx:149
+[  926523ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx:190
+[  926523ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:256
+[  926524ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  926525ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  926734ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  926735ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  927319ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx:149
+[  927321ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx:190
+[  927321ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:256
+[  927323ms] [LOG] 📊 CLS: 0.027868591845756758 @ http://localhost:3000/login:205
+[  927326ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  927327ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  927348ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[  927349ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1033193ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3000/@vite/client:963
+[ 1035541ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1038891ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1042267ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1045622ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1048987ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1052344ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1055731ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1059114ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1062516ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1065902ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1069320ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1072722ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1076351ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[ 1081951ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[ 1086681ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[ 1086695ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1086696ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1086766ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/login:149
+[ 1086770ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[ 1086770ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:92
+[ 1086772ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1086772ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1086785ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[ 1086789ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:124
+[ 1086791ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1086791ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1093533ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:128
+[ 1093533ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:129
+[ 1093539ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1093539ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1093565ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:128
+[ 1093565ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:129
+[ 1093574ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1093575ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1291
+[ 1093929ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[ 1094178ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx:149
+[ 1094179ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx:190
+[ 1094179ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:256
+[ 1094180ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1094182ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1094404ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[ 1094409ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1094410ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1094881ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx:149
+[ 1094882ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx:190
+[ 1094882ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:256
+[ 1094883ms] [LOG] 📊 CLS: 0.027868591845756758 @ http://localhost:3000/login:205
+[ 1094883ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1094884ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1094912ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1094913ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx:1291
+[ 1111987ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1111988ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1112003ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx?t=1775285692534:92
+[ 1112004ms] [LOG] 📦 Cache hit: 48 products loaded instantly @ http://localhost:3000/App.tsx?t=1775285692534:99
+[ 1112006ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1112007ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1112029ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx?t=1775285692534:124
+[ 1112033ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1112034ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1112118ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx?t=1775285692534:128
+[ 1112118ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx?t=1775285692534:129
+[ 1112128ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1112129ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1112475ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[ 1113031ms] [LOG] ✅ Products response has 48 products @ http://localhost:3000/App.tsx?t=1775285692534:149
+[ 1113032ms] [LOG] ✅ Loaded and cached 48 products @ http://localhost:3000/App.tsx?t=1775285692534:190
+[ 1113032ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx?t=1775285692534:256
+[ 1113033ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1113034ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1113054ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291
+[ 1113055ms] [LOG] App Render: {currentView: login, selectedProductId: undefined, productsCount: 48} @ http://localhost:3000/App.tsx?t=1775285692534:1291

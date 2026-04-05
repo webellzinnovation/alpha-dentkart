@@ -1,0 +1,151 @@
+[    2139ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[    7907ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[    7969ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    7970ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8069ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/:149
+[    8089ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[    8092ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[    8100ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8101ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8107ms] [LOG] 📊 CLS: 0.0000065036402771526304 @ http://localhost:3000/:205
+[    8144ms] [LOG] 📊 CLS: 0.000046963237377314925 @ http://localhost:3000/:205
+[    8451ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/csrf-token:0
+[    8453ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[    8479ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8479ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8538ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/csrf-token:0
+[    8542ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[    8546ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8547ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8719ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/products?limit=100:0
+[    8721ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[    8722ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[    8722ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[    8722ms] [ERROR] Error message: Request failed with status code 500 @ http://localhost:3000/App.tsx:266
+[    8722ms] [ERROR] Error code: ERR_BAD_RESPONSE @ http://localhost:3000/App.tsx:267
+[    8722ms] [ERROR] Response data:  @ http://localhost:3000/App.tsx:268
+[    8725ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8727ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8824ms] [LOG] 📊 CLS: 0.07129378039139245 @ http://localhost:3000/:205
+[    8871ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/products?limit=100:0
+[    8872ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[    8872ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[    8873ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[    8873ms] [ERROR] Error message: Request failed with status code 500 @ http://localhost:3000/App.tsx:266
+[    8873ms] [ERROR] Error code: ERR_BAD_RESPONSE @ http://localhost:3000/App.tsx:267
+[    8873ms] [ERROR] Response data:  @ http://localhost:3000/App.tsx:268
+[    8874ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    8874ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   10468ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   10469ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   10569ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[   10973ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[   10982ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   10982ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11040ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[   11042ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[   11043ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11044ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11072ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/csrf-token:0
+[   11073ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[   11075ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11076ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11101ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/csrf-token:0
+[   11102ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[   11106ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11107ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11131ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/products?limit=100:0
+[   11132ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[   11132ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[   11133ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[   11133ms] [ERROR] Error message: Request failed with status code 500 @ http://localhost:3000/App.tsx:266
+[   11133ms] [ERROR] Error code: ERR_BAD_RESPONSE @ http://localhost:3000/App.tsx:267
+[   11133ms] [ERROR] Response data:  @ http://localhost:3000/App.tsx:268
+[   11133ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11134ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11173ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/products?limit=100:0
+[   11173ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[   11174ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[   11174ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[   11174ms] [ERROR] Error message: Request failed with status code 500 @ http://localhost:3000/App.tsx:266
+[   11174ms] [ERROR] Error code: ERR_BAD_RESPONSE @ http://localhost:3000/App.tsx:267
+[   11174ms] [ERROR] Response data:  @ http://localhost:3000/App.tsx:268
+[   11174ms] [LOG] 📊 CLS: 0.07124681715401514 @ http://localhost:3000/:205
+[   11175ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   11175ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   13512ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/:149
+[   76553ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3000/@vite/client:963
+[   77642ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[   84219ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[   84260ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   84261ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   84337ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/:149
+[   84345ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[   84349ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[   84374ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   84374ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   84950ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[   84954ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   84955ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   85373ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[   85378ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   85379ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   85418ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/products?limit=100:0
+[   85419ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[   85420ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[   85421ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[   85421ms] [ERROR] Error message: Request failed with status code 500 @ http://localhost:3000/App.tsx:266
+[   85421ms] [ERROR] Error code: ERR_BAD_RESPONSE @ http://localhost:3000/App.tsx:267
+[   85421ms] [ERROR] Response data: {error: Internal server error} @ http://localhost:3000/App.tsx:268
+[   85423ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   85423ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   85498ms] [LOG] 📊 CLS: 0.10253070497262208 @ http://localhost:3000/:205
+[   85559ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/products?limit=100:0
+[   85566ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[   85566ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[   85567ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[   85567ms] [ERROR] Error message: Request failed with status code 500 @ http://localhost:3000/App.tsx:266
+[   85567ms] [ERROR] Error code: ERR_BAD_RESPONSE @ http://localhost:3000/App.tsx:267
+[   85567ms] [ERROR] Response data: {error: Internal server error} @ http://localhost:3000/App.tsx:268
+[   85569ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[   85570ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  210333ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3000/@vite/client:963
+[  212676ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  216040ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  219415ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  222788ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  226162ms] [ERROR] WebSocket connection to 'ws://localhost:3000/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/@vite/client:1034
+[  229599ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[  235016ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[  235039ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235041ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235101ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/:149
+[  235108ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[  235113ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[  235138ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235139ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235478ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[  235488ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235491ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235511ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[  235513ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235514ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235593ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/products?limit=100:0
+[  235594ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[  235595ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[  235595ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[  235595ms] [ERROR] Error message: Request failed with status code 500 @ http://localhost:3000/App.tsx:266
+[  235595ms] [ERROR] Error code: ERR_BAD_RESPONSE @ http://localhost:3000/App.tsx:267
+[  235596ms] [ERROR] Response data: {error: Internal server error} @ http://localhost:3000/App.tsx:268
+[  235597ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235598ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235665ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/products?limit=100:0
+[  235668ms] [ERROR] ❌ Products API call failed: AxiosError @ http://localhost:3000/App.tsx:137
+[  235669ms] [ERROR] ❌ Failed to fetch fresh data: AxiosError @ http://localhost:3000/App.tsx:264
+[  235669ms] [ERROR] Error type: AxiosError @ http://localhost:3000/App.tsx:265
+[  235670ms] [ERROR] Error message: Request failed with status code 500 @ http://localhost:3000/App.tsx:266
+[  235670ms] [ERROR] Error code: ERR_BAD_RESPONSE @ http://localhost:3000/App.tsx:267
+[  235670ms] [ERROR] Response data: {error: Internal server error} @ http://localhost:3000/App.tsx:268
+[  235673ms] [LOG] 📊 CLS: 0.10253070497262208 @ http://localhost:3000/:205
+[  235675ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[  235676ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344

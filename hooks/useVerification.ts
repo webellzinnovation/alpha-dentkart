@@ -23,14 +23,14 @@ interface VerificationHook {
   error: string | null;
   uploadDocument: (file: File, documentType: VerificationDocument['documentType']) => Promise<void>;
   deleteDocument: (documentId: string) => Promise<void>;
-  deleteVerification: (documentId: string) => Promise<void>;
+  deleteVerification: (documentId: string) => Promise<{ success: boolean; error?: string }>;
   refreshDocuments: () => Promise<void>;
-  getUserVerifications: () => Promise<VerificationDocument[]>;
-  submitVerification: (data: any) => Promise<void>;
+  getUserVerifications: () => Promise<{ success: boolean; documents?: VerificationDocument[]; error?: string }>;
+  submitVerification: (data: any) => Promise<{ success: boolean; error?: string }>;
   clearError: () => void;
 }
 
-export const useVerification = (userId: string): VerificationHook => {
+export const useVerification = (userId?: string): VerificationHook => {
   const [documents, setDocuments] = useState<VerificationDocument[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -120,13 +120,32 @@ export const useVerification = (userId: string): VerificationHook => {
     }
   }, [userId]);
 
+  // Get user verifications
+  const getUserVerifications = async (): Promise<{ success: boolean; documents?: VerificationDocument[]; error?: string }> => {
+    try {
+      if (!userId) return { success: false, error: 'User ID not provided' };
+      const response = await fetch(`/api/v1/verification/documents`, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch verification documents');
+      }
+      const data = await response.json();
+      return { success: true, documents: data.documents || [] };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch verifications';
+      return { success: false, error: errorMessage };
+    }
+  };
+
   // Submit verification with form data
-  const submitVerification = async (data: any) => {
+  const submitVerification = async (data: any): Promise<{ success: boolean; error?: string }> => {
     setIsUploading(true);
     setUploadError(null);
 
     try {
-      const response = await fetch('/api/verification/submit', {
+      if (!userId) throw new Error('User ID not provided');
+      const response = await fetch('/api/v1/verification/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,19 +162,35 @@ export const useVerification = (userId: string): VerificationHook => {
       }
 
       await refreshDocuments();
+      return { success: true };
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Submission failed';
       setUploadError(errorMessage);
-      throw error;
+      return { success: false, error: errorMessage };
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Get user verifications
-  const getUserVerifications = async () => {
-    return documents;
+  // Delete verification document
+  const deleteVerification = async (documentId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`/api/v1/verification/documents/${documentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Delete failed');
+      }
+
+      setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete verification';
+      return { success: false, error: errorMessage };
+    }
   };
 
   // Clear error
@@ -171,7 +206,7 @@ export const useVerification = (userId: string): VerificationHook => {
     error: uploadError,
     uploadDocument,
     deleteDocument,
-    deleteVerification: deleteDocument,
+    deleteVerification,
     refreshDocuments,
     getUserVerifications,
     submitVerification,

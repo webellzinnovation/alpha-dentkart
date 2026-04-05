@@ -1,0 +1,73 @@
+[     459ms] [WARNING] cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation @ https://cdn.tailwindcss.com/?plugins=forms,typography:65
+[     983ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-NXESFFTV.js?v=97706f7e:21608
+[    1001ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1001ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1042ms] [LOG] ✅ Service Worker registered: ServiceWorkerRegistration @ http://localhost:3000/:149
+[    1045ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[    1048ms] [LOG] 🚀 Starting app data load with stale-while-revalidate... @ http://localhost:3000/App.tsx:93
+[    1050ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1050ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1113ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[    1117ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1118ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1130ms] [LOG] 📡 Fetching products from API... @ http://localhost:3000/App.tsx:130
+[    1131ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1132ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1597ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:134
+[    1597ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:135
+[    1611ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1612ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1684ms] [LOG] 📦 Products API response received, type: object @ http://localhost:3000/App.tsx:134
+[    1684ms] [LOG] 📦 Products has products key: true @ http://localhost:3000/App.tsx:135
+[    1693ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1694ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 0} @ http://localhost:3000/App.tsx:1344
+[    1964ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[    2260ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx:155
+[    2260ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx:196
+[    2261ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:262
+[    2263ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    2266ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    3134ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/v1/auth/me:0
+[    3143ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    3145ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    3167ms] [LOG] ✅ Products response has 100 products @ http://localhost:3000/App.tsx:155
+[    3168ms] [LOG] ✅ Loaded and cached 100 products @ http://localhost:3000/App.tsx:196
+[    3169ms] [LOG] ✅ All data loaded and cached successfully @ http://localhost:3000/App.tsx:262
+[    3279ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    3282ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    3342ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[    3344ms] [LOG] App Render: {currentView: home, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[   60702ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[   60703ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[   61067ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[   61068ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[   61183ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[   61183ms] [LOG] App Render: {currentView: shop, selectedProductId: undefined, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[   61525ms] [LOG] 📊 CLS: 0.03635156735834644 @ http://localhost:3000/:205
+[ 1915234ms] [LOG] 📊 CLS: 0.39621030570485155 @ http://localhost:3000/:205
+[ 1917762ms] [LOG] Product Clicked: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/App.tsx:891
+[ 1917763ms] [LOG] App Render: {currentView: product-detail, selectedProductId: 37853, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[ 1917763ms] [LOG] App Render: {currentView: product-detail, selectedProductId: 37853, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[ 1917862ms] [LOG] App Render: {currentView: product-detail, selectedProductId: 37853, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[ 1917862ms] [LOG] App Render: {currentView: product-detail, selectedProductId: 37853, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[ 1917877ms] [LOG] App Render: {currentView: product-detail, selectedProductId: 37853, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[ 1917877ms] [LOG] App Render: {currentView: product-detail, selectedProductId: 37853, productsCount: 100} @ http://localhost:3000/App.tsx:1344
+[ 1918000ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx:17
+[ 1918001ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx:17
+[ 1918101ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx:17
+[ 1918102ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx:17
+[ 1918105ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx:17
+[ 1918106ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx:17
+[ 2187167ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365557599:21
+[ 2187170ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365557599:21
+[ 2187176ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365557599:21
+[ 2187177ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365557599:21
+[ 2187180ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365557599:21
+[ 2187181ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365557599:21
+[ 2197854ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365568764:21
+[ 2197856ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365568764:21
+[ 2197865ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365568764:21
+[ 2197866ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365568764:21
+[ 2197871ms] [LOG] 📊 CLS: 0.4572514418246938 @ http://localhost:3000/:205
+[ 2197872ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365568764:21
+[ 2197873ms] [LOG] Rendering ProductDetail for: Kovident Airolite LED Airotor Handpiece 37853 @ http://localhost:3000/components/ProductDetail.tsx?t=1775365568764:21

@@ -74,11 +74,11 @@ function sanitizePublicSettings(settings) {
 // Get store settings
 const getSettings = async (req, res) => {
     try {
-        if (!(0, firebase_1.isFirebaseInitialized)()) {
+        if (!firebase_1.isFirebaseInitialized) {
             res.set('Cache-Control', 'public, max-age=300, s-maxage=900');
             return res.json({ settings: sanitizePublicSettings(localData_1.mockSettings) });
         }
-        const doc = await (0, firebase_1.withTimeout)(firebase_1.db.doc(SETTINGS_DOC).get());
+        const doc = await (0, firebase_1.withTimeout)(firebase_1.db.doc(SETTINGS_DOC).get(), 10000);
         if (!doc.exists) {
             // Return default settings if none exist
             res.set('Cache-Control', 'public, max-age=300, s-maxage=900');
@@ -96,11 +96,11 @@ const getSettings = async (req, res) => {
 exports.getSettings = getSettings;
 const getAdminSettings = async (req, res) => {
     try {
-        if (!(0, firebase_1.isFirebaseInitialized)()) {
+        if (!firebase_1.isFirebaseInitialized) {
             res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
             return res.json({ settings: localData_1.mockSettings });
         }
-        const doc = await (0, firebase_1.withTimeout)(firebase_1.db.doc(SETTINGS_DOC).get());
+        const doc = await (0, firebase_1.withTimeout)(firebase_1.db.doc(SETTINGS_DOC).get(), 10000);
         if (!doc.exists) {
             res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
             return res.json({ settings: null });
@@ -119,8 +119,8 @@ exports.getAdminSettings = getAdminSettings;
 const updateSettings = async (req, res) => {
     try {
         const updates = req.body;
-        await (0, firebase_1.withTimeout)(firebase_1.db.doc(SETTINGS_DOC).set({ ...updates, updatedAt: new Date().toISOString() }, { merge: true }));
-        const updated = await (0, firebase_1.withTimeout)(firebase_1.db.doc(SETTINGS_DOC).get());
+        await (0, firebase_1.withTimeout)(firebase_1.db.doc(SETTINGS_DOC).set({ ...updates, updatedAt: new Date().toISOString() }, { merge: true }), 10000);
+        const updated = await (0, firebase_1.withTimeout)(firebase_1.db.doc(SETTINGS_DOC).get(), 10000);
         res.json({ settings: updated.data(), message: 'Settings saved successfully' });
     }
     catch (error) {

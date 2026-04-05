@@ -66,3 +66,12 @@ try {
 }
 
 export { admin, db, auth };
+
+export const isFirebaseInitialized = firebaseInitialized;
+
+export async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Firebase operation timed out')), ms)
+    );
+    return Promise.race([promise, timeout]);
+}

@@ -157,12 +157,15 @@ export const adaptDemoData = (data: RawData) => {
 
         // Transform WordPress shipping address to our format
         const shippingAddress = o.shipping ? {
+            id: o.id,
+            type: 'Clinic' as const,
             name: `${o.shipping.first_name || ''} ${o.shipping.last_name || ''}`.trim() || 'N/A',
             street: [o.shipping.address_1, o.shipping.address_2].filter(Boolean).join(', ') || 'N/A',
             city: o.shipping.city || 'N/A',
             state: o.shipping.state || 'N/A',
             zip: o.shipping.postcode || 'N/A',
-            phone: o.shipping.phone || o.billing?.phone || 'N/A'
+            phone: o.shipping.phone || o.billing?.phone || 'N/A',
+            isDefault: false
         } : undefined;
 
         // Mark orders from last 48 hours as new

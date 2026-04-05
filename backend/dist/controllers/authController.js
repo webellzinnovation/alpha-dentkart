@@ -7,6 +7,7 @@ exports.register = register;
 exports.login = login;
 exports.logout = logout;
 exports.me = me;
+exports.updateProfile = updateProfile;
 exports.verifyEmail = verifyEmail;
 exports.resendVerification = resendVerification;
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -146,12 +147,51 @@ async function me(req, res) {
             role: userData?.role,
             phone: userData?.phone,
             avatar: userData?.avatar,
+            addresses: userData?.addresses || [],
             isVerified: userData?.isVerified ?? false,
         };
         res.json({ user });
     }
     catch (error) {
         logger_1.default.error('Me endpoint error', { error, userId: req.user?.id });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+async function updateProfile(req, res) {
+    try {
+        const userId = req.user?.id;
+        const updates = req.body;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        // Only allow updating specific fields
+        const allowedUpdates = ['name', 'phone', 'avatar', 'addresses'];
+        const sanitizedUpdates = {};
+        allowedUpdates.forEach(field => {
+            if (updates[field] !== undefined) {
+                sanitizedUpdates[field] = updates[field];
+            }
+        });
+        sanitizedUpdates.updatedAt = new Date().toISOString();
+        await firebase_1.db.collection('users').doc(userId).update(sanitizedUpdates);
+        // Fetch and return the updated user
+        const docSnapshot = await firebase_1.db.collection('users').doc(userId).get();
+        const userData = docSnapshot.data();
+        const user = {
+            id: docSnapshot.id,
+            email: userData?.email,
+            name: userData?.name,
+            role: userData?.role,
+            phone: userData?.phone,
+            avatar: userData?.avatar,
+            addresses: userData?.addresses || [],
+            isVerified: userData?.isVerified ?? false,
+        };
+        logger_1.default.info('User profile updated', { userId });
+        res.json({ message: 'Profile updated successfully', user });
+    }
+    catch (error) {
+        logger_1.default.error('Update profile error', { error, userId: req.user?.id });
         res.status(500).json({ error: 'Internal server error' });
     }
 }

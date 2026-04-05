@@ -1,53 +1,76 @@
 import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
 
 interface OrderTrackingProps {
   orderId: string;
+  onClose?: () => void;
 }
 
-const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
-  const [trackingData, setTrackingData] = useState<any>(null);
+interface TrackingCheckpoint {
+  date: string;
+  time: string;
+  location: string;
+  status: string;
+}
+
+interface TrackingData {
+  orderId: string;
+  awbNumber: string;
+  courierName: string;
+  currentStatus: string;
+  estimatedDelivery: string;
+  checkpoints: TrackingCheckpoint[];
+}
+
+const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, onClose }) => {
+  const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTracking = async () => {
       try {
-        const response = await fetch(`/api/shipping/track/${orderId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setTrackingData(data.tracking);
+        const response = await api.post('/shiprocket/track', { orderId });
+        if (response.data && response.data.tracking) {
+          setTrackingData(response.data.tracking);
         } else {
-          setError('Failed to load tracking information');
+          setError('Tracking information not available yet. The order may not have been shipped.');
         }
-      } catch (err) {
-        setError('Error loading tracking information');
+      } catch (err: any) {
+        console.error('Tracking fetch error:', err);
+        setError(err.response?.data?.error || 'Failed to load tracking information');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTracking();
+    if (orderId) {
+      fetchTracking();
+    }
   }, [orderId]);
 
   if (loading) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 border-t-transparent"></div>
+      <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="min-h-[200px] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary border-t-transparent"></div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <div className="text-center">
-          <div className="text-red-500 text-lg mb-2">⚠️ Error</div>
-          <p className="text-gray-700">{error}</p>
+      <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="text-center py-8">
+          <i className="fas fa-truck text-4xl text-gray-300 mb-4"></i>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Tracking Unavailable</h3>
+          <p className="text-gray-500 text-sm">{error}</p>
+          {onClose && (
+            <button onClick={onClose} className="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm">
+              Go Back
+            </button>
+          )}
         </div>
       </div>
     );
@@ -55,135 +78,120 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId }) => {
 
   if (!trackingData) {
     return (
-      <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <div className="text-center">
-          <div className="text-gray-500 text-lg mb-2">📦 No Tracking Information</div>
-          <p className="text-gray-700">Tracking information is not available for this order.</p>
+      <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="text-center py-8">
+          <i className="fas fa-box-open text-4xl text-gray-300 mb-4"></i>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">No Tracking Info</h3>
+          <p className="text-gray-500 text-sm">Tracking information will appear once your order is shipped.</p>
         </div>
       </div>
     );
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const statusSteps = [
+    { label: 'Order Placed', key: 'order_placed' },
+    { label: 'Picked Up', key: 'picked_up' },
+    { label: 'In Transit', key: 'in_transit' },
+    { label: 'Out for Delivery', key: 'out_for_delivery' },
+    { label: 'Delivered', key: 'delivered' }
+  ];
+
+  const getCurrentStepIndex = (status: string) => {
+    const s = status.toLowerCase().replace(/\s+/g, '_');
+    const idx = statusSteps.findIndex(step => step.key === s);
+    return idx >= 0 ? idx : 1;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'delivered':
-        return 'text-green-600';
-      case 'out-for-delivery':
-        return 'text-blue-600';
-      case 'in-transit':
-        return 'text-yellow-600';
-      case 'pending':
-        return 'text-gray-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'delivered':
-        return '✅';
-      case 'out-for-delivery':
-        return '📦';
-      case 'in-transit':
-        return '🚚';
-      default:
-        return '📋';
-    }
-  };
+  const currentStep = getCurrentStepIndex(trackingData.currentStatus);
 
   return (
-    <div className="bg-white rounded-lg p-6 border border-gray-200">
-      {/* Tracking Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Tracking</h2>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <span>Order ID: {orderId}</span>
-          <span className="mx-2">•</span>
-          <span>Carrier: {trackingData.carrier}</span>
+    <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+            <i className="fas fa-truck text-primary"></i> Order Tracking
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">Order #{orderId.slice(0, 8).toUpperCase()}</p>
         </div>
-      </div>
-
-      {/* Current Status */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">Current Status</h3>
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(trackingData.status)}`}>
-            {getStatusIcon(trackingData.status)} {trackingData.status}
-          </div>
-        </div>
-        
-        {trackingData.estimatedDelivery && (
-          <div className="text-sm text-gray-600">
-            Estimated Delivery: {formatDate(trackingData.estimatedDelivery)}
-          </div>
+        {onClose && (
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <i className="fas fa-times"></i>
+          </button>
         )}
       </div>
 
-      {/* Tracking Timeline */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Tracking History</h3>
-        
-        {trackingData.checkpoints && trackingData.checkpoints.length > 0 ? (
-          <div className="space-y-4">
-            {trackingData.checkpoints.map((checkpoint: any, index: number) => (
-              <div key={index} className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
-                  <div className="text-pink-600 font-bold">{index + 1}</div>
+      {/* Shipment Info */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <div>
+          <p className="text-xs text-gray-500">AWB Number</p>
+          <p className="text-sm font-bold text-gray-800 dark:text-white">{trackingData.awbNumber || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">Courier</p>
+          <p className="text-sm font-bold text-gray-800 dark:text-white">{trackingData.courierName || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">Status</p>
+          <p className="text-sm font-bold text-primary">{trackingData.currentStatus}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">Est. Delivery</p>
+          <p className="text-sm font-bold text-gray-800 dark:text-white">
+            {trackingData.estimatedDelivery ? new Date(trackingData.estimatedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A'}
+          </p>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between relative">
+          <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-700"></div>
+          <div
+            className="absolute top-4 left-0 h-0.5 bg-primary transition-all duration-500"
+            style={{ width: `${(currentStep / (statusSteps.length - 1)) * 100}%` }}
+          ></div>
+          {statusSteps.map((step, idx) => (
+            <div key={step.key} className="flex flex-col items-center relative z-10">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                idx <= currentStep
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
+              }`}>
+                {idx <= currentStep ? <i className="fas fa-check text-[10px]"></i> : idx + 1}
+              </div>
+              <span className={`text-[10px] mt-2 text-center ${
+                idx <= currentStep ? 'text-primary font-medium' : 'text-gray-400'
+              }`}>{step.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tracking History */}
+      {trackingData.checkpoints && trackingData.checkpoints.length > 0 && (
+        <div>
+          <h3 className="text-sm font-bold text-gray-800 dark:text-white mb-4 uppercase tracking-wider">Tracking History</h3>
+          <div className="space-y-0">
+            {trackingData.checkpoints.map((checkpoint, index) => (
+              <div key={index} className="flex gap-4 relative">
+                <div className="flex flex-col items-center">
+                  <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                  {index < trackingData.checkpoints.length - 1 && (
+                    <div className="w-0.5 h-full bg-gray-200 dark:bg-gray-700 my-1"></div>
+                  )}
                 </div>
-                
-                <div className="flex-1">
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">
-                        {formatDate(checkpoint.timestamp)}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(checkpoint.status)}`}>
-                        {checkpoint.status}
-                      </span>
-                    </div>
-                    
-                    <div className="text-gray-700">
-                      <p className="font-medium">{checkpoint.location}</p>
-                      <p className="text-sm">{checkpoint.description}</p>
-                    </div>
+                <div className={`pb-6 flex-1 ${index === 0 ? '' : 'opacity-70'}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-gray-800 dark:text-white">{checkpoint.status}</span>
+                    <span className="text-xs text-gray-400">{checkpoint.date}{checkpoint.time ? ` at ${checkpoint.time}` : ''}</span>
                   </div>
+                  {checkpoint.location && (
+                    <p className="text-xs text-gray-500">{checkpoint.location}</p>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No tracking updates available yet</p>
-          </div>
-        )}
-      </div>
-
-      {/* External Tracking Link */}
-      {trackingData.trackingUrl && (
-        <div className="mt-6 text-center">
-          <a
-            href={trackingData.trackingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-600 transition-colors duration-200 inline-flex items-center"
-          >
-            Track on Carrier Website
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002 2v2a2 2 0 002-2zm3 0a1 1 0 000 2h6a1 1 0 000 2v6a1 1 0 000-2H4a2 2 0 002 2v4a1 1 0 002-2z"/>
-            </svg>
-          </a>
         </div>
       )}
     </div>

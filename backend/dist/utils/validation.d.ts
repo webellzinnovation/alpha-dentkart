@@ -45,6 +45,7 @@ export declare const createOrderSchema: z.ZodObject<{
     total: z.ZodNumber;
     shippingAddress: z.ZodOptional<z.ZodObject<{
         name: z.ZodString;
+        email: z.ZodOptional<z.ZodString>;
         street: z.ZodString;
         city: z.ZodString;
         state: z.ZodString;
@@ -57,6 +58,7 @@ export declare const createOrderSchema: z.ZodObject<{
         city: string;
         state: string;
         zip: string;
+        email?: string | undefined;
     }, {
         name: string;
         phone: string;
@@ -64,6 +66,7 @@ export declare const createOrderSchema: z.ZodObject<{
         city: string;
         state: string;
         zip: string;
+        email?: string | undefined;
     }>>;
     paymentMethod: z.ZodOptional<z.ZodString>;
     paymentId: z.ZodOptional<z.ZodString>;
@@ -87,6 +90,7 @@ export declare const createOrderSchema: z.ZodObject<{
         city: string;
         state: string;
         zip: string;
+        email?: string | undefined;
     } | undefined;
     paymentMethod?: string | undefined;
     paymentId?: string | undefined;
@@ -110,6 +114,7 @@ export declare const createOrderSchema: z.ZodObject<{
         city: string;
         state: string;
         zip: string;
+        email?: string | undefined;
     } | undefined;
     paymentMethod?: string | undefined;
     paymentId?: string | undefined;

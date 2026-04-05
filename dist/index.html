@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- Alpha-Dentkart Build v4.1 -->
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
     <title>Alpha Dentkart - Dental Supplies</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+        // Suppress Tailwind CDN warning in development
+        window.__tailwind_suppress_compile_warning = true;
+        if (typeof console !== 'undefined') {
+            const _warn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+                _warn.apply(console, args);
+            };
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
         rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
@@ -126,15 +138,15 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/assets/index-BQCqeSAF.js"></script>
+  <script type="module" crossorigin src="/assets/index-CCkYRoi_.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/vendor-PidWjDGE.js">
-  <link rel="modulepreload" crossorigin href="/assets/products-B4oOGGSc.js">
-  <link rel="modulepreload" crossorigin href="/assets/themes-DdSmXeol.js">
   <link rel="modulepreload" crossorigin href="/assets/ai-ZayOz6mS.js">
-  <link rel="modulepreload" crossorigin href="/assets/admin-Bi_Pa1Qa.js">
-  <link rel="modulepreload" crossorigin href="/assets/checkout-x17KXKCX.js">
+  <link rel="modulepreload" crossorigin href="/assets/admin-cTv9QvZb.js">
+  <link rel="modulepreload" crossorigin href="/assets/products-C82Ob0D3.js">
+  <link rel="modulepreload" crossorigin href="/assets/themes-Bxhahf61.js">
+  <link rel="modulepreload" crossorigin href="/assets/checkout--7qzWFiX.js">
   <link rel="stylesheet" crossorigin href="/assets/products-CpOn96BZ.css">
-  <link rel="stylesheet" crossorigin href="/assets/index-CqtwokDF.css">
+  <link rel="stylesheet" crossorigin href="/assets/index-se4uerba.css">
 </head>
 
 <body
