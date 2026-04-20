@@ -1,14 +1,48 @@
-import { Router } from 'express';
-import { register, login, logout, me, verifyEmail, resendVerification, getAllUsers, resetPassword } from '../controllers/authController';
+import { Router, Request, Response } from 'express';
+import { register, login, logout, me, verifyEmail, resendVerification, getAllUsers, resetPassword, forgotPassword } from '../controllers/authController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { authLimiter } from '../middleware/rateLimiter';
+import { sanitizeInput } from '../middleware/sanitize';
+import { db } from '../config/firebase';
+import bcrypt from 'bcrypt';
+import { generateToken } from '../utils/jwt';
 
 const router = Router();
 
-// Public routes with rate limiting
-router.post('/register', authLimiter, register);
-router.post('/login', authLimiter, login);
-router.post('/reset-password', resetPassword);
+// Admin login function
+async function adminLogin(req: Request, res: Response) {
+    try {
+        const { email, password } = req.body;
+        const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+        if (snapshot.empty) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        const userDoc = snapshot.docs[0];
+        const userData = userDoc.data();
+        if (userData.role !== 'admin') {
+            return res.status(403).json({ error: 'Access denied. Administrator privileges required.' });
+        }
+        const isValid = await bcrypt.compare(password, userData.password);
+        if (!isValid) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        const token = generateToken({ id: userDoc.id, email: userData.email, role: 'admin' });
+        res.cookie('__session', token, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 3600000 * 24 });
+        res.json({ success: true, token, user: { id: userDoc.id, email: userData.email, role: 'admin', name: userData.name } });
+    } catch (error) {
+        console.error('Admin Login Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+// Admin login endpoint (rate limited + sanitized)
+router.post('/admin/login', authLimiter, sanitizeInput, adminLogin as any);
+
+// Public routes with rate limiting (sanitized)
+router.post('/register', authLimiter, sanitizeInput, register);
+router.post('/login', authLimiter, sanitizeInput, login);
+router.post('/forgot-password', authLimiter, sanitizeInput, forgotPassword);
+router.post('/reset-password', sanitizeInput, resetPassword);
 
 // Email verification (public — token-based)
 router.get('/verify-email', verifyEmail);
@@ -18,7 +52,7 @@ router.post('/logout', authenticateToken, logout);
 router.get('/me', authenticateToken, me);
 router.post('/resend-verification', authenticateToken, resendVerification);
 
-// Admin routes
-router.get('/users', getAllUsers); // Temporarily open for dev - add auth back in production
+// Admin routes (protected)
+router.get('/users', authenticateToken, requireAdmin, getAllUsers);
 
 export default router;

@@ -33,6 +33,7 @@ import whatsappRoutes from './routes/whatsapp';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
 import { sanitizeInput } from './middleware/sanitize';
+import { csrfProtection, sendCsrfToken } from './middleware/csrf';
 import { requestLogger } from './middleware/requestLogger';
 import { auditLogger } from './middleware/auditLogger';
 import logger from './utils/logger';
@@ -136,6 +137,9 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
+// CSRF protection - generate token on GET, validate on mutating requests
+app.use(csrfProtection);
+app.use(sendCsrfToken);
 app.use(sanitizeInput);
 app.use(requestLogger);
 
