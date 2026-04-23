@@ -1,0 +1,64 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --include=optional
+
+      - name: Build Web App
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://alphadentkart-001.web.app/api/v1' }}
+
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+
+      - name: Build iOS (Debug)
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination generic/platform=iOS Simulator build
+
+      - name: Build iOS (Release)
+        if: github.event_name != 'pull_request' && secrets.IOS_CERTIFICATE != ''
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          APPLE_PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+        run: |
+          KEYCHAIN_PASSWORD=${{ secrets.KEYCHAIN_PASSWORD }}
+          echo $APPLE_CERTIFICATE | base64 --decode -o certificate.p12
+          security create-keychain -p $KEYCHAIN_PASSWORD ios-build.keychain
+          security default-keychain -s ios-build.keychain
+          security unlock-keychain -p $KEYCHAIN_PASSWORD ios-build.keychain
+          security import certificate.p12 -P $APPLE_CERTIFICATE_PASSWORD -A -t cert -k ios-build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo $APPLE_PROVISIONING_PROFILE | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination generic/platform=iOS build CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO
+
+      - name: Upload IPA Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ github.run_id }}
+          path: |
+            ios/App/build/App.ipa
+            ios/App/build/App.xcarchive
+        continue-on-error: true
