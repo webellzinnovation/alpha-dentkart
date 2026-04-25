@@ -2943,7 +2943,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         )}
 
                                         {/* Email Settings */}
-                                        {activeSettingsTab === 'email' && (
+                                        {activeSettingsTab === 'email' && settings.email && (
                                             <div className="bg-white dark:bg-surface-dark p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-4xl space-y-6 animate-fade-in">
                                                 <div className="border-b border-gray-100 dark:border-gray-700 pb-4 mb-4">
                                                     <h3 className="text-lg font-bold text-gray-800 dark:text-white">SMTP Settings</h3>
@@ -2952,23 +2952,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SMTP Host</label>
-                                                        <input type="text" value={settings.email.host} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, host: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
+                                                        <input type="text" value={settings.email?.host || ''} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, host: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Port</label>
-                                                        <input type="number" value={settings.email.port} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, port: parseInt(e.target.value) } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
+                                                        <input type="number" value={settings.email?.port || 587} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, port: parseInt(e.target.value) || 587 } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username / Email</label>
-                                                        <input type="text" value={settings.email.user} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, user: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
+                                                        <input type="text" value={settings.email?.user || ''} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, user: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-                                                        <input type="password" value={settings.email.pass} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, pass: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
+                                                        <input type="password" value={settings.email?.pass || ''} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, pass: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary" />
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Encryption</label>
-                                                        <select value={settings.email.encryption} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, encryption: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary">
+                                                        <select value={settings.email?.encryption || 'TLS'} onChange={(e) => setSettings({ ...settings, email: { ...settings.email, encryption: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary">
                                                             <option value="TLS">TLS</option>
                                                             <option value="SSL">SSL</option>
                                                             <option value="None">None</option>
@@ -2997,6 +2997,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         )}
                                                     </button>
                                                 </div>
+                                            </div>
+                                        )}
+                                        {activeSettingsTab === 'email' && !settings.email && (
+                                            <div className="bg-white dark:bg-surface-dark p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-4xl">
+                                                <p className="text-red-500">Email settings not loaded. Please refresh the page.</p>
                                             </div>
                                         )}
 
