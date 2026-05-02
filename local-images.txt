@@ -1,0 +1,4 @@
+[GET] http://localhost:3001/Alpha-dentkart-logo-600p.png => [200] OK
+[GET] http://localhost:3001/Alpha-dentkart-logo-icon.png => [200] OK
+[GET] http://localhost:3001/api/v1/products?limit=3000 => [500] Internal Server Error
+[GET] http://localhost:3001/api/v1/products?limit=3000 => [500] Internal Server Error

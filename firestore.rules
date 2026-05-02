@@ -1,0 +1,162 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User records
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Products (public read, admin write)
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Categories (public read, admin write)
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Brands (public read, admin write)
+    match /brands/{brandId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Addresses
+    match /addresses/{addressId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+    }
+
+    // Stock Alerts
+    match /stock_alerts/{alertId} {
+      allow read: if isAdmin();
+      allow write: if isAuthenticated();
+    }
+
+    // Coupons
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Used Coupons
+    match /used_coupons/{usedCouponId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Return Requests
+    match /return_requests/{returnId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Refund Transactions
+    match /refund_transactions/{refundId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Hero Slides (public read, admin write)
+    match /hero_slides/{slideId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Promotional Tiles (public read, admin write)
+    match /promotional_tiles/{tileId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Verification Documents
+    match /verification_documents/{docId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Verification Audit Logs
+    match /verification_audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // WhatsApp Notifications
+    match /whatsapp_notifications/{notificationId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Saved Payment Methods
+    match /saved_payment_methods/{methodId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+    }
+
+    // Quick Reorders
+    match /quick_reorders/{reorderId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAuthenticated() && (isOwner(request.resource.data.userId) || isAdmin());
+    }
+
+    // Guest Sessions
+    match /guest_sessions/{sessionId} {
+      allow read: if isAdmin();
+      allow write: if true; // Allow guest checkout
+    }
+
+    // Indian Pincodes (public read, admin write)
+    match /indian_pincodes/{pincodeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Shipping Tracking
+    match /shipping_tracking/{trackingId} {
+      allow read: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      allow write: if isAdmin();
+    }
+  }
+}

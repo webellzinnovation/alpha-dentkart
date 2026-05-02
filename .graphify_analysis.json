@@ -1,0 +1,2582 @@
+{
+  "communities": {
+    "0": [
+      "admin_ctv9qvzb_se_foreach",
+      "adminlogin_handlesubmit",
+      "adminstatscontroller_getadminstats",
+      "ai_zayoz6ms_jt_data",
+      "ai_zayoz6ms_si_update",
+      "ai_zayoz6ms_t_json",
+      "app_loadappdata",
+      "app_refreshdata",
+      "auth_adminlogin",
+      "authcontroller_adminlogin",
+      "authcontroller_forgotpassword",
+      "authcontroller_generateandstoreverificationtoken",
+      "authcontroller_getallusers",
+      "authcontroller_login",
+      "authcontroller_logout",
+      "authcontroller_me",
+      "authcontroller_register",
+      "authcontroller_resendverification",
+      "authcontroller_resetpassword",
+      "authcontroller_updateprofile",
+      "authcontroller_verifyemail",
+      "backend_scripts_debugmatching_js",
+      "backend_src_config_firebase_ts",
+      "backend_src_controllers_adminstatscontroller_ts",
+      "backend_src_controllers_authcontroller_ts",
+      "backend_src_controllers_chatsessioncontroller_ts",
+      "backend_src_controllers_couponcontroller_ts",
+      "backend_src_controllers_guestcheckoutcontroller_ts",
+      "backend_src_controllers_heroslidecontroller_ts",
+      "backend_src_controllers_notificationscontroller_ts",
+      "backend_src_controllers_ordercancellationcontroller_ts",
+      "backend_src_controllers_ordercontroller_ts",
+      "backend_src_controllers_productcontroller_ts",
+      "backend_src_controllers_promotionaltilecontroller_ts",
+      "backend_src_controllers_pushnotificationcontroller_ts",
+      "backend_src_controllers_returncontroller_ts",
+      "backend_src_controllers_reviewcontroller_ts",
+      "backend_src_controllers_settingscontroller_ts",
+      "backend_src_controllers_shippingcontroller_ts",
+      "backend_src_controllers_usercontroller_ts",
+      "backend_src_routes_webhooks_ts",
+      "backend_src_scripts_backfillcustomeremails_ts",
+      "backend_src_scripts_checkusertypes_ts",
+      "backend_src_scripts_createadmin_ts",
+      "backend_src_scripts_debugcustomers_ts",
+      "backend_src_scripts_debugorders_ts",
+      "backend_src_scripts_denormalizeproducts_ts",
+      "backend_src_scripts_fixuserorders_ts",
+      "backend_src_scripts_fixuserverification_ts",
+      "backend_src_scripts_fixverificationstatus_ts",
+      "backend_src_scripts_fixverificationstrict_ts",
+      "backend_src_scripts_migration_verify_db_ts",
+      "backend_src_scripts_resetusertypes_ts",
+      "backend_src_scripts_setallproductsstock_ts",
+      "backend_src_scripts_setallvariationsstock_ts",
+      "backend_src_scripts_setupadmin_ts",
+      "backend_src_scripts_testlogin_ts",
+      "backend_src_scripts_updateusertypes_ts",
+      "backend_src_services_quickreorderservice_ts",
+      "backend_src_services_refundservice_ts",
+      "backend_src_services_savedpaymentservice_ts",
+      "backend_src_services_verificationservice_ts",
+      "backfillcustomeremails_backfillcustomeremails",
+      "cache_cachemanager_get",
+      "cache_cachemanager_set",
+      "cacheservice_cacheservice_invalidateproductscache",
+      "chatsessioncontroller_addmessage",
+      "chatsessioncontroller_createsession",
+      "chatsessioncontroller_getallsessions",
+      "chatsessioncontroller_getsession",
+      "chatsessioncontroller_updatesessionstatus",
+      "check_admin_checkadmin",
+      "checkusertypes_checkusertypes",
+      "components_adminlogin_tsx",
+      "count_products_countproducts",
+      "couponcontroller_applycoupon",
+      "couponcontroller_createcoupon",
+      "couponcontroller_deletecoupon",
+      "couponcontroller_getallcoupons",
+      "couponcontroller_getcouponanalytics",
+      "couponcontroller_getcouponbycode",
+      "couponcontroller_updatecoupon",
+      "couponcontroller_validatecoupon",
+      "couponcontroller_validatecouponlogic",
+      "createadmin_createadmin",
+      "debugcustomers_checkcustomers",
+      "debugmatching_checkmatching",
+      "debugorders_checkmatching",
+      "denormalizeproducts_denormalizeproducts",
+      "emailservice_sendverificationemail",
+      "firebase_isfirebaseinitialized",
+      "firebase_withtimeout",
+      "fixuserorders_fixuserorders",
+      "fixuserverification_fixuserverification",
+      "fixverificationstatus_fixverificationstatus",
+      "fixverificationstrict_fixverificationstrict",
+      "functions_check_admin_ts",
+      "functions_lib_config_firebase_js",
+      "functions_lib_controllers_adminstatscontroller_js",
+      "functions_lib_controllers_authcontroller_js",
+      "functions_lib_controllers_chatsessioncontroller_js",
+      "functions_lib_controllers_couponcontroller_js",
+      "functions_lib_controllers_guestcheckoutcontroller_js",
+      "functions_lib_controllers_heroslidecontroller_js",
+      "functions_lib_controllers_notificationscontroller_js",
+      "functions_lib_controllers_ordercancellationcontroller_js",
+      "functions_lib_controllers_ordercontroller_js",
+      "functions_lib_controllers_productcontroller_js",
+      "functions_lib_controllers_promotionaltilecontroller_js",
+      "functions_lib_controllers_returncontroller_js",
+      "functions_lib_controllers_reviewcontroller_js",
+      "functions_lib_controllers_settingscontroller_js",
+      "functions_lib_controllers_shippingcontroller_js",
+      "functions_lib_controllers_usercontroller_js",
+      "functions_lib_routes_auth_js",
+      "functions_lib_scripts_createadmin_js",
+      "functions_lib_scripts_denormalizeproducts_js",
+      "functions_lib_scripts_migration_test_wc_connection_js",
+      "functions_lib_scripts_migration_verify_db_js",
+      "functions_lib_scripts_setupadmin_js",
+      "functions_lib_scripts_testlogin_js",
+      "functions_lib_services_quickreorderservice_js",
+      "functions_lib_services_savedpaymentservice_js",
+      "functions_lib_services_verificationservice_js",
+      "functions_src_config_firebase_ts",
+      "functions_src_controllers_adminstatscontroller_ts",
+      "functions_src_controllers_authcontroller_ts",
+      "functions_src_controllers_chatsessioncontroller_ts",
+      "functions_src_controllers_couponcontroller_ts",
+      "functions_src_controllers_guestcheckoutcontroller_ts",
+      "functions_src_controllers_heroslidecontroller_ts",
+      "functions_src_controllers_notificationscontroller_ts",
+      "functions_src_controllers_ordercancellationcontroller_ts",
+      "functions_src_controllers_ordercontroller_ts",
+      "functions_src_controllers_productcontroller_ts",
+      "functions_src_controllers_promotionaltilecontroller_ts",
+      "functions_src_controllers_returncontroller_ts",
+      "functions_src_controllers_reviewcontroller_ts",
+      "functions_src_controllers_settingscontroller_ts",
+      "functions_src_controllers_shippingcontroller_ts",
+      "functions_src_controllers_usercontroller_ts",
+      "functions_src_routes_auth_ts",
+      "functions_src_scripts_createadmin_ts",
+      "functions_src_scripts_denormalizeproducts_ts",
+      "functions_src_scripts_migration_test_wc_connection_ts",
+      "functions_src_scripts_migration_verify_db_ts",
+      "functions_src_scripts_setupadmin_ts",
+      "functions_src_scripts_testlogin_ts",
+      "functions_src_services_quickreorderservice_ts",
+      "functions_src_services_savedpaymentservice_ts",
+      "functions_src_services_verificationservice_ts",
+      "guestcheckoutcontroller_convertguestorder",
+      "guestcheckoutcontroller_createguestorder",
+      "guestcheckoutcontroller_createguestsession",
+      "guestcheckoutcontroller_getguestorder",
+      "guestcheckoutcontroller_getguestorders",
+      "guestcheckoutcontroller_getguestorderstatus",
+      "guestcheckoutcontroller_updateguestorder",
+      "guestcheckoutcontroller_validateguestsession",
+      "heroslidecontroller_createheroslide",
+      "heroslidecontroller_deleteheroslide",
+      "heroslidecontroller_getallheroslides",
+      "heroslidecontroller_reorderheroslides",
+      "heroslidecontroller_updateheroslide",
+      "notificationscontroller_sendcustomnotification",
+      "notificationscontroller_sendorderstatusnotification",
+      "notificationscontroller_sendtrackingnotification",
+      "notificationservice_sendtouser",
+      "ordercancellationcontroller_bulkcancelorders",
+      "ordercancellationcontroller_cancelorder",
+      "ordercancellationcontroller_getcancellationreasons",
+      "ordercancellationcontroller_getordercancellationhistory",
+      "ordercancellationcontroller_getorderforcancellation",
+      "ordercontroller_createorder",
+      "ordercontroller_createrazorpayorder",
+      "ordercontroller_deleteorder",
+      "ordercontroller_getallorders",
+      "ordercontroller_getmyorders",
+      "ordercontroller_handlecreaterazorpayorder",
+      "ordercontroller_updateorderstatus",
+      "productcontroller_createproduct",
+      "productcontroller_deleteproduct",
+      "productcontroller_getallproducts",
+      "productcontroller_getcachedbrands",
+      "productcontroller_getcachedcategories",
+      "productcontroller_getproductbyid",
+      "productcontroller_updateproduct",
+      "promotionaltilecontroller_createpromotionaltile",
+      "promotionaltilecontroller_deletepromotionaltile",
+      "promotionaltilecontroller_getallpromotionaltiles",
+      "promotionaltilecontroller_reorderpromotionaltiles",
+      "promotionaltilecontroller_updatepromotionaltile",
+      "pushnotificationcontroller_getuserpushtokens",
+      "pushnotificationcontroller_registerpushtoken",
+      "quickreorderservice_quickreorderservice",
+      "quickreorderservice_quickreorderservice_cancelreorder",
+      "quickreorderservice_quickreorderservice_constructor",
+      "quickreorderservice_quickreorderservice_createquickreorder",
+      "quickreorderservice_quickreorderservice_getrecommendedreorders",
+      "quickreorderservice_quickreorderservice_getreorderbyid",
+      "quickreorderservice_quickreorderservice_getreorderstats",
+      "quickreorderservice_quickreorderservice_getuserreorders",
+      "refundservice_getrefundstatus",
+      "refundservice_initiaterefund",
+      "resetusertypes_resetusertypes",
+      "returncontroller_approvereturnrequest",
+      "returncontroller_createreturnrequest",
+      "returncontroller_getallreturnrequests",
+      "returncontroller_getreturnpolicy",
+      "returncontroller_getreturnrequest",
+      "returncontroller_getuserreturnrequests",
+      "returncontroller_processrefund",
+      "reviewcontroller_createreview",
+      "reviewcontroller_deletereview",
+      "reviewcontroller_getallreviews",
+      "reviewcontroller_getproductreviews",
+      "reviewcontroller_getuserreviews",
+      "reviewcontroller_markreviewhelpful",
+      "reviewcontroller_moderatereview",
+      "reviewcontroller_updateproductratings",
+      "reviewcontroller_updatereview",
+      "savedpaymentservice_savedpaymentservice",
+      "savedpaymentservice_savedpaymentservice_constructor",
+      "savedpaymentservice_savedpaymentservice_deletepaymentmethod",
+      "savedpaymentservice_savedpaymentservice_getdefaultpaymentmethod",
+      "savedpaymentservice_savedpaymentservice_getpaymentmethodbyid",
+      "savedpaymentservice_savedpaymentservice_getpaymentmethodsbygateway",
+      "savedpaymentservice_savedpaymentservice_getpaymentmethodstats",
+      "savedpaymentservice_savedpaymentservice_getuserpaymentmethods",
+      "savedpaymentservice_savedpaymentservice_savepaymentmethod",
+      "savedpaymentservice_savedpaymentservice_setdefaultpaymentmethod",
+      "savedpaymentservice_savedpaymentservice_updatepaymentmethod",
+      "savedpaymentservice_savedpaymentservice_validatepaymenttoken",
+      "scratch_count_products_ts",
+      "setallproductsstock_updateallproductsstock",
+      "setallvariationsstock_updateallvariationsstock",
+      "settingscontroller_getadminsettings",
+      "settingscontroller_getsettings",
+      "settingscontroller_sanitizepublicsettings",
+      "settingscontroller_updatesettings",
+      "setupadmin_main",
+      "shippingcontroller_checkpincodeserviceability",
+      "shippingcontroller_createshipment",
+      "shippingcontroller_getallshipments",
+      "shippingcontroller_getshippingrates",
+      "shippingcontroller_getuserordertracking",
+      "shippingcontroller_trackshipment",
+      "test_firestore_order_checkorder",
+      "test_firestore_order_mjs",
+      "test_wc_connection_testconnection",
+      "testlogin_testlogin",
+      "updateusertypes_updateusertypes",
+      "usercontroller_deleteuser",
+      "usercontroller_getallusers",
+      "usercontroller_updateuser",
+      "usercontroller_updateuserbyemail",
+      "verificationcontroller_getuserverifications",
+      "verificationservice_verificationservice",
+      "verificationservice_verificationservice_constructor",
+      "verificationservice_verificationservice_createauditlog",
+      "verificationservice_verificationservice_deleteverification",
+      "verificationservice_verificationservice_getallverificationauditlogs",
+      "verificationservice_verificationservice_getallverifications",
+      "verificationservice_verificationservice_getverificationauditlogs",
+      "verificationservice_verificationservice_getverificationbyid",
+      "verificationservice_verificationservice_getverificationdocuments",
+      "verificationservice_verificationservice_getverificationstats",
+      "verificationservice_verificationservice_submitverification",
+      "verificationservice_verificationservice_updateverificationstatus",
+      "verificationservice_verificationservice_uploadtostorage",
+      "verificationservice_verificationservice_validatefilesize",
+      "verificationservice_verificationservice_validatefiletype",
+      "verify_db_verifycounts",
+      "webhooks_verifyrazorpaywebhooksignature"
+    ],
+    "1": [
+      "ai_zayoz6ms_a",
+      "ai_zayoz6ms_ai",
+      "ai_zayoz6ms_an",
+      "ai_zayoz6ms_ao",
+      "ai_zayoz6ms_as",
+      "ai_zayoz6ms_at",
+      "ai_zayoz6ms_bi",
+      "ai_zayoz6ms_bi_constructor",
+      "ai_zayoz6ms_bi_fetchpredictvideosoperationinternal",
+      "ai_zayoz6ms_bi_get",
+      "ai_zayoz6ms_bi_getvideosoperation",
+      "ai_zayoz6ms_bi_getvideosoperationinternal",
+      "ai_zayoz6ms_bn",
+      "ai_zayoz6ms_bo",
+      "ai_zayoz6ms_br",
+      "ai_zayoz6ms_bs_request",
+      "ai_zayoz6ms_bt",
+      "ai_zayoz6ms_c",
+      "ai_zayoz6ms_ci_getlocation",
+      "ai_zayoz6ms_ci_getproject",
+      "ai_zayoz6ms_ci_isvertexai",
+      "ai_zayoz6ms_ci_processstreamresponse",
+      "ai_zayoz6ms_cn",
+      "ai_zayoz6ms_co",
+      "ai_zayoz6ms_cr",
+      "ai_zayoz6ms_cr_constructor",
+      "ai_zayoz6ms_cs",
+      "ai_zayoz6ms_cs_constructor",
+      "ai_zayoz6ms_cs_decode",
+      "ai_zayoz6ms_cs_flush",
+      "ai_zayoz6ms_d",
+      "ai_zayoz6ms_di",
+      "ai_zayoz6ms_dn",
+      "ai_zayoz6ms_do",
+      "ai_zayoz6ms_dr",
+      "ai_zayoz6ms_ds",
+      "ai_zayoz6ms_dt",
+      "ai_zayoz6ms_dt_fromapiresponse",
+      "ai_zayoz6ms_ei",
+      "ai_zayoz6ms_ei_close",
+      "ai_zayoz6ms_ei_constructor",
+      "ai_zayoz6ms_ei_pause",
+      "ai_zayoz6ms_ei_play",
+      "ai_zayoz6ms_ei_resetcontext",
+      "ai_zayoz6ms_ei_sendplaybackcontrol",
+      "ai_zayoz6ms_ei_setmusicgenerationconfig",
+      "ai_zayoz6ms_ei_setweightedprompts",
+      "ai_zayoz6ms_ei_stop",
+      "ai_zayoz6ms_el_generatecontent",
+      "ai_zayoz6ms_el_generatecontentstream",
+      "ai_zayoz6ms_en",
+      "ai_zayoz6ms_eo",
+      "ai_zayoz6ms_fi",
+      "ai_zayoz6ms_fi_constructor",
+      "ai_zayoz6ms_fn",
+      "ai_zayoz6ms_fo",
+      "ai_zayoz6ms_fr",
+      "ai_zayoz6ms_ft",
+      "ai_zayoz6ms_gn",
+      "ai_zayoz6ms_gn_cancel",
+      "ai_zayoz6ms_gn_constructor",
+      "ai_zayoz6ms_gn_createembeddingsinternal",
+      "ai_zayoz6ms_gn_createinlinedgeneratecontentrequest",
+      "ai_zayoz6ms_gn_createinternal",
+      "ai_zayoz6ms_gn_delete",
+      "ai_zayoz6ms_gn_formatdestination",
+      "ai_zayoz6ms_gn_get",
+      "ai_zayoz6ms_gn_getbigqueryuri",
+      "ai_zayoz6ms_gn_getgcsuri",
+      "ai_zayoz6ms_gn_listinternal",
+      "ai_zayoz6ms_go",
+      "ai_zayoz6ms_gt",
+      "ai_zayoz6ms_h",
+      "ai_zayoz6ms_hn",
+      "ai_zayoz6ms_ho",
+      "ai_zayoz6ms_hr",
+      "ai_zayoz6ms_ht",
+      "ai_zayoz6ms_ht_fromapiresponse",
+      "ai_zayoz6ms_i",
+      "ai_zayoz6ms_ii",
+      "ai_zayoz6ms_ii_close",
+      "ai_zayoz6ms_ii_constructor",
+      "ai_zayoz6ms_ii_sendclientcontent",
+      "ai_zayoz6ms_ii_sendrealtimeinput",
+      "ai_zayoz6ms_ii_sendtoolresponse",
+      "ai_zayoz6ms_ii_tliveclientcontent",
+      "ai_zayoz6ms_ii_tliveclientttoolresponse",
+      "ai_zayoz6ms_in",
+      "ai_zayoz6ms_io",
+      "ai_zayoz6ms_io_constructor",
+      "ai_zayoz6ms_is",
+      "ai_zayoz6ms_ji",
+      "ai_zayoz6ms_ji_constructor",
+      "ai_zayoz6ms_jn",
+      "ai_zayoz6ms_jo",
+      "ai_zayoz6ms_jr",
+      "ai_zayoz6ms_ki",
+      "ai_zayoz6ms_ko",
+      "ai_zayoz6ms_kr",
+      "ai_zayoz6ms_ks",
+      "ai_zayoz6ms_kt",
+      "ai_zayoz6ms_l",
+      "ai_zayoz6ms_li",
+      "ai_zayoz6ms_li_constructor",
+      "ai_zayoz6ms_li_create",
+      "ai_zayoz6ms_li_delete",
+      "ai_zayoz6ms_li_get",
+      "ai_zayoz6ms_li_importfile",
+      "ai_zayoz6ms_li_listinternal",
+      "ai_zayoz6ms_li_uploadtofilesearchstore",
+      "ai_zayoz6ms_li_uploadtofilesearchstoreinternal",
+      "ai_zayoz6ms_ln",
+      "ai_zayoz6ms_lo",
+      "ai_zayoz6ms_lr",
+      "ai_zayoz6ms_ls",
+      "ai_zayoz6ms_ls_constructor",
+      "ai_zayoz6ms_ls_fromreadablestream",
+      "ai_zayoz6ms_ls_fromsseresponse",
+      "ai_zayoz6ms_ls_symbol_asynciterator",
+      "ai_zayoz6ms_ls_tee",
+      "ai_zayoz6ms_ls_toreadablestream",
+      "ai_zayoz6ms_lt",
+      "ai_zayoz6ms_mi",
+      "ai_zayoz6ms_mn",
+      "ai_zayoz6ms_mo",
+      "ai_zayoz6ms_mr",
+      "ai_zayoz6ms_ms",
+      "ai_zayoz6ms_mt",
+      "ai_zayoz6ms_n",
+      "ai_zayoz6ms_ni",
+      "ai_zayoz6ms_nn",
+      "ai_zayoz6ms_no",
+      "ai_zayoz6ms_no_constructor",
+      "ai_zayoz6ms_no_create",
+      "ai_zayoz6ms_ns",
+      "ai_zayoz6ms_nt",
+      "ai_zayoz6ms_o",
+      "ai_zayoz6ms_oi",
+      "ai_zayoz6ms_on",
+      "ai_zayoz6ms_oo",
+      "ai_zayoz6ms_oo_constructor",
+      "ai_zayoz6ms_oo_gethistory",
+      "ai_zayoz6ms_oo_processstreamresponse",
+      "ai_zayoz6ms_oo_recordhistory",
+      "ai_zayoz6ms_oo_sendmessage",
+      "ai_zayoz6ms_oo_sendmessagestream",
+      "ai_zayoz6ms_os",
+      "ai_zayoz6ms_ot",
+      "ai_zayoz6ms_p",
+      "ai_zayoz6ms_pi",
+      "ai_zayoz6ms_pi_constructor",
+      "ai_zayoz6ms_pi_create",
+      "ai_zayoz6ms_pn",
+      "ai_zayoz6ms_po",
+      "ai_zayoz6ms_pt",
+      "ai_zayoz6ms_qo",
+      "ai_zayoz6ms_qr",
+      "ai_zayoz6ms_qs_then",
+      "ai_zayoz6ms_qt",
+      "ai_zayoz6ms_r",
+      "ai_zayoz6ms_ri",
+      "ai_zayoz6ms_rn",
+      "ai_zayoz6ms_ro",
+      "ai_zayoz6ms_ro_constructor",
+      "ai_zayoz6ms_ro_createinternal",
+      "ai_zayoz6ms_ro_delete",
+      "ai_zayoz6ms_ro_get",
+      "ai_zayoz6ms_ro_listinternal",
+      "ai_zayoz6ms_ro_upload",
+      "ai_zayoz6ms_rr_close",
+      "ai_zayoz6ms_rs",
+      "ai_zayoz6ms_rt",
+      "ai_zayoz6ms_s",
+      "ai_zayoz6ms_si",
+      "ai_zayoz6ms_si_computetokens",
+      "ai_zayoz6ms_si_constructor",
+      "ai_zayoz6ms_si_counttokens",
+      "ai_zayoz6ms_si_delete",
+      "ai_zayoz6ms_si_editimageinternal",
+      "ai_zayoz6ms_si_embedcontent",
+      "ai_zayoz6ms_si_generatecontentinternal",
+      "ai_zayoz6ms_si_generatecontentstreaminternal",
+      "ai_zayoz6ms_si_generateimagesinternal",
+      "ai_zayoz6ms_si_generatevideosinternal",
+      "ai_zayoz6ms_si_get",
+      "ai_zayoz6ms_si_initafctoolsmap",
+      "ai_zayoz6ms_si_listinternal",
+      "ai_zayoz6ms_si_maybemovetoresponsejsonschem",
+      "ai_zayoz6ms_si_processafcstream",
+      "ai_zayoz6ms_si_processparamsmaybeaddmcpusage",
+      "ai_zayoz6ms_si_recontextimage",
+      "ai_zayoz6ms_si_segmentimage",
+      "ai_zayoz6ms_si_upscaleimageinternal",
+      "ai_zayoz6ms_sn",
+      "ai_zayoz6ms_so",
+      "ai_zayoz6ms_ss",
+      "ai_zayoz6ms_st",
+      "ai_zayoz6ms_ti",
+      "ai_zayoz6ms_tn",
+      "ai_zayoz6ms_to",
+      "ai_zayoz6ms_tr",
+      "ai_zayoz6ms_tr_constructor",
+      "ai_zayoz6ms_ts",
+      "ai_zayoz6ms_tt",
+      "ai_zayoz6ms_u",
+      "ai_zayoz6ms_ui",
+      "ai_zayoz6ms_ui_constructor",
+      "ai_zayoz6ms_ui_delete",
+      "ai_zayoz6ms_ui_get",
+      "ai_zayoz6ms_ui_listinternal",
+      "ai_zayoz6ms_un",
+      "ai_zayoz6ms_uo",
+      "ai_zayoz6ms_ur",
+      "ai_zayoz6ms_ur_constructor",
+      "ai_zayoz6ms_us",
+      "ai_zayoz6ms_ut",
+      "ai_zayoz6ms_vn",
+      "ai_zayoz6ms_vo",
+      "ai_zayoz6ms_vr",
+      "ai_zayoz6ms_vs",
+      "ai_zayoz6ms_vt",
+      "ai_zayoz6ms_wi",
+      "ai_zayoz6ms_wn",
+      "ai_zayoz6ms_wo",
+      "ai_zayoz6ms_ws",
+      "ai_zayoz6ms_wt",
+      "ai_zayoz6ms_xn",
+      "ai_zayoz6ms_xo",
+      "ai_zayoz6ms_xr",
+      "ai_zayoz6ms_xs",
+      "ai_zayoz6ms_xs_constructor",
+      "ai_zayoz6ms_xs_decode",
+      "ai_zayoz6ms_xt",
+      "ai_zayoz6ms_yn",
+      "ai_zayoz6ms_yn_constructor",
+      "ai_zayoz6ms_yn_create",
+      "ai_zayoz6ms_yn_delete",
+      "ai_zayoz6ms_yn_get",
+      "ai_zayoz6ms_yn_listinternal",
+      "ai_zayoz6ms_yn_update",
+      "ai_zayoz6ms_yo",
+      "ai_zayoz6ms_yt_fromapiresponse",
+      "ai_zayoz6ms_zi",
+      "ai_zayoz6ms_zn",
+      "ai_zayoz6ms_zo",
+      "ai_zayoz6ms_zr_gethistory",
+      "ai_zayoz6ms_zs",
+      "ai_zayoz6ms_zs_cancel",
+      "ai_zayoz6ms_zs_constructor",
+      "ai_zayoz6ms_zs_getinternal",
+      "ai_zayoz6ms_zs_listinternal",
+      "ai_zayoz6ms_zs_tuneinternal",
+      "ai_zayoz6ms_zs_tunemldevinternal",
+      "ai_zayoz6ms_zt",
+      "android_app_src_main_assets_public_assets_ai_zayoz6ms_js",
+      "cache_cachemanager_keys"
+    ],
+    "2": [
+      "admin_ctv9qvzb_a",
+      "admin_ctv9qvzb_ae",
+      "admin_ctv9qvzb_ai",
+      "admin_ctv9qvzb_ao",
+      "admin_ctv9qvzb_b",
+      "admin_ctv9qvzb_c",
+      "admin_ctv9qvzb_constructor",
+      "admin_ctv9qvzb_de",
+      "admin_ctv9qvzb_e",
+      "admin_ctv9qvzb_ee",
+      "admin_ctv9qvzb_ei",
+      "admin_ctv9qvzb_fe",
+      "admin_ctv9qvzb_gi",
+      "admin_ctv9qvzb_h",
+      "admin_ctv9qvzb_i",
+      "admin_ctv9qvzb_ie",
+      "admin_ctv9qvzb_ii",
+      "admin_ctv9qvzb_io",
+      "admin_ctv9qvzb_je",
+      "admin_ctv9qvzb_ke",
+      "admin_ctv9qvzb_ki",
+      "admin_ctv9qvzb_le",
+      "admin_ctv9qvzb_li",
+      "admin_ctv9qvzb_lo",
+      "admin_ctv9qvzb_me",
+      "admin_ctv9qvzb_mo",
+      "admin_ctv9qvzb_ne",
+      "admin_ctv9qvzb_no",
+      "admin_ctv9qvzb_oe",
+      "admin_ctv9qvzb_oo",
+      "admin_ctv9qvzb_p",
+      "admin_ctv9qvzb_pe",
+      "admin_ctv9qvzb_qe",
+      "admin_ctv9qvzb_qi",
+      "admin_ctv9qvzb_re",
+      "admin_ctv9qvzb_ro",
+      "admin_ctv9qvzb_se",
+      "admin_ctv9qvzb_se_clear",
+      "admin_ctv9qvzb_se_constructor",
+      "admin_ctv9qvzb_se_eject",
+      "admin_ctv9qvzb_se_use",
+      "admin_ctv9qvzb_set",
+      "admin_ctv9qvzb_source",
+      "admin_ctv9qvzb_subscribe",
+      "admin_ctv9qvzb_t",
+      "admin_ctv9qvzb_te",
+      "admin_ctv9qvzb_throwifrequested",
+      "admin_ctv9qvzb_to",
+      "admin_ctv9qvzb_toabortsignal",
+      "admin_ctv9qvzb_u",
+      "admin_ctv9qvzb_unsubscribe",
+      "admin_ctv9qvzb_v",
+      "admin_ctv9qvzb_ve",
+      "admin_ctv9qvzb_we",
+      "admin_ctv9qvzb_wi",
+      "admin_ctv9qvzb_xe",
+      "admin_ctv9qvzb_xi",
+      "admin_ctv9qvzb_y",
+      "admin_ctv9qvzb_yi",
+      "admin_ctv9qvzb_ze",
+      "admin_ctv9qvzb_zi",
+      "ai_zayoz6ms_ci_getheaders",
+      "ai_zayoz6ms_ct",
+      "ai_zayoz6ms_t",
+      "ai_zayoz6ms_t_audiochunk",
+      "ai_zayoz6ms_t_constructor",
+      "ai_zayoz6ms_yt",
+      "android_app_src_main_assets_public_assets_admin_ctv9qvzb_js",
+      "android_app_src_main_assets_public_assets_dashboard_ccnnzbej_js",
+      "android_app_src_main_assets_public_assets_vendor_pidwjdge_js",
+      "backend_src_test_settings_ts",
+      "dashboard_ccnnzbej_d",
+      "dashboard_ccnnzbej_m",
+      "dashboard_ccnnzbej_n",
+      "dashboard_ccnnzbej_s",
+      "dashboard_ccnnzbej_t",
+      "dashboard_ccnnzbej_u",
+      "index_cckyroi_ee",
+      "products_c82ob0d3_a",
+      "runtimeapi_patchfetchforapibase",
+      "runtimeapi_resolveapiurl",
+      "shiprocketapi_shiprocketapiservice_validateindianpincode",
+      "shiprocketservice_shiprocketservice_validateindianpincode",
+      "test_settings_test",
+      "utils_runtimeapi_ts",
+      "vendor_pidwjdge_ae",
+      "vendor_pidwjdge_at",
+      "vendor_pidwjdge_be",
+      "vendor_pidwjdge_c",
+      "vendor_pidwjdge_ce",
+      "vendor_pidwjdge_componentdidcatch",
+      "vendor_pidwjdge_d",
+      "vendor_pidwjdge_e",
+      "vendor_pidwjdge_ee",
+      "vendor_pidwjdge_et",
+      "vendor_pidwjdge_f",
+      "vendor_pidwjdge_g",
+      "vendor_pidwjdge_ge",
+      "vendor_pidwjdge_getderivedstatefromerror",
+      "vendor_pidwjdge_getderivedstatefromprops",
+      "vendor_pidwjdge_h",
+      "vendor_pidwjdge_i",
+      "vendor_pidwjdge_ie",
+      "vendor_pidwjdge_it",
+      "vendor_pidwjdge_j",
+      "vendor_pidwjdge_je",
+      "vendor_pidwjdge_k",
+      "vendor_pidwjdge_ke",
+      "vendor_pidwjdge_l",
+      "vendor_pidwjdge_m",
+      "vendor_pidwjdge_me",
+      "vendor_pidwjdge_n",
+      "vendor_pidwjdge_ne",
+      "vendor_pidwjdge_nt",
+      "vendor_pidwjdge_o",
+      "vendor_pidwjdge_p",
+      "vendor_pidwjdge_pe",
+      "vendor_pidwjdge_q",
+      "vendor_pidwjdge_qe",
+      "vendor_pidwjdge_r",
+      "vendor_pidwjdge_re",
+      "vendor_pidwjdge_rt",
+      "vendor_pidwjdge_s",
+      "vendor_pidwjdge_se",
+      "vendor_pidwjdge_st",
+      "vendor_pidwjdge_te",
+      "vendor_pidwjdge_tt",
+      "vendor_pidwjdge_u",
+      "vendor_pidwjdge_ue",
+      "vendor_pidwjdge_ve",
+      "vendor_pidwjdge_xe",
+      "vendor_pidwjdge_y",
+      "vendor_pidwjdge_ye",
+      "vendor_pidwjdge_z",
+      "vendor_pidwjdge_ze"
+    ],
+    "3": [
+      "ai_zayoz6ms_ar",
+      "ai_zayoz6ms_ar_addauthheaders",
+      "ai_zayoz6ms_ar_constructor",
+      "ai_zayoz6ms_ci",
+      "ai_zayoz6ms_ci_apicall",
+      "ai_zayoz6ms_ci_baseurlfromprojectlocation",
+      "ai_zayoz6ms_ci_constructor",
+      "ai_zayoz6ms_ci_constructurl",
+      "ai_zayoz6ms_ci_downloadfile",
+      "ai_zayoz6ms_ci_fetchuploadurl",
+      "ai_zayoz6ms_ci_getapikey",
+      "ai_zayoz6ms_ci_getapiversion",
+      "ai_zayoz6ms_ci_getauthheaders",
+      "ai_zayoz6ms_ci_getbaseresourcepath",
+      "ai_zayoz6ms_ci_getbaseurl",
+      "ai_zayoz6ms_ci_getdefaultheaders",
+      "ai_zayoz6ms_ci_getfilename",
+      "ai_zayoz6ms_ci_getheadersinternal",
+      "ai_zayoz6ms_ci_getrequesturl",
+      "ai_zayoz6ms_ci_getrequesturlinternal",
+      "ai_zayoz6ms_ci_getwebsocketbaseurl",
+      "ai_zayoz6ms_ci_includeextrahttpoptionstorequestinit",
+      "ai_zayoz6ms_ci_normalizeauthparameters",
+      "ai_zayoz6ms_ci_patchhttpoptions",
+      "ai_zayoz6ms_ci_request",
+      "ai_zayoz6ms_ci_requeststream",
+      "ai_zayoz6ms_ci_setbaseurl",
+      "ai_zayoz6ms_ci_shouldprependvertexprojectpath",
+      "ai_zayoz6ms_ci_streamapicall",
+      "ai_zayoz6ms_ci_unaryapicall",
+      "ai_zayoz6ms_ci_uploadfile",
+      "ai_zayoz6ms_ci_uploadfiletofilesearchstore",
+      "ai_zayoz6ms_el",
+      "ai_zayoz6ms_el_batchembedcontents",
+      "ai_zayoz6ms_el_constructor",
+      "ai_zayoz6ms_el_counttokens",
+      "ai_zayoz6ms_el_embedcontent",
+      "ai_zayoz6ms_el_startchat",
+      "ai_zayoz6ms_er",
+      "ai_zayoz6ms_er_download",
+      "ai_zayoz6ms_ir",
+      "ai_zayoz6ms_ir_stat",
+      "ai_zayoz6ms_ir_upload",
+      "ai_zayoz6ms_ir_uploadtofilesearchstore",
+      "ai_zayoz6ms_nr",
+      "ai_zayoz6ms_or",
+      "ai_zayoz6ms_pr",
+      "ai_zayoz6ms_qs",
+      "ai_zayoz6ms_qs_asresponse",
+      "ai_zayoz6ms_qs_catch",
+      "ai_zayoz6ms_qs_constructor",
+      "ai_zayoz6ms_qs_finally",
+      "ai_zayoz6ms_qs_parse",
+      "ai_zayoz6ms_qs_thenunwrap",
+      "ai_zayoz6ms_qs_withresponse",
+      "ai_zayoz6ms_ro_download",
+      "ai_zayoz6ms_rr",
+      "ai_zayoz6ms_rr_connect",
+      "ai_zayoz6ms_rr_constructor",
+      "ai_zayoz6ms_rr_send",
+      "ai_zayoz6ms_rr_tostring",
+      "ai_zayoz6ms_ur_interactions",
+      "ai_zayoz6ms_vi",
+      "ai_zayoz6ms_vi_connect",
+      "ai_zayoz6ms_vi_constructor",
+      "ai_zayoz6ms_vi_iscallabletool",
+      "ai_zayoz6ms_wr",
+      "ai_zayoz6ms_yi",
+      "ai_zayoz6ms_yi_connect",
+      "ai_zayoz6ms_yi_constructor",
+      "ai_zayoz6ms_yr",
+      "ai_zayoz6ms_zr",
+      "ai_zayoz6ms_zr_constructor",
+      "ai_zayoz6ms_zr_sendmessage",
+      "ai_zayoz6ms_zr_sendmessagestream",
+      "auditlogger_auditlogger",
+      "auditlogger_sanitizepayload",
+      "backend_src_middleware_auditlogger_ts",
+      "backend_src_middleware_csrf_ts",
+      "backend_src_scripts_migrateorders_ts",
+      "backend_src_scripts_migrateproducts_ts",
+      "backend_src_scripts_migrateusers_ts",
+      "csrf_generatecsrftoken",
+      "csrf_validatecsrftoken",
+      "functions_lib_middleware_auditlogger_js",
+      "functions_lib_scripts_migrateorders_js",
+      "functions_lib_scripts_migrateproducts_js",
+      "functions_lib_scripts_migrateusers_js",
+      "functions_lib_services_notificationservice_js",
+      "functions_src_middleware_auditlogger_ts",
+      "functions_src_scripts_migrateorders_ts",
+      "functions_src_scripts_migrateproducts_ts",
+      "functions_src_scripts_migrateusers_ts",
+      "homepage_convertproduct",
+      "migrateorders_migrateorders",
+      "migrateproducts_migrateproducts",
+      "migrateusers_migrateusers",
+      "notificationservice_broadcast",
+      "themes_theme_2_service_style_pages_homepage_tsx",
+      "themes_theme_3_pharmacy_pages_homepage_tsx",
+      "vendor_pidwjdge_constructor",
+      "vendor_pidwjdge_render"
+    ],
+    "4": [
+      "ai_zayoz6ms_bs",
+      "ai_zayoz6ms_bs_authheaders",
+      "ai_zayoz6ms_bs_baseurloverridden",
+      "ai_zayoz6ms_bs_buildbody",
+      "ai_zayoz6ms_bs_buildheaders",
+      "ai_zayoz6ms_bs_buildrequest",
+      "ai_zayoz6ms_bs_buildurl",
+      "ai_zayoz6ms_bs_calculatedefaultretrytimeoutmillis",
+      "ai_zayoz6ms_bs_constructor",
+      "ai_zayoz6ms_bs_defaultidempotencykey",
+      "ai_zayoz6ms_bs_defaultquery",
+      "ai_zayoz6ms_bs_fetchwithtimeout",
+      "ai_zayoz6ms_bs_get",
+      "ai_zayoz6ms_bs_getuseragent",
+      "ai_zayoz6ms_bs_makerequest",
+      "ai_zayoz6ms_bs_makestatuserror",
+      "ai_zayoz6ms_bs_methodrequest",
+      "ai_zayoz6ms_bs_patch",
+      "ai_zayoz6ms_bs_post",
+      "ai_zayoz6ms_bs_prepareoptions",
+      "ai_zayoz6ms_bs_preparerequest",
+      "ai_zayoz6ms_bs_put",
+      "ai_zayoz6ms_bs_retryrequest",
+      "ai_zayoz6ms_bs_shouldretry",
+      "ai_zayoz6ms_bs_stringifyquery",
+      "ai_zayoz6ms_bs_validateheaders",
+      "ai_zayoz6ms_bs_withoptions",
+      "ai_zayoz6ms_es",
+      "ai_zayoz6ms_es_cancel",
+      "ai_zayoz6ms_es_create",
+      "ai_zayoz6ms_es_delete",
+      "ai_zayoz6ms_es_get",
+      "ai_zayoz6ms_fs",
+      "ai_zayoz6ms_fs_constructor",
+      "ai_zayoz6ms_hi",
+      "ai_zayoz6ms_hi_constructor",
+      "ai_zayoz6ms_hi_generate",
+      "ai_zayoz6ms_hi_makemessage",
+      "ai_zayoz6ms_js",
+      "ai_zayoz6ms_js_constructor",
+      "ai_zayoz6ms_kn",
+      "ai_zayoz6ms_qi",
+      "ai_zayoz6ms_xi",
+      "ai_zayoz6ms_ys",
+      "android_app_src_main_assets_public_sw_js",
+      "cache_cachemanager_has",
+      "cancelordermodal_checkeligibility",
+      "cancelordermodal_handlecancel",
+      "components_cancelordermodal_tsx",
+      "components_deliveryestimator_tsx",
+      "components_guestcheckout_tsx",
+      "components_ordertracking_tsx",
+      "components_quickreorder_tsx",
+      "components_savedpaymentmethods_tsx",
+      "deliveryestimator_checkpincode",
+      "guestcheckout_createsession",
+      "guestcheckout_handlesubmit",
+      "guestcheckout_updatefield",
+      "ordertracking_fetchtracking",
+      "public_sw_js",
+      "quickreorder_fetchreorders",
+      "quickreorder_handlereorder",
+      "savedpaymentmethods_fetchmethods",
+      "savedpaymentmethods_handledelete",
+      "savedpaymentmethods_handlesaveupi",
+      "savedpaymentmethods_handlesetdefault",
+      "sw_cachefirststrategy",
+      "sw_fetchwithtimeout",
+      "sw_networkfirststrategy",
+      "sw_stalewhilerevalidatestrategy",
+      "sw_syncproducts"
+    ],
+    "5": [
+      "adminlogin_batesgk2_n",
+      "ai_zayoz6ms_qn_getitem",
+      "android_app_src_main_assets_public_assets_adminlogin_batesgk2_js",
+      "checkout_calculateshipping",
+      "checkout_handleaddnewaddress",
+      "checkout_handleeditaddress",
+      "checkout_handlepayment",
+      "checkout_handlesaveaddress",
+      "components_checkout_tsx",
+      "couponservice_couponservice",
+      "couponservice_couponservice_apicall",
+      "couponservice_couponservice_applycoupon",
+      "couponservice_couponservice_calculatediscount",
+      "couponservice_couponservice_canapplytocart",
+      "couponservice_couponservice_constructor",
+      "couponservice_couponservice_formatcoupondescription",
+      "couponservice_couponservice_formatdiscountamount",
+      "couponservice_couponservice_getcouponbycode",
+      "couponservice_couponservice_getcouponsuggestions",
+      "couponservice_couponservice_getusercoupons",
+      "couponservice_couponservice_iscouponvalidforuser",
+      "couponservice_couponservice_validatecoupon",
+      "couponservice_usecoupons",
+      "guestcheckoutservice_guestcheckoutservice",
+      "guestcheckoutservice_guestcheckoutservice_apicall",
+      "guestcheckoutservice_guestcheckoutservice_calculateordertotal",
+      "guestcheckoutservice_guestcheckoutservice_canguestcheckout",
+      "guestcheckoutservice_guestcheckoutservice_checkguestsession",
+      "guestcheckoutservice_guestcheckoutservice_clearguestsession",
+      "guestcheckoutservice_guestcheckoutservice_constructor",
+      "guestcheckoutservice_guestcheckoutservice_convertguestorder",
+      "guestcheckoutservice_guestcheckoutservice_createguestorder",
+      "guestcheckoutservice_guestcheckoutservice_createguestsession",
+      "guestcheckoutservice_guestcheckoutservice_formatorderdata",
+      "guestcheckoutservice_guestcheckoutservice_getcurrentsession",
+      "guestcheckoutservice_guestcheckoutservice_getguestorder",
+      "guestcheckoutservice_guestcheckoutservice_getguestorders",
+      "guestcheckoutservice_guestcheckoutservice_getguestorderstatus",
+      "guestcheckoutservice_guestcheckoutservice_getstoredsession",
+      "guestcheckoutservice_guestcheckoutservice_startguestcheckout",
+      "guestcheckoutservice_guestcheckoutservice_storesession",
+      "guestcheckoutservice_guestcheckoutservice_updateguestorder",
+      "guestcheckoutservice_guestcheckoutservice_validateemail",
+      "guestcheckoutservice_guestcheckoutservice_validateguestsession",
+      "guestcheckoutservice_guestcheckoutservice_validateorderdata",
+      "guestcheckoutservice_guestcheckoutservice_validatephone",
+      "guestcheckoutservice_useguestcheckout",
+      "razorpayservice_formatamountforrazorpay",
+      "razorpayservice_formatamountfromrazorpay",
+      "razorpayservice_getpaymentsettings",
+      "razorpayservice_getrazorpaykey",
+      "razorpayservice_initializerazorpay",
+      "razorpayservice_ispaymentgatewayenabled",
+      "razorpayservice_loadrazorpayscript",
+      "razorpayservice_savepaymentsettings",
+      "razorpayservice_verifypaymentsignature",
+      "utils_couponservice_ts",
+      "utils_guestcheckoutservice_ts",
+      "utils_razorpayservice_ts"
+    ],
+    "6": [
+      "ai_zayoz6ms_sr",
+      "ai_zayoz6ms_sr_create",
+      "aichat_handlesend",
+      "aichat_initchat",
+      "aicontroller_chatwithai",
+      "app_addtocart",
+      "app_fetchuserorders",
+      "app_handleaddheroslide",
+      "app_handleadminlogin",
+      "app_handlelogin",
+      "app_handlelogout",
+      "app_handlenavigate",
+      "app_handleplaceorder",
+      "app_handleproductclick",
+      "app_handlereorderfeaturedbrands",
+      "app_handlereorderheroslides",
+      "app_handlesavehomepagesettings",
+      "app_handlesearch",
+      "app_handletogglebrandfeatured",
+      "app_handleupdateheroslide",
+      "app_handleupdatepromotionaltile",
+      "app_handleupdateuser",
+      "app_loadadmindata",
+      "app_navigatetobrands",
+      "app_navigatetocategories",
+      "app_navigatetohome",
+      "app_navigatetoshop",
+      "app_navigatetowishlist",
+      "app_removefromcart",
+      "app_retrydataload",
+      "app_togglewishlist",
+      "app_tsx",
+      "app_updatecartquantity",
+      "backend_src_controllers_aicontroller_ts",
+      "backend_src_utils_payment_ts",
+      "cache_cachemanager_clear",
+      "components_aichat_tsx",
+      "components_couponstab_tsx",
+      "couponstab_fetchcoupons",
+      "couponstab_handledelete",
+      "couponstab_handlegeneratecode",
+      "couponstab_handlesavecoupon",
+      "couponstab_openmodal",
+      "couponstab_togglestatus",
+      "functions_lib_controllers_aicontroller_js",
+      "functions_lib_utils_payment_js",
+      "functions_src_controllers_aicontroller_ts",
+      "functions_src_utils_payment_ts",
+      "payment_createrazorpayorder",
+      "payment_verifyrazorpaysignature"
+    ],
+    "7": [
+      "ai_zayoz6ms_bs_delete",
+      "app_handledeleteheroslide",
+      "backend_src_controllers_brandcontroller_ts",
+      "backend_src_controllers_categorycontroller_ts",
+      "backend_src_services_cacheservice_ts",
+      "brandcontroller_createbrand",
+      "brandcontroller_deletebrand",
+      "brandcontroller_getallbrands",
+      "brandcontroller_reorderfeaturedbrands",
+      "brandcontroller_togglebrandfeatured",
+      "brandcontroller_updatebrand",
+      "cache_cachemanager",
+      "cache_cachemanager_cleanup",
+      "cache_cachemanager_getage",
+      "cache_cachemanager_getstats",
+      "cache_cachemanager_invalidate",
+      "cache_cachemanager_invalidatepattern",
+      "cache_cachemanager_isfresh",
+      "cacheservice_cacheservice",
+      "cacheservice_cacheservice_cleanupmemorycache",
+      "cacheservice_cacheservice_constructor",
+      "cacheservice_cacheservice_del",
+      "cacheservice_cacheservice_disconnect",
+      "cacheservice_cacheservice_get",
+      "cacheservice_cacheservice_getbrands",
+      "cacheservice_cacheservice_getcategories",
+      "cacheservice_cacheservice_getfeaturedproducts",
+      "cacheservice_cacheservice_getmemorycache",
+      "cacheservice_cacheservice_getproducts",
+      "cacheservice_cacheservice_healthcheck",
+      "cacheservice_cacheservice_initializeredis",
+      "cacheservice_cacheservice_invalidatebrandscache",
+      "cacheservice_cacheservice_invalidatecategoriescache",
+      "cacheservice_cacheservice_invalidatepattern",
+      "cacheservice_cacheservice_set",
+      "cacheservice_cacheservice_setmemorycache",
+      "categorycontroller_createcategory",
+      "categorycontroller_deletecategory",
+      "categorycontroller_fetchcategoriesfromwoocommerce",
+      "categorycontroller_getallcategories",
+      "categorycontroller_updatecategory",
+      "functions_lib_controllers_brandcontroller_js",
+      "functions_lib_controllers_categorycontroller_js",
+      "functions_lib_services_cacheservice_js",
+      "functions_src_controllers_brandcontroller_ts",
+      "functions_src_controllers_categorycontroller_ts",
+      "functions_src_services_cacheservice_ts",
+      "utils_cache_ts"
+    ],
+    "8": [
+      "backend_src_services_whatsappservice_ts",
+      "functions_lib_controllers_whatsappcontroller_js",
+      "functions_lib_services_whatsappservice_js",
+      "functions_src_controllers_whatsappcontroller_ts",
+      "functions_src_services_whatsappservice_ts",
+      "src_components_whatsappnotificationmanager_tsx",
+      "src_services_whatsappservice_ts",
+      "whatsappcontroller_sendcustomwhatsapp",
+      "whatsappcontroller_sendorderstatuswhatsapp",
+      "whatsappcontroller_sendpaymentreminderwhatsapp",
+      "whatsappnotificationmanager_clearform",
+      "whatsappnotificationmanager_getstatuscolor",
+      "whatsappnotificationmanager_handlesendcustommessage",
+      "whatsappnotificationmanager_handlesenddeliveryconfirmation",
+      "whatsappnotificationmanager_handlesendordercancellation",
+      "whatsappnotificationmanager_handlesendorderconfirmation",
+      "whatsappnotificationmanager_handlesendpaymentreminder",
+      "whatsappnotificationmanager_handlesendshippingupdate",
+      "whatsappnotificationmanager_loadmessagehistory",
+      "whatsappservice_formatphonenumber",
+      "whatsappservice_getwhatsappconfig",
+      "whatsappservice_whatsappservice",
+      "whatsappservice_whatsappservice_constructor",
+      "whatsappservice_whatsappservice_formattemplate",
+      "whatsappservice_whatsappservice_generatewhatsapplink",
+      "whatsappservice_whatsappservice_getfailednotifications",
+      "whatsappservice_whatsappservice_getmessagehistory",
+      "whatsappservice_whatsappservice_getmessagestatus",
+      "whatsappservice_whatsappservice_getnotificationstatus",
+      "whatsappservice_whatsappservice_gettemplates",
+      "whatsappservice_whatsappservice_makerequest",
+      "whatsappservice_whatsappservice_retrymessage",
+      "whatsappservice_whatsappservice_senddeliveryconfirmation",
+      "whatsappservice_whatsappservice_sendmessage",
+      "whatsappservice_whatsappservice_sendordercancellation",
+      "whatsappservice_whatsappservice_sendorderconfirmation",
+      "whatsappservice_whatsappservice_sendpaymentreminder",
+      "whatsappservice_whatsappservice_sendpromotionaloffer",
+      "whatsappservice_whatsappservice_sendshippingupdate",
+      "whatsappservice_whatsappservice_sendsupportmessage",
+      "whatsappservice_whatsappservice_sendwhatsappmessage",
+      "whatsappservice_whatsappservice_validatephonenumber"
+    ],
+    "9": [
+      "backend_src_controllers_shiprocketcontroller_ts",
+      "backend_src_services_shiprocketservice_ts",
+      "functions_lib_controllers_shiprocketcontroller_js",
+      "functions_lib_services_shiprocketservice_js",
+      "functions_src_controllers_shiprocketcontroller_ts",
+      "functions_src_services_shiprocketservice_ts",
+      "shiprocketcontroller_calculateshippingcharges",
+      "shiprocketcontroller_cancelshiprocketorder",
+      "shiprocketcontroller_checkpincodeserviceability",
+      "shiprocketcontroller_createshiprocketorder",
+      "shiprocketcontroller_getavailablecouriers",
+      "shiprocketcontroller_getestimateddelivery",
+      "shiprocketcontroller_getshippingrates",
+      "shiprocketcontroller_trackshipment",
+      "shiprocketservice_shiprocketservice",
+      "shiprocketservice_shiprocketservice_apicall",
+      "shiprocketservice_shiprocketservice_authenticate",
+      "shiprocketservice_shiprocketservice_cancelorder",
+      "shiprocketservice_shiprocketservice_checkpincodeserviceability",
+      "shiprocketservice_shiprocketservice_constructor",
+      "shiprocketservice_shiprocketservice_converttoshiprocketitems",
+      "shiprocketservice_shiprocketservice_createorder",
+      "shiprocketservice_shiprocketservice_createorderrequest",
+      "shiprocketservice_shiprocketservice_formatphonenumber",
+      "shiprocketservice_shiprocketservice_generateawb",
+      "shiprocketservice_shiprocketservice_generatelabel",
+      "shiprocketservice_shiprocketservice_generatemanifest",
+      "shiprocketservice_shiprocketservice_getavailablecouriers",
+      "shiprocketservice_shiprocketservice_getestimateddelivery",
+      "shiprocketservice_shiprocketservice_getshippingrates",
+      "shiprocketservice_shiprocketservice_printmanifest",
+      "shiprocketservice_shiprocketservice_requestpickup",
+      "shiprocketservice_shiprocketservice_trackorder",
+      "shiprocketservice_shiprocketservice_trackshipment",
+      "utils_shiprocketservice_ts"
+    ],
+    "10": [
+      "adminnotificationservice_addadminnotification",
+      "adminnotificationservice_clearallnotifications",
+      "adminnotificationservice_deletenotification",
+      "adminnotificationservice_generatenotificationid",
+      "adminnotificationservice_getalladminnotifications",
+      "adminnotificationservice_getnotificationcolor",
+      "adminnotificationservice_getnotificationicon",
+      "adminnotificationservice_getnotificationsbytype",
+      "adminnotificationservice_getrelativetime",
+      "adminnotificationservice_getunreadcount",
+      "adminnotificationservice_markallnotificationsasread",
+      "adminnotificationservice_marknotificationasread",
+      "adminnotificationservice_notifylowstock",
+      "adminnotificationservice_notifynewcustomer",
+      "adminnotificationservice_notifyneworder",
+      "adminnotificationservice_notifyorderstatuschange",
+      "adminnotificationservice_notifyoutofstock",
+      "adminnotificationservice_notifypaymentreceived",
+      "adminnotificationservice_notifyrefundrequested",
+      "adminnotificationservice_notifysmtperror",
+      "adminnotificationservice_notifystockrestocked",
+      "adminnotificationservice_notifystocksubscribers",
+      "adminnotificationservice_notifysystemerror",
+      "adminnotificationservice_notifyverificationpending",
+      "adminnotificationservice_saveadminnotifications",
+      "utils_adminnotificationservice_ts"
+    ],
+    "11": [
+      "admin_dashboard",
+      "alpha_dentkart_project",
+      "cloudrun_backend",
+      "coupon_system",
+      "csrf_protection",
+      "data_migration",
+      "firebase_auth",
+      "firebase_backend",
+      "firestore_db",
+      "fix_instructions",
+      "guest_checkout",
+      "jwt_auth",
+      "order_management",
+      "phonepe_payment",
+      "product_catalog",
+      "production_config",
+      "rate_limiting",
+      "razorpay_payment",
+      "react_frontend",
+      "security_fix_checklist",
+      "security_hardening",
+      "shiprocket_integration",
+      "user_types",
+      "verification_system",
+      "whatsapp_integration"
+    ],
+    "12": [
+      "ai_zayoz6ms_gi",
+      "ai_zayoz6ms_gi_calltool",
+      "ai_zayoz6ms_gi_constructor",
+      "ai_zayoz6ms_gi_create",
+      "ai_zayoz6ms_gi_initialize",
+      "ai_zayoz6ms_gi_tool",
+      "ai_zayoz6ms_hs",
+      "ai_zayoz6ms_ps",
+      "ai_zayoz6ms_qn",
+      "ai_zayoz6ms_qn_constructor",
+      "ai_zayoz6ms_qn_hasnextpage",
+      "ai_zayoz6ms_qn_init",
+      "ai_zayoz6ms_qn_initnextpage",
+      "ai_zayoz6ms_qn_name",
+      "ai_zayoz6ms_qn_nextpage",
+      "ai_zayoz6ms_qn_page",
+      "ai_zayoz6ms_qn_pagelength",
+      "ai_zayoz6ms_qn_pagesize",
+      "ai_zayoz6ms_qn_params",
+      "ai_zayoz6ms_qn_sdkhttpresponse",
+      "ai_zayoz6ms_qn_symbol_asynciterator"
+    ],
+    "13": [
+      "chatservice_generateid",
+      "chatservice_getactivesessionscount",
+      "chatservice_getchatbyid",
+      "chatservice_getchatsessions",
+      "chatservice_getorcreatesession",
+      "chatservice_gettotalunreadcount",
+      "chatservice_marksessionasread",
+      "chatservice_savechatmessage",
+      "chatservice_savesessions",
+      "chatservice_updatechatstatus",
+      "chatsupport_formattime",
+      "chatsupport_getstatusbadge",
+      "chatsupport_handleclosechat",
+      "chatsupport_handleselectsession",
+      "chatsupport_handlesendmessage",
+      "chatsupport_handletakeover",
+      "chatsupport_loadsessions",
+      "components_chatsupport_tsx",
+      "utils_chatservice_ts"
+    ],
+    "14": [
+      "components_productcard_tsx",
+      "productcard_handleaddtocart",
+      "productcard_handleclick",
+      "productcard_handlenotifyme",
+      "productcard_handlequickview",
+      "productcard_handlewishlistclick",
+      "stocknotificationservice_getallstocknotifications",
+      "stocknotificationservice_getstockavailableemailhtml",
+      "stocknotificationservice_getsubscribercount",
+      "stocknotificationservice_getsubscribersforproduct",
+      "stocknotificationservice_issubscribedtoproduct",
+      "stocknotificationservice_marknotificationsassent",
+      "stocknotificationservice_notifyallsubscribers",
+      "stocknotificationservice_savestocknotifications",
+      "stocknotificationservice_sendstockavailableemail",
+      "stocknotificationservice_subscribetoproduct",
+      "stocknotificationservice_unsubscribefromproduct",
+      "utils_stocknotificationservice_ts"
+    ],
+    "15": [
+      "shiprocketapi_shiprocketapiservice",
+      "shiprocketapi_shiprocketapiservice_apicall",
+      "shiprocketapi_shiprocketapiservice_calculateshippingcharges",
+      "shiprocketapi_shiprocketapiservice_cancelorder",
+      "shiprocketapi_shiprocketapiservice_checkpincodeserviceability",
+      "shiprocketapi_shiprocketapiservice_constructor",
+      "shiprocketapi_shiprocketapiservice_createorder",
+      "shiprocketapi_shiprocketapiservice_formatdeliverymessage",
+      "shiprocketapi_shiprocketapiservice_formatshippingrate",
+      "shiprocketapi_shiprocketapiservice_getavailablecouriers",
+      "shiprocketapi_shiprocketapiservice_getestimateddelivery",
+      "shiprocketapi_shiprocketapiservice_getfreeshippingmessage",
+      "shiprocketapi_shiprocketapiservice_getshippingrates",
+      "shiprocketapi_shiprocketapiservice_issamedaydelivery",
+      "shiprocketapi_shiprocketapiservice_trackorder",
+      "shiprocketapi_shiprocketapiservice_trackshipment",
+      "shiprocketapi_useshippingcalculation",
+      "utils_shiprocketapi_ts"
+    ],
+    "16": [
+      "android_app_src_main_assets_public_assets_index_cckyroi_js",
+      "index_cckyroi_b",
+      "index_cckyroi_d",
+      "index_cckyroi_f",
+      "index_cckyroi_g",
+      "index_cckyroi_i",
+      "index_cckyroi_k",
+      "index_cckyroi_n",
+      "index_cckyroi_o",
+      "index_cckyroi_p",
+      "index_cckyroi_p_componentdidcatch",
+      "index_cckyroi_p_getderivedstatefromerror",
+      "index_cckyroi_p_render",
+      "index_cckyroi_vite_mapdeps",
+      "index_cckyroi_w",
+      "index_cckyroi_x",
+      "index_cckyroi_y"
+    ],
+    "17": [
+      "backend_src_services_deliveryestimationservice_ts",
+      "deliveryestimationservice_deliveryestimationservice",
+      "deliveryestimationservice_deliveryestimationservice_calculateaccuracy",
+      "deliveryestimationservice_deliveryestimationservice_calculatedeliverydate",
+      "deliveryestimationservice_deliveryestimationservice_calculatedeliveryestimation",
+      "deliveryestimationservice_deliveryestimationservice_calculateshippingcost",
+      "deliveryestimationservice_deliveryestimationservice_calculateshippingoptions",
+      "deliveryestimationservice_deliveryestimationservice_calculatetotaldimensions",
+      "deliveryestimationservice_deliveryestimationservice_checkweatherdelays",
+      "deliveryestimationservice_deliveryestimationservice_constructor",
+      "deliveryestimationservice_deliveryestimationservice_getdeliveryanalytics",
+      "deliveryestimationservice_deliveryestimationservice_getdeliveryhistory",
+      "deliveryestimationservice_deliveryestimationservice_getproductweight",
+      "deliveryestimationservice_deliveryestimationservice_storedeliveryestimation",
+      "deliveryestimationservice_deliveryestimationservice_validatepincode",
+      "functions_lib_services_deliveryestimationservice_js",
+      "functions_src_services_deliveryestimationservice_ts"
+    ],
+    "18": [
+      "components_customermanagement_tsx",
+      "customermanagement_async",
+      "customermanagement_getusertypebadge",
+      "customermanagement_getverificationbadge",
+      "customermanagement_handleaddnewaddress",
+      "customermanagement_handlecanceladdressedit",
+      "customermanagement_handledeleteaddress",
+      "customermanagement_handleeditaddress",
+      "customermanagement_handleeditcustomer",
+      "customermanagement_handlesaveaddress",
+      "customermanagement_handlesavecustomer",
+      "customermanagement_handlesetdefaultaddress",
+      "emailservice_generateverificationtoken",
+      "emailservice_getpasswordresetemailhtml",
+      "emailservice_getverificationemailhtml",
+      "emailservice_sendpasswordresetemail",
+      "utils_emailservice_ts"
+    ],
+    "19": [
+      "ai_zayoz6ms_jt",
+      "ai_zayoz6ms_jt_text",
+      "ai_zayoz6ms_tl",
+      "ai_zayoz6ms_tl_constructor",
+      "ai_zayoz6ms_tl_getgenerativemodel",
+      "ai_zayoz6ms_tl_getgenerativemodelfromcachedcontent",
+      "aisettings_handlelistmodels",
+      "aisettings_handlesave",
+      "aisettings_handletestconnection",
+      "components_aisettings_tsx",
+      "debug_local_api_mjs",
+      "debug_local_api_testlocalapi",
+      "debug_prod_api_debugproductionapi",
+      "debug_prod_api_mjs",
+      "test_update_order_mjs",
+      "test_update_order_testupdateorder"
+    ],
+    "20": [
+      "backend_src_controllers_savedpaymentcontroller_ts",
+      "functions_lib_controllers_savedpaymentcontroller_js",
+      "functions_src_controllers_savedpaymentcontroller_ts",
+      "savedpaymentcontroller_deletepaymentmethod",
+      "savedpaymentcontroller_getdefaultpaymentmethod",
+      "savedpaymentcontroller_getpaymentmethodbyid",
+      "savedpaymentcontroller_getpaymentmethodsbygateway",
+      "savedpaymentcontroller_getpaymentmethodstats",
+      "savedpaymentcontroller_getuserpaymentmethods",
+      "savedpaymentcontroller_savepaymentmethod",
+      "savedpaymentcontroller_setdefaultpaymentmethod",
+      "savedpaymentcontroller_updatepaymentmethod",
+      "savedpaymentcontroller_validatepaymenttoken"
+    ],
+    "21": [
+      "backend_src_scripts_migration_import_wp_ts",
+      "functions_lib_scripts_migration_import_wp_js",
+      "functions_src_scripts_migration_import_wp_ts",
+      "import_wp_batchwrite",
+      "import_wp_fetchall",
+      "import_wp_migratebrands",
+      "import_wp_migratecategories",
+      "import_wp_migratecustomers",
+      "import_wp_migrateorders",
+      "import_wp_migrateproducts",
+      "import_wp_migratereviews",
+      "import_wp_runmigration",
+      "import_wp_sleep"
+    ],
+    "22": [
+      "backend_src_scripts_migration_incremental_sync_ts",
+      "functions_lib_scripts_migration_incremental_sync_js",
+      "functions_src_scripts_migration_incremental_sync_ts",
+      "incremental_sync_batchwrite",
+      "incremental_sync_fetchall",
+      "incremental_sync_runincrementalsync",
+      "incremental_sync_sleep",
+      "incremental_sync_syncbrands",
+      "incremental_sync_synccategories",
+      "incremental_sync_synccustomers",
+      "incremental_sync_syncorders",
+      "incremental_sync_syncproducts",
+      "incremental_sync_syncreviews"
+    ],
+    "23": [
+      "backend_src_middleware_errorhandler_ts",
+      "backend_src_routes_orders_ts",
+      "backend_src_test_server_ts",
+      "backend_src_utils_errortracker_ts",
+      "errorhandler_errorhandler",
+      "errortracker_captureexception",
+      "errortracker_capturemessage",
+      "errortracker_init",
+      "errortracker_initsentry",
+      "functions_lib_middleware_errorhandler_js",
+      "functions_lib_utils_errortracker_js",
+      "functions_src_middleware_errorhandler_ts",
+      "functions_src_utils_errortracker_ts"
+    ],
+    "24": [
+      "auth_authenticatetoken",
+      "auth_optionalauth",
+      "auth_requireadmin",
+      "backend_src_middleware_auth_ts",
+      "backend_src_utils_jwt_ts",
+      "functions_lib_middleware_auth_js",
+      "functions_lib_utils_jwt_js",
+      "functions_src_middleware_auth_ts",
+      "functions_src_utils_jwt_ts",
+      "jwt_generatetoken",
+      "jwt_getjwtsecret",
+      "jwt_verifytoken"
+    ],
+    "25": [
+      "backend_src_controllers_verificationcontroller_ts",
+      "functions_lib_controllers_verificationcontroller_js",
+      "functions_src_controllers_verificationcontroller_ts",
+      "verificationcontroller_deleteverification",
+      "verificationcontroller_getallverificationauditlogs",
+      "verificationcontroller_getallverifications",
+      "verificationcontroller_getverificationauditlogs",
+      "verificationcontroller_getverificationbyid",
+      "verificationcontroller_getverificationstats",
+      "verificationcontroller_submitverification",
+      "verificationcontroller_updateverificationstatus"
+    ],
+    "26": [
+      "android_app_src_main_assets_public_assets_themes_bxhahf61_js",
+      "themes_bxhahf61_b",
+      "themes_bxhahf61_c",
+      "themes_bxhahf61_d",
+      "themes_bxhahf61_h",
+      "themes_bxhahf61_m",
+      "themes_bxhahf61_n",
+      "themes_bxhahf61_p",
+      "themes_bxhahf61_r",
+      "themes_bxhahf61_s"
+    ],
+    "27": [
+      "functions_lib_routes_sync_js",
+      "functions_src_routes_sync_ts",
+      "sync_fetchall",
+      "sync_searchbrandlogo",
+      "sync_sleep",
+      "sync_syncbrands",
+      "sync_synccategories",
+      "sync_syncorders",
+      "sync_syncproducts",
+      "sync_syncusers"
+    ],
+    "28": [
+      "hooks_usequeries_ts",
+      "usequeries_useadminorders",
+      "usequeries_useadminreviews",
+      "usequeries_useadminusers",
+      "usequeries_usebrands",
+      "usequeries_usecategories",
+      "usequeries_useheroslides",
+      "usequeries_useproductreviews",
+      "usequeries_usepromotionaltiles",
+      "usequeries_usesettings"
+    ],
+    "29": [
+      "emailtemplates_getabandonedcartemail",
+      "emailtemplates_getemailfooter",
+      "emailtemplates_getemailheader",
+      "emailtemplates_getnewsletteremail",
+      "emailtemplates_getorderconfirmationemail",
+      "emailtemplates_getproductrecommendationemail",
+      "emailtemplates_getpromotionalemail",
+      "emailtemplates_getwelcomeemail",
+      "emailtemplates_wrapemail",
+      "utils_emailtemplates_ts"
+    ],
+    "30": [
+      "backend_src_controllers_quickreordercontroller_ts",
+      "functions_lib_controllers_quickreordercontroller_js",
+      "functions_src_controllers_quickreordercontroller_ts",
+      "quickreordercontroller_cancelreorder",
+      "quickreordercontroller_createquickreorder",
+      "quickreordercontroller_getrecommendedreorders",
+      "quickreordercontroller_getreorderbyid",
+      "quickreordercontroller_getreorderstats",
+      "quickreordercontroller_getuserreorders"
+    ],
+    "31": [
+      "backend_src_services_emailservice_ts",
+      "emailservice_emailservice",
+      "emailservice_emailservice_constructor",
+      "emailservice_emailservice_initializetransporter",
+      "emailservice_emailservice_sendemail",
+      "emailservice_emailservice_sendpasswordresetemail",
+      "emailservice_emailservice_sendverificationemail",
+      "functions_lib_services_emailservice_js",
+      "functions_src_services_emailservice_ts"
+    ],
+    "32": [
+      "backend_src_scripts_backfillkeywords_ts",
+      "backend_src_utils_generatekeywords_ts",
+      "backfillkeywords_backfillkeywords",
+      "functions_lib_scripts_backfillkeywords_js",
+      "functions_lib_utils_generatekeywords_js",
+      "functions_src_scripts_backfillkeywords_ts",
+      "functions_src_utils_generatekeywords_ts",
+      "generatekeywords_generatekeywords",
+      "generatekeywords_generateproductkeywords"
+    ],
+    "33": [
+      "components_homepagetab_tsx",
+      "homepagetab_handleaddslide",
+      "homepagetab_handleeditslide",
+      "homepagetab_handleslideimageupload",
+      "homepagetab_handletileimageupload",
+      "homepagetab_saveslide",
+      "homepagetab_togglecategory",
+      "homepagetab_updatebadge",
+      "homepagetab_updatetilefield"
+    ],
+    "34": [
+      "backend_src_controllers_deliveryestimationcontroller_ts",
+      "deliveryestimationcontroller_calculatedeliveryestimation",
+      "deliveryestimationcontroller_checkpincodeserviceability",
+      "deliveryestimationcontroller_getcartdeliveryestimate",
+      "deliveryestimationcontroller_getdeliveryanalytics",
+      "deliveryestimationcontroller_getdeliveryhistory",
+      "deliveryestimationcontroller_getshippingcost",
+      "functions_lib_controllers_deliveryestimationcontroller_js",
+      "functions_src_controllers_deliveryestimationcontroller_ts"
+    ],
+    "35": [
+      "components_productdetail_tsx",
+      "productdetail_gotonextimage",
+      "productdetail_gotopreviousimage",
+      "productdetail_handleaddtocart",
+      "productdetail_handleattributeselect",
+      "productdetail_handlekeydown",
+      "productdetail_striphtml",
+      "productdetail_togglesection"
+    ],
+    "36": [
+      "components_verificationmanager_tsx",
+      "verificationmanager_getdocumenttypelabel",
+      "verificationmanager_getrequireddocuments",
+      "verificationmanager_getstatuscolor",
+      "verificationmanager_handledelete",
+      "verificationmanager_handlefileselect",
+      "verificationmanager_handlesubmit",
+      "verificationmanager_loaduserverifications"
+    ],
+    "37": [
+      "android_app_src_main_assets_public_assets_products_c82ob0d3_js",
+      "products_c82ob0d3_b",
+      "products_c82ob0d3_c",
+      "products_c82ob0d3_d",
+      "products_c82ob0d3_r",
+      "products_c82ob0d3_s",
+      "products_c82ob0d3_u"
+    ],
+    "38": [
+      "ai_zayoz6ms_it",
+      "ai_zayoz6ms_it_codeexecutionresult",
+      "ai_zayoz6ms_it_data",
+      "ai_zayoz6ms_it_executablecode",
+      "ai_zayoz6ms_it_functioncalls",
+      "ai_zayoz6ms_it_text"
+    ],
+    "39": [
+      "android_app_src_main_assets_public_assets_checkout_7qzwfix_js",
+      "checkout_7qzwfix_a",
+      "checkout_7qzwfix_d",
+      "checkout_7qzwfix_n",
+      "checkout_7qzwfix_r",
+      "checkout_7qzwfix_t"
+    ],
+    "40": [
+      "components_dashboard_tsx",
+      "dashboard_getstatuscolor",
+      "dashboard_handleaddnewaddress",
+      "dashboard_handledeleteaddress",
+      "dashboard_handleeditaddress",
+      "dashboard_handlesaveaddress"
+    ],
+    "41": [
+      "components_shop_tsx",
+      "shop_getpagenumbers",
+      "shop_gotopage",
+      "shop_loadmore",
+      "shop_togglebrand",
+      "shop_togglecategory"
+    ],
+    "42": [
+      "backend_src_middleware_sanitize_ts",
+      "functions_lib_middleware_sanitize_js",
+      "functions_src_middleware_sanitize_ts",
+      "sanitize_sanitizeinput",
+      "sanitize_striphtml"
+    ],
+    "43": [
+      "admindashboard_async",
+      "admindashboard_handlemouseleave",
+      "admindashboard_handlemousemove",
+      "admindashboard_if",
+      "components_admindashboard_tsx"
+    ],
+    "44": [
+      "components_hero_tsx",
+      "hero_gotoslide",
+      "hero_handleslideclick",
+      "hero_nextslide",
+      "hero_prevslide"
+    ],
+    "45": [
+      "hooks_useanalytics_ts",
+      "useanalytics_trackconversion",
+      "useanalytics_trackevent",
+      "useanalytics_trackpageview",
+      "useanalytics_useanalytics"
+    ],
+    "46": [
+      "backend_src_middleware_ratelimiter_ts",
+      "functions_lib_middleware_ratelimiter_js",
+      "functions_src_middleware_ratelimiter_ts",
+      "ratelimiter_bypasslimiter"
+    ],
+    "47": [
+      "backend_src_middleware_requestlogger_ts",
+      "functions_lib_middleware_requestlogger_js",
+      "functions_src_middleware_requestlogger_ts",
+      "requestlogger_requestlogger"
+    ],
+    "48": [
+      "backend_src_routes_shiprocket_ts",
+      "functions_lib_routes_shiprocket_js",
+      "functions_src_routes_shiprocket_ts",
+      "shiprocket_validaterequest"
+    ],
+    "49": [
+      "csrf_sendcsrftoken",
+      "csrf_shouldskipcsrf",
+      "functions_lib_middleware_csrf_js",
+      "functions_src_middleware_csrf_ts"
+    ],
+    "50": [
+      "pushnotifications_pushnotificationservice",
+      "pushnotifications_pushnotificationservice_initialize",
+      "pushnotifications_pushnotificationservice_removelistener",
+      "src_services_pushnotifications_ts"
+    ],
+    "51": [
+      "slugify_createuniqueslug",
+      "slugify_extractidfromslug",
+      "slugify_generateslug",
+      "utils_slugify_ts"
+    ],
+    "52": [
+      "android_app_src_androidtest_java_com_getcapacitor_myapp_exampleinstrumentedtest_java",
+      "exampleinstrumentedtest_exampleinstrumentedtest",
+      "exampleinstrumentedtest_exampleinstrumentedtest_useappcontext"
+    ],
+    "53": [
+      "android_app_src_main_java_com_adk_app_mainactivity_java",
+      "bridgeactivity",
+      "mainactivity_mainactivity"
+    ],
+    "54": [
+      "android_app_src_test_java_com_getcapacitor_myapp_exampleunittest_java",
+      "exampleunittest_exampleunittest",
+      "exampleunittest_exampleunittest_addition_iscorrect"
+    ],
+    "55": [
+      "backend_test_firebase_ts",
+      "functions_test_firebase_ts",
+      "test_firebase_testfirebase"
+    ],
+    "56": [
+      "backend_scripts_fetchorders_js",
+      "fetchorders_fetchorders",
+      "fetchorders_main"
+    ],
+    "57": [
+      "components_cookieconsent_tsx",
+      "cookieconsent_handleaccept",
+      "cookieconsent_handledecline"
+    ],
+    "58": [
+      "components_errorboundary_tsx",
+      "errorboundary_componentdidcatch",
+      "errorboundary_getderivedstatefromerror"
+    ],
+    "59": [
+      "components_header_tsx",
+      "header_handlescroll",
+      "header_handlesearchsubmit"
+    ],
+    "60": [
+      "components_invoiceviewer_tsx",
+      "invoiceviewer_fetchinvoice",
+      "invoiceviewer_handledownload"
+    ],
+    "61": [
+      "components_productmodal_tsx",
+      "productmodal_handleaddtocart",
+      "productmodal_handleattributeselect"
+    ],
+    "62": [
+      "components_themeswitcher_tsx",
+      "themeswitcher_confirmswitch",
+      "themeswitcher_handleactivate"
+    ],
+    "63": [
+      "config_themes_ts",
+      "themes_getdefaulttheme",
+      "themes_getthemebyid"
+    ],
+    "64": [
+      "functions_lib_mock_localdata_js",
+      "functions_src_mock_localdata_ts",
+      "localdata_mockproductspagination"
+    ],
+    "65": [
+      "hooks_useverification_ts",
+      "src_hooks_useverification_ts",
+      "useverification_useverification"
+    ],
+    "66": [
+      "demodataadapter_adaptdemodata",
+      "demodataadapter_striphtml",
+      "utils_demodataadapter_ts"
+    ],
+    "67": [
+      "orderemailservice_getorderstatusemailhtml",
+      "orderemailservice_sendorderstatusemail",
+      "utils_orderemailservice_ts"
+    ],
+    "68": [
+      "aichat_c_4czcan_t",
+      "android_app_src_main_assets_public_assets_aichat_c_4czcan_js"
+    ],
+    "69": [
+      "android_app_src_main_assets_public_assets_login_d1sds8qx_js",
+      "login_d1sds8qx_o"
+    ],
+    "70": [
+      "android_app_src_main_assets_public_assets_privacypolicy_ca3blw28_js",
+      "privacypolicy_ca3blw28_e"
+    ],
+    "71": [
+      "android_app_src_main_assets_public_assets_shop_birrlvcm_js",
+      "shop_birrlvcm_r"
+    ],
+    "72": [
+      "android_app_src_main_assets_public_assets_termsofservice_bqvyxa6l_js",
+      "termsofservice_bqvyxa6l_i"
+    ],
+    "73": [
+      "android_app_src_main_assets_public_assets_wishlist_d15hlof2_js",
+      "wishlist_d15hlof2_o"
+    ],
+    "74": [
+      "brandscroll_brandscroll",
+      "components_brandscroll_tsx"
+    ],
+    "75": [
+      "cartsidebar_handlecheckout",
+      "components_cartsidebar_tsx"
+    ],
+    "76": [
+      "categorylist_categorylist",
+      "components_categorylist_tsx"
+    ],
+    "77": [
+      "components_customdropdown_tsx",
+      "customdropdown_customdropdown"
+    ],
+    "78": [
+      "components_login_tsx",
+      "login_handlesubmit"
+    ],
+    "79": [
+      "components_mobilebottomnav_tsx",
+      "mobilebottomnav_mobilebottomnav"
+    ],
+    "80": [
+      "components_productdetailroute_tsx",
+      "productdetailroute_productdetailroute"
+    ],
+    "81": [
+      "components_stickycartbutton_tsx",
+      "stickycartbutton_stickycartbutton"
+    ],
+    "82": [
+      "components_theme2demo_tsx",
+      "theme2demo_theme2demo"
+    ],
+    "83": [
+      "components_theme3demo_tsx",
+      "theme3demo_theme3demo"
+    ],
+    "84": [
+      "components_themestab_tsx",
+      "themestab_themestab"
+    ],
+    "85": [
+      "components_verifyemailpage_tsx",
+      "verifyemailpage_verifyemailpage"
+    ],
+    "86": [
+      "contexts_themecontext_tsx",
+      "themecontext_usetheme"
+    ],
+    "87": [
+      "hooks_useapi_ts",
+      "useapi_useapi"
+    ],
+    "88": [
+      "src_hooks_usewhatsappnotifications_ts",
+      "usewhatsappnotifications_usewhatsappnotifications"
+    ],
+    "89": [
+      "herocard_herocard",
+      "themes_theme_2_service_style_components_herocard_tsx"
+    ],
+    "90": [
+      "categorypage_togglebrand",
+      "themes_theme_2_service_style_pages_categorypage_tsx"
+    ],
+    "91": [
+      "productdetailpage_handleaddtocart",
+      "themes_theme_2_service_style_pages_productdetailpage_tsx"
+    ],
+    "92": [
+      "productcard_renderstars",
+      "themes_theme_3_pharmacy_components_productcard_tsx"
+    ],
+    "93": [
+      "capacitor_config_ts"
+    ],
+    "94": [
+      "constants_ts"
+    ],
+    "95": [
+      "index_tsx"
+    ],
+    "96": [
+      "postcss_config_js"
+    ],
+    "97": [
+      "tailwind_config_js"
+    ],
+    "98": [
+      "types_ts"
+    ],
+    "99": [
+      "vite_config_ts"
+    ],
+    "100": [
+      "android_app_src_main_assets_public_cordova_js"
+    ],
+    "101": [
+      "android_app_src_main_assets_public_cordova_plugins_js"
+    ],
+    "102": [
+      "api_index_ts"
+    ],
+    "103": [
+      "backend_api_config_php"
+    ],
+    "104": [
+      "backend_api_test_smtp_connection_php"
+    ],
+    "105": [
+      "backend_scripts_import_data_php"
+    ],
+    "106": [
+      "backend_src_server_ts"
+    ],
+    "107": [
+      "backend_src_mock_localdata_ts"
+    ],
+    "108": [
+      "backend_src_routes_adminstats_ts"
+    ],
+    "109": [
+      "backend_src_routes_ai_ts"
+    ],
+    "110": [
+      "backend_src_routes_analytics_ts"
+    ],
+    "111": [
+      "backend_src_routes_auth_ts"
+    ],
+    "112": [
+      "backend_src_routes_brands_ts"
+    ],
+    "113": [
+      "backend_src_routes_cart_ts"
+    ],
+    "114": [
+      "backend_src_routes_categories_ts"
+    ],
+    "115": [
+      "backend_src_routes_chatsessionroutes_ts"
+    ],
+    "116": [
+      "backend_src_routes_coupon_ts"
+    ],
+    "117": [
+      "backend_src_routes_deliveryestimation_ts"
+    ],
+    "118": [
+      "backend_src_routes_guestcheckout_ts"
+    ],
+    "119": [
+      "backend_src_routes_heroslides_ts"
+    ],
+    "120": [
+      "backend_src_routes_invoice_ts"
+    ],
+    "121": [
+      "backend_src_routes_notification_routes_ts"
+    ],
+    "122": [
+      "backend_src_routes_notifications_ts"
+    ],
+    "123": [
+      "backend_src_routes_ordercancellation_ts"
+    ],
+    "124": [
+      "backend_src_routes_products_ts"
+    ],
+    "125": [
+      "backend_src_routes_promotionaltiles_ts"
+    ],
+    "126": [
+      "backend_src_routes_pushnotifications_ts"
+    ],
+    "127": [
+      "backend_src_routes_quickreorder_ts"
+    ],
+    "128": [
+      "backend_src_routes_returns_ts"
+    ],
+    "129": [
+      "backend_src_routes_reviews_ts"
+    ],
+    "130": [
+      "backend_src_routes_savedpayment_ts"
+    ],
+    "131": [
+      "backend_src_routes_settings_ts"
+    ],
+    "132": [
+      "backend_src_routes_shipping_ts"
+    ],
+    "133": [
+      "backend_src_routes_users_ts"
+    ],
+    "134": [
+      "backend_src_routes_verification_ts"
+    ],
+    "135": [
+      "backend_src_routes_whatsapp_ts"
+    ],
+    "136": [
+      "backend_src_services_notificationservice_ts"
+    ],
+    "137": [
+      "backend_src_utils_logger_ts"
+    ],
+    "138": [
+      "backend_src_utils_validation_ts"
+    ],
+    "139": [
+      "components_brands_tsx"
+    ],
+    "140": [
+      "components_categories_tsx"
+    ],
+    "141": [
+      "components_footer_tsx"
+    ],
+    "142": [
+      "components_loading_tsx"
+    ],
+    "143": [
+      "components_loadingskeleton_tsx"
+    ],
+    "144": [
+      "components_optimizedimage_tsx"
+    ],
+    "145": [
+      "components_privacypolicy_tsx"
+    ],
+    "146": [
+      "components_returnrequestmodal_tsx"
+    ],
+    "147": [
+      "components_reviewdisplay_tsx"
+    ],
+    "148": [
+      "components_skeletonloader_tsx"
+    ],
+    "149": [
+      "components_termsofservice_tsx"
+    ],
+    "150": [
+      "components_wishlist_tsx"
+    ],
+    "151": [
+      "data_mockdata_ts"
+    ],
+    "152": [
+      "functions_api_config_php"
+    ],
+    "153": [
+      "functions_api_test_smtp_connection_php"
+    ],
+    "154": [
+      "functions_lib_index_js"
+    ],
+    "155": [
+      "functions_lib_server_js"
+    ],
+    "156": [
+      "functions_lib_routes_adminstats_js"
+    ],
+    "157": [
+      "functions_lib_routes_ai_js"
+    ],
+    "158": [
+      "functions_lib_routes_brands_js"
+    ],
+    "159": [
+      "functions_lib_routes_categories_js"
+    ],
+    "160": [
+      "functions_lib_routes_chatsessionroutes_js"
+    ],
+    "161": [
+      "functions_lib_routes_coupon_js"
+    ],
+    "162": [
+      "functions_lib_routes_deliveryestimation_js"
+    ],
+    "163": [
+      "functions_lib_routes_guestcheckout_js"
+    ],
+    "164": [
+      "functions_lib_routes_heroslides_js"
+    ],
+    "165": [
+      "functions_lib_routes_notification_routes_js"
+    ],
+    "166": [
+      "functions_lib_routes_notifications_js"
+    ],
+    "167": [
+      "functions_lib_routes_ordercancellation_js"
+    ],
+    "168": [
+      "functions_lib_routes_orders_js"
+    ],
+    "169": [
+      "functions_lib_routes_products_js"
+    ],
+    "170": [
+      "functions_lib_routes_promotionaltiles_js"
+    ],
+    "171": [
+      "functions_lib_routes_quickreorder_js"
+    ],
+    "172": [
+      "functions_lib_routes_returns_js"
+    ],
+    "173": [
+      "functions_lib_routes_reviews_js"
+    ],
+    "174": [
+      "functions_lib_routes_savedpayment_js"
+    ],
+    "175": [
+      "functions_lib_routes_settings_js"
+    ],
+    "176": [
+      "functions_lib_routes_shipping_js"
+    ],
+    "177": [
+      "functions_lib_routes_users_js"
+    ],
+    "178": [
+      "functions_lib_routes_verification_js"
+    ],
+    "179": [
+      "functions_lib_routes_whatsapp_js"
+    ],
+    "180": [
+      "functions_lib_utils_logger_js"
+    ],
+    "181": [
+      "functions_lib_utils_validation_js"
+    ],
+    "182": [
+      "functions_scripts_import_data_php"
+    ],
+    "183": [
+      "functions_src_index_ts"
+    ],
+    "184": [
+      "functions_src_server_ts"
+    ],
+    "185": [
+      "functions_src_routes_adminstats_ts"
+    ],
+    "186": [
+      "functions_src_routes_ai_ts"
+    ],
+    "187": [
+      "functions_src_routes_brands_ts"
+    ],
+    "188": [
+      "functions_src_routes_categories_ts"
+    ],
+    "189": [
+      "functions_src_routes_chatsessionroutes_ts"
+    ],
+    "190": [
+      "functions_src_routes_coupon_ts"
+    ],
+    "191": [
+      "functions_src_routes_deliveryestimation_ts"
+    ],
+    "192": [
+      "functions_src_routes_guestcheckout_ts"
+    ],
+    "193": [
+      "functions_src_routes_heroslides_ts"
+    ],
+    "194": [
+      "functions_src_routes_notification_routes_ts"
+    ],
+    "195": [
+      "functions_src_routes_notifications_ts"
+    ],
+    "196": [
+      "functions_src_routes_ordercancellation_ts"
+    ],
+    "197": [
+      "functions_src_routes_orders_ts"
+    ],
+    "198": [
+      "functions_src_routes_products_ts"
+    ],
+    "199": [
+      "functions_src_routes_promotionaltiles_ts"
+    ],
+    "200": [
+      "functions_src_routes_quickreorder_ts"
+    ],
+    "201": [
+      "functions_src_routes_returns_ts"
+    ],
+    "202": [
+      "functions_src_routes_reviews_ts"
+    ],
+    "203": [
+      "functions_src_routes_savedpayment_ts"
+    ],
+    "204": [
+      "functions_src_routes_settings_ts"
+    ],
+    "205": [
+      "functions_src_routes_shipping_ts"
+    ],
+    "206": [
+      "functions_src_routes_users_ts"
+    ],
+    "207": [
+      "functions_src_routes_verification_ts"
+    ],
+    "208": [
+      "functions_src_routes_whatsapp_ts"
+    ],
+    "209": [
+      "functions_src_services_notificationservice_ts"
+    ],
+    "210": [
+      "functions_src_utils_logger_ts"
+    ],
+    "211": [
+      "functions_src_utils_validation_ts"
+    ],
+    "212": [
+      "scratch_debug_wc_ts"
+    ],
+    "213": [
+      "scratch_test_bulletproof_ts"
+    ],
+    "214": [
+      "scratch_test_constructor_ts"
+    ],
+    "215": [
+      "src_config_api_ts"
+    ],
+    "216": [
+      "themes_theme_2_service_style_index_ts"
+    ],
+    "217": [
+      "themes_theme_2_service_style_components_header_tsx"
+    ],
+    "218": [
+      "themes_theme_2_service_style_components_productcard_tsx"
+    ],
+    "219": [
+      "themes_theme_2_service_style_pages_cartpage_tsx"
+    ],
+    "220": [
+      "themes_theme_3_pharmacy_index_ts"
+    ],
+    "221": [
+      "themes_theme_3_pharmacy_components_header_tsx"
+    ],
+    "222": [
+      "types_theme_ts"
+    ],
+    "223": [
+      "utils_api_ts"
+    ],
+    "224": [
+      "utils_apiservice_ts"
+    ],
+    "225": [
+      "utils_demodata_ts"
+    ],
+    "226": [
+      "utils_notificationservice_ts"
+    ]
+  },
+  "cohesion": {
+    "0": 0.02,
+    "1": 0.03,
+    "2": 0.03,
+    "3": 0.03,
+    "4": 0.05,
+    "5": 0.05,
+    "6": 0.05,
+    "7": 0.08,
+    "8": 0.1,
+    "9": 0.1,
+    "10": 0.15,
+    "11": 0.1,
+    "12": 0.12,
+    "13": 0.25,
+    "14": 0.2,
+    "15": 0.17,
+    "16": 0.12,
+    "17": 0.18,
+    "18": 0.12,
+    "19": 0.12,
+    "20": 0.38,
+    "21": 0.63,
+    "22": 0.63,
+    "23": 0.17,
+    "24": 0.27,
+    "25": 0.45,
+    "26": 0.2,
+    "27": 0.47,
+    "28": 0.2,
+    "29": 0.6,
+    "30": 0.5,
+    "31": 0.31,
+    "32": 0.31,
+    "33": 0.22,
+    "34": 0.58,
+    "35": 0.32,
+    "36": 0.32,
+    "37": 0.29,
+    "38": 0.33,
+    "39": 0.33,
+    "40": 0.33,
+    "41": 0.33,
+    "42": 0.7,
+    "43": 0.4,
+    "44": 0.4,
+    "45": 0.4,
+    "46": 0.5,
+    "47": 0.5,
+    "48": 0.5,
+    "49": 0.67,
+    "50": 0.5,
+    "51": 0.67,
+    "52": 0.67,
+    "53": 1.0,
+    "54": 0.67,
+    "55": 0.67,
+    "56": 1.0,
+    "57": 0.67,
+    "58": 0.67,
+    "59": 0.67,
+    "60": 0.67,
+    "61": 0.67,
+    "62": 0.67,
+    "63": 0.67,
+    "64": 0.67,
+    "65": 0.67,
+    "66": 0.67,
+    "67": 0.67,
+    "68": 1.0,
+    "69": 1.0,
+    "70": 1.0,
+    "71": 1.0,
+    "72": 1.0,
+    "73": 1.0,
+    "74": 1.0,
+    "75": 1.0,
+    "76": 1.0,
+    "77": 1.0,
+    "78": 1.0,
+    "79": 1.0,
+    "80": 1.0,
+    "81": 1.0,
+    "82": 1.0,
+    "83": 1.0,
+    "84": 1.0,
+    "85": 1.0,
+    "86": 1.0,
+    "87": 1.0,
+    "88": 1.0,
+    "89": 1.0,
+    "90": 1.0,
+    "91": 1.0,
+    "92": 1.0,
+    "93": 1.0,
+    "94": 1.0,
+    "95": 1.0,
+    "96": 1.0,
+    "97": 1.0,
+    "98": 1.0,
+    "99": 1.0,
+    "100": 1.0,
+    "101": 1.0,
+    "102": 1.0,
+    "103": 1.0,
+    "104": 1.0,
+    "105": 1.0,
+    "106": 1.0,
+    "107": 1.0,
+    "108": 1.0,
+    "109": 1.0,
+    "110": 1.0,
+    "111": 1.0,
+    "112": 1.0,
+    "113": 1.0,
+    "114": 1.0,
+    "115": 1.0,
+    "116": 1.0,
+    "117": 1.0,
+    "118": 1.0,
+    "119": 1.0,
+    "120": 1.0,
+    "121": 1.0,
+    "122": 1.0,
+    "123": 1.0,
+    "124": 1.0,
+    "125": 1.0,
+    "126": 1.0,
+    "127": 1.0,
+    "128": 1.0,
+    "129": 1.0,
+    "130": 1.0,
+    "131": 1.0,
+    "132": 1.0,
+    "133": 1.0,
+    "134": 1.0,
+    "135": 1.0,
+    "136": 1.0,
+    "137": 1.0,
+    "138": 1.0,
+    "139": 1.0,
+    "140": 1.0,
+    "141": 1.0,
+    "142": 1.0,
+    "143": 1.0,
+    "144": 1.0,
+    "145": 1.0,
+    "146": 1.0,
+    "147": 1.0,
+    "148": 1.0,
+    "149": 1.0,
+    "150": 1.0,
+    "151": 1.0,
+    "152": 1.0,
+    "153": 1.0,
+    "154": 1.0,
+    "155": 1.0,
+    "156": 1.0,
+    "157": 1.0,
+    "158": 1.0,
+    "159": 1.0,
+    "160": 1.0,
+    "161": 1.0,
+    "162": 1.0,
+    "163": 1.0,
+    "164": 1.0,
+    "165": 1.0,
+    "166": 1.0,
+    "167": 1.0,
+    "168": 1.0,
+    "169": 1.0,
+    "170": 1.0,
+    "171": 1.0,
+    "172": 1.0,
+    "173": 1.0,
+    "174": 1.0,
+    "175": 1.0,
+    "176": 1.0,
+    "177": 1.0,
+    "178": 1.0,
+    "179": 1.0,
+    "180": 1.0,
+    "181": 1.0,
+    "182": 1.0,
+    "183": 1.0,
+    "184": 1.0,
+    "185": 1.0,
+    "186": 1.0,
+    "187": 1.0,
+    "188": 1.0,
+    "189": 1.0,
+    "190": 1.0,
+    "191": 1.0,
+    "192": 1.0,
+    "193": 1.0,
+    "194": 1.0,
+    "195": 1.0,
+    "196": 1.0,
+    "197": 1.0,
+    "198": 1.0,
+    "199": 1.0,
+    "200": 1.0,
+    "201": 1.0,
+    "202": 1.0,
+    "203": 1.0,
+    "204": 1.0,
+    "205": 1.0,
+    "206": 1.0,
+    "207": 1.0,
+    "208": 1.0,
+    "209": 1.0,
+    "210": 1.0,
+    "211": 1.0,
+    "212": 1.0,
+    "213": 1.0,
+    "214": 1.0,
+    "215": 1.0,
+    "216": 1.0,
+    "217": 1.0,
+    "218": 1.0,
+    "219": 1.0,
+    "220": 1.0,
+    "221": 1.0,
+    "222": 1.0,
+    "223": 1.0,
+    "224": 1.0,
+    "225": 1.0,
+    "226": 1.0
+  },
+  "gods": [
+    {
+      "id": "ai_zayoz6ms_r",
+      "label": "r()",
+      "degree": 94
+    },
+    {
+      "id": "ai_zayoz6ms_l",
+      "label": "l()",
+      "degree": 92
+    },
+    {
+      "id": "ai_zayoz6ms_s",
+      "label": "s()",
+      "degree": 52
+    },
+    {
+      "id": "vendor_pidwjdge_r",
+      "label": "R()",
+      "degree": 51
+    },
+    {
+      "id": "ai_zayoz6ms_ci",
+      "label": "ci",
+      "degree": 36
+    },
+    {
+      "id": "ai_zayoz6ms_bs",
+      "label": "Bs",
+      "degree": 29
+    },
+    {
+      "id": "ai_zayoz6ms_kt",
+      "label": "kt",
+      "degree": 26
+    },
+    {
+      "id": "shiprocketservice_shiprocketservice",
+      "label": "ShiprocketService",
+      "degree": 24
+    },
+    {
+      "id": "whatsappservice_whatsappservice",
+      "label": "WhatsAppService",
+      "degree": 24
+    },
+    {
+      "id": "ai_zayoz6ms_qn",
+      "label": "qn",
+      "degree": 23
+    }
+  ],
+  "surprises": [
+    {
+      "source": "fetchUserOrders()",
+      "target": "getMyOrders()",
+      "source_files": [
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\App.tsx",
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\functions\\src\\controllers\\orderController.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `fetchUserOrders()` unexpectedly reaches hub `getMyOrders()`"
+    },
+    {
+      "source": "handleLogin()",
+      "target": "login()",
+      "source_files": [
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\App.tsx",
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\functions\\src\\controllers\\authController.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `handleLogin()` unexpectedly reaches hub `login()`"
+    },
+    {
+      "source": "handleLogout()",
+      "target": "logout()",
+      "source_files": [
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\App.tsx",
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\functions\\src\\controllers\\authController.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `handleLogout()` unexpectedly reaches hub `logout()`"
+    },
+    {
+      "source": "handleUpdateUser()",
+      "target": "updateProfile()",
+      "source_files": [
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\App.tsx",
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\backend\\src\\controllers\\authController.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `handleUpdateUser()` unexpectedly reaches hub `updateProfile()`"
+    },
+    {
+      "source": "c()",
+      "target": "x()",
+      "source_files": [
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\android\\app\\src\\main\\assets\\public\\assets\\vendor-PidWjDGE.js",
+        "D:\\Cloud iDrive\\Cloud-Drive_webellzinnovation@gmail.com\\Ai studio\\alpha-dentkart\\android\\app\\src\\main\\assets\\public\\assets\\index-CCkYRoi_.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `x()` unexpectedly reaches hub `c()`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `R()` connect `Community 2` to `Community 0`, `Community 1`, `Community 3`, `Community 4`?",
+      "why": "High betweenness centrality (0.064) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `test()` connect `Community 2` to `Community 0`, `Community 1`, `Community 34`, `Community 3`, `Community 4`, `Community 5`, `Community 7`?",
+      "why": "High betweenness centrality (0.035) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `qn` connect `Community 12` to `Community 1`, `Community 5`?",
+      "why": "High betweenness centrality (0.033) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 39 inferred relationships involving `R()` (e.g. with `.forEach()` and `.toString()`) actually correct?",
+      "why": "`R()` has 39 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 2 inferred relationships involving `ci` (e.g. with `.forEach()` and `R()`) actually correct?",
+      "why": "`ci` has 2 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `i`, `Tt`, `At` to the rest of the system?",
+      "why": "30 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.02 - nodes in this community are weakly interconnected."
+    }
+  ]
+}
