@@ -76,6 +76,26 @@ export function getOrderStatusEmailHTML(
             message: 'Your order has been cancelled.',
             color: '#ef4444',
             icon: '❌'
+        },
+        'Return Initiated': {
+            message: 'Your return request has been initiated.',
+            color: '#f59e0b',
+            icon: '↩️'
+        },
+        'Return Approved': {
+            message: 'Your return request has been approved.',
+            color: '#10b981',
+            icon: '✅'
+        },
+        'Return Completed': {
+            message: 'Your return process has been completed successfully.',
+            color: '#10b981',
+            icon: '🏁'
+        },
+        'Return Rejected': {
+            message: 'Your return request has been rejected.',
+            color: '#ef4444',
+            icon: '❌'
         }
     };
 

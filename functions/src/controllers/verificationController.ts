@@ -3,6 +3,8 @@ import { AuthRequest } from '../middleware/auth';
 import multer from 'multer';
 import VerificationService, { VerificationSubmissionData } from '../services/verificationService';
 import logger from '../utils/logger';
+import { emailService } from '../services/EmailService';
+import { db } from '../config/firebase';
 
 // No longer need Prisma Client here, as Service handles DB and is migrated
 const verificationService = new VerificationService(); // Removed prisma arg
@@ -43,21 +45,38 @@ export const submitVerification = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const { documentType, licenseId, licenseState, specialization, institution, studentId, gstNumber, businessName } = req.body;
+    const { 
+      documentType, 
+      licenseId, 
+      licenseState, 
+      specialization, 
+      institution, 
+      studentId, 
+      gstNumber, 
+      businessName,
+      fileUrl,
+      fileName,
+      fileSize,
+      mimeType
+    } = req.body;
 
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: 'No file uploaded' });
+    if (!req.file && !fileUrl) {
+      return res.status(400).json({ success: false, error: 'No file uploaded or file URL provided' });
     }
 
     const submissionData: VerificationSubmissionData = {
       userId,
       documentType: documentType as 'license' | 'certificate' | 'id_proof' | 'clinic_proof',
-      file: {
+      fileUrl,
+      fileName,
+      fileSize: fileSize ? parseInt(fileSize) : undefined,
+      mimeType,
+      file: req.file ? {
         buffer: req.file.buffer,
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
         size: req.file.size
-      },
+      } : undefined,
       additionalData: {
         licenseId,
         licenseState,
@@ -92,7 +111,7 @@ export const submitVerification = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// Get user's verification documents
+// Get user's own verification documents
 export const getUserVerifications = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -108,6 +127,35 @@ export const getUserVerifications = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     logger.error('Error in getUserVerifications:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+};
+
+// Get verification documents for a specific user (admin only)
+export const getVerificationsByUserId = async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const userRole = req.user?.role;
+
+    if (userRole !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID is required' });
+    }
+
+    const documents = await verificationService.getVerificationDocuments(userId);
+
+    return res.status(200).json({
+      success: true,
+      documents
+    });
+  } catch (error) {
+    logger.error('Error in getVerificationsByUserId:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -225,6 +273,24 @@ export const updateVerificationStatus = async (req: AuthRequest, res: Response) 
     );
 
     if (result.success) {
+      // Send notification email asynchronously
+      try {
+        const userDoc = await db.collection('users').doc(document.userId).get();
+        const userData = userDoc.data();
+        if (userData && userData.email) {
+          emailService.sendVerificationStatusEmail(
+            userData.email,
+            userData.name || 'User',
+            status as 'approved' | 'rejected',
+            rejectionReason
+          ).catch(err => {
+            logger.error('Failed to send verification status email', { error: err, userId: document.userId });
+          });
+        }
+      } catch (emailErr) {
+        logger.error('Error fetching user for verification email', { error: emailErr, userId: document.userId });
+      }
+
       return res.status(200).json({
         success: true,
         message: `Verification ${status} successfully`,

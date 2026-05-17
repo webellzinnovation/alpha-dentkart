@@ -14,6 +14,7 @@ interface OptimizedImageProps {
   onError?: () => void;
   quality?: number; // 1-100
   format?: 'webp' | 'jpg' | 'png' | 'auto';
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -31,10 +32,25 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   quality = 80,
   format = 'auto'
 }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(priority);
   const [hasError, setHasError] = useState(false);
   const [isInView, setIsInView] = useState(priority);
-  const [currentSrc, setCurrentSrc] = useState(priority ? src : placeholder);
+  
+  // Generate optimized URL once
+  const optimizedUrl = React.useMemo(() => {
+    if (import.meta.env.DEV) return src;
+    
+    const url = new URL(src, window.location.origin);
+    if (format !== 'auto') {
+      url.searchParams.set('format', format);
+    }
+    url.searchParams.set('quality', quality.toString());
+    url.searchParams.set('auto', 'compress');
+    
+    return url.toString();
+  }, [src, quality, format]);
+
+  const [currentSrc, setCurrentSrc] = useState(priority ? optimizedUrl : placeholder);
   const imgRef = useRef<HTMLImageElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -82,13 +98,11 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   // Load optimized image when in view
   useEffect(() => {
-    if (!isInView || isLoaded || hasError) return;
+    if (priority || !isInView || isLoaded || hasError) return;
 
-    const optimizedSrc = generateOptimizedUrl(src);
     const img = new Image();
-
     img.onload = () => {
-      setCurrentSrc(optimizedSrc);
+      setCurrentSrc(optimizedUrl);
       setIsLoaded(true);
       onLoad?.();
     };
@@ -99,8 +113,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       onError?.();
     };
 
-    img.src = optimizedSrc;
-  }, [isInView, isLoaded, hasError, src, generateOptimizedUrl, onLoad, onError, fallback]);
+    img.src = optimizedUrl;
+  }, [isInView, isLoaded, hasError, optimizedUrl, onLoad, onError, fallback, priority]);
 
   // Generate srcset for responsive images
   const generateSrcSet = useCallback(() => {
@@ -118,7 +132,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }, [src, quality]);
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={`${className} relative overflow-hidden`}>
       {/* Placeholder with blur effect */}
       {!isLoaded && (
         <div 
@@ -143,16 +157,18 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         sizes={sizes}
         srcSet={generateSrcSet()}
         loading={priority ? 'eager' : 'lazy'}
+        // @ts-ignore - fetchpriority is a valid HTML attribute but not yet in all React types
+        fetchpriority={priority ? 'high' : 'auto'}
         decoding="async"
         className={`
           transition-opacity duration-300 ease-in-out
           ${isLoaded ? 'opacity-100' : 'opacity-0'}
-          ${className}
+          w-full h-full
         `}
         style={{
-          objectFit: 'cover',
-          width: width || '100%',
-          height: height || 'auto'
+          objectFit: (className.includes('object-contain') ? 'contain' : 'cover') as any,
+          width: '100%',
+          height: '100%'
         }}
       />
 

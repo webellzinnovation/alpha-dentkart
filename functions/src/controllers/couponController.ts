@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { db, admin } from '../config/firebase'; // Firestore
-import { z } from 'zod';
 import logger from '../utils/logger';
+import { createCouponSchema, validateCouponSchema } from '../utils/validation';
 
 interface AuthenticatedRequest extends Request {
     user?: {
@@ -10,28 +10,7 @@ interface AuthenticatedRequest extends Request {
     };
 }
 
-// Validation schemas
-const createCouponSchema = z.object({
-    code: z.string().min(3, 'Coupon code must be at least 3 characters').max(20, 'Coupon code must not exceed 20 characters'),
-    type: z.enum(['percentage', 'fixed', 'free_shipping']),
-    value: z.number().min(0, 'Value must be non-negative'),
-    minimumAmount: z.number().min(0, 'Minimum amount must be non-negative').optional(),
-    maximumDiscount: z.number().min(0, 'Maximum discount must be non-negative').optional(),
-    usageLimit: z.number().min(1, 'Usage limit must be at least 1').optional(),
-    userUsageLimit: z.number().min(1, 'User usage limit must be at least 1').optional(),
-    startsAt: z.string().datetime('Invalid start date format'),
-    expiresAt: z.string().datetime('Invalid expiry date format'),
-    applicableProducts: z.string().optional(),
-    applicableCategories: z.string().optional(),
-    userType: z.string().optional(),
-    isActive: z.boolean().default(true)
-});
-
-const validateCouponSchema = z.object({
-    code: z.string().min(3, 'Coupon code is required'),
-    cartTotal: z.number().min(0, 'Cart total is required'),
-    userId: z.string().optional()
-});
+// Validation schemas removed (now in validation.ts)
 
 // Create a new coupon
 export const createCoupon = async (req: AuthenticatedRequest, res: Response) => {
@@ -102,6 +81,7 @@ export const getAllCoupons = async (req: AuthenticatedRequest, res: Response) =>
             data: coupons
         });
     } catch (error) {
+        logger.error('Get all coupons error:', error);
         res.status(500).json({ success: false, message: 'Failed to retrieve coupons' });
     }
 };
@@ -122,6 +102,7 @@ export const getCouponByCode = async (req: Request, res: Response) => {
 
         res.json({ success: true, data: coupon });
     } catch (error) {
+        logger.error('Get coupon by code error:', error);
         res.status(500).json({ success: false, message: 'Failed to retrieve coupon' });
     }
 };
@@ -151,6 +132,7 @@ export const updateCoupon = async (req: AuthenticatedRequest, res: Response) => 
 
         res.json({ success: true, message: 'Coupon updated', data: { id: doc.id, ...doc.data() } });
     } catch (error) {
+        logger.error('Update coupon error:', error);
         res.status(500).json({ success: false, message: 'Failed to update coupon' });
     }
 };
@@ -168,6 +150,7 @@ export const deleteCoupon = async (req: AuthenticatedRequest, res: Response) => 
 
         res.json({ success: true, message: 'Coupon deleted successfully' });
     } catch (error) {
+        logger.error('Delete coupon error:', error);
         res.status(500).json({ success: false, message: 'Failed to delete coupon' });
     }
 };
@@ -282,6 +265,7 @@ export const getCouponAnalytics = async (req: AuthenticatedRequest, res: Respons
             }
         });
     } catch (error) {
+        logger.error('Get coupon analytics error:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch analytics' });
     }
 };

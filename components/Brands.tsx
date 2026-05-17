@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { BrandProfile } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
 
 interface BrandsProps {
   onBrandClick: (brandName: string) => void;
@@ -28,7 +28,7 @@ export const Brands: React.FC<BrandsProps> = ({ onBrandClick, brands }) => {
               className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl p-6 flex flex-col items-center text-center cursor-pointer hover:shadow-lg transition-all group"
             >
               <div className="w-32 h-32 mb-6 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-full group-hover:scale-110 transition-transform duration-300">
-                <img src={brand.logo} alt={brand.name} className="max-w-[70%] max-h-[70%] object-contain mix-blend-multiply dark:mix-blend-normal" />
+                <OptimizedImageMemo src={brand.logo} alt={brand.name} className="max-w-[70%] max-h-[70%] object-contain mix-blend-multiply dark:mix-blend-normal" width={100} height={100} />
               </div>
               <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">{brand.name}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 h-10">{brand.description}</p>

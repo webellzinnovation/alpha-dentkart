@@ -1,2 +1,58 @@
-nul
-node_modules
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+firebase-service-account.json
+service-account-file.json
+
+# Firebase logs and cache
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+.firebaserc
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Graphify tool outputs
+graphify-out/
+.graphify_*
+
+# Temporary diagnostic logs
+lint_errors.txt
+lint_errors_clean.txt
+lint_errors_new.txt
+lint_final_report.txt
+eslint_report.txt
+functions/build_output.log
+functions/lib/
+
+# Tool configurations
+.opencode/
+.playwright-mcp/
+
+

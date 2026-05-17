@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { User } from '../types';
+import { storage } from '../src/services/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface VerificationDocument {
   id: string;
@@ -38,7 +39,8 @@ export const useVerification = (userId?: string): VerificationHook => {
   // Fetch verification documents
   const refreshDocuments = async () => {
     try {
-      const response = await fetch(`/api/verification/documents/${userId}`);
+      if (!userId) return;
+      const response = await fetch(`/api/v1/verification/documents`);
       if (!response.ok) {
         throw new Error('Failed to fetch verification documents');
       }
@@ -49,29 +51,41 @@ export const useVerification = (userId?: string): VerificationHook => {
     }
   };
 
-  // Upload document
+  // Upload document via Firebase Storage
   const uploadDocument = async (file: File, documentType: VerificationDocument['documentType']) => {
     setIsUploading(true);
     setUploadError(null);
 
     try {
+      if (!userId) throw new Error('User ID not provided');
+
       // Validate file
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        throw new Error('File size must be less than 5MB');
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        throw new Error('File size must be less than 10MB');
       }
 
-      if (!['image/jpeg', 'image/png', 'application/pdf'].includes(file.type)) {
-        throw new Error('Only JPEG, PNG, and PDF files are allowed');
-      }
+      // 1. Upload to Firebase Storage
+      const fileExtension = file.name.split('.').pop();
+      const storagePath = `verifications/${userId}/${Date.now()}_${documentType}.${fileExtension}`;
+      const storageRef = ref(storage, storagePath);
+      
+      const uploadResult = await uploadBytes(storageRef, file);
+      const fileUrl = await getDownloadURL(uploadResult.ref);
 
-      const formData = new FormData();
-      formData.append('document', file);
-      formData.append('documentType', documentType);
-      formData.append('userId', userId);
-
-      const response = await fetch('/api/verification/upload', {
+      // 2. Submit metadata to backend
+      const response = await fetch('/api/v1/verification/submit', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          documentType,
+          fileUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type
+        }),
       });
 
       if (!response.ok) {
@@ -96,7 +110,7 @@ export const useVerification = (userId?: string): VerificationHook => {
   // Delete document
   const deleteDocument = async (documentId: string) => {
     try {
-      const response = await fetch(`/api/verification/documents/${documentId}`, {
+      const response = await fetch(`/api/v1/verification/documents/${documentId}`, {
         method: 'DELETE',
       });
 
@@ -123,7 +137,6 @@ export const useVerification = (userId?: string): VerificationHook => {
   // Get user verifications
   const getUserVerifications = async (): Promise<{ success: boolean; documents?: VerificationDocument[]; error?: string }> => {
     try {
-      if (!userId) return { success: false, error: 'User ID not provided' };
       const response = await fetch(`/api/v1/verification/documents`, {
         headers: { 'Content-Type': 'application/json' }
       });
@@ -138,13 +151,26 @@ export const useVerification = (userId?: string): VerificationHook => {
     }
   };
 
-  // Submit verification with form data
+  // Submit verification with form data and Firebase Storage upload
   const submitVerification = async (data: any): Promise<{ success: boolean; error?: string }> => {
     setIsUploading(true);
     setUploadError(null);
 
     try {
+      const { file, documentType, additionalData } = data;
+      
+      if (!file) throw new Error('No file provided');
       if (!userId) throw new Error('User ID not provided');
+
+      // 1. Upload to Firebase Storage
+      const fileExtension = file.name.split('.').pop();
+      const storagePath = `verifications/${userId}/${Date.now()}_${documentType}.${fileExtension}`;
+      const storageRef = ref(storage, storagePath);
+      
+      const uploadResult = await uploadBytes(storageRef, file);
+      const fileUrl = await getDownloadURL(uploadResult.ref);
+
+      // 2. Submit metadata and additional data to backend
       const response = await fetch('/api/v1/verification/submit', {
         method: 'POST',
         headers: {
@@ -152,7 +178,12 @@ export const useVerification = (userId?: string): VerificationHook => {
         },
         body: JSON.stringify({
           userId,
-          ...data
+          documentType,
+          fileUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          ...additionalData
         }),
       });
 
@@ -212,4 +243,4 @@ export const useVerification = (userId?: string): VerificationHook => {
     submitVerification,
     clearError
   };
-};
+};

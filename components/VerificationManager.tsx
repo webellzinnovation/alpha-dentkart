@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useVerification } from '../hooks/useVerification';
+import { toast } from 'sonner';
 
 interface VerificationManagerProps {
   userId: string;
@@ -19,7 +20,7 @@ export const VerificationManager: React.FC<VerificationManagerProps> = ({
     isLoading,
     error,
     clearError
-  } = useVerification();
+  } = useVerification(userId);
 
   const [verifications, setVerifications] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -96,7 +97,7 @@ export const VerificationManager: React.FC<VerificationManagerProps> = ({
       });
 
       if (result.success) {
-        alert('Verification submitted successfully!');
+        toast.success('Verification submitted successfully!');
         setShowUploadForm(false);
         setSelectedFile(null);
         setFormData({
@@ -110,31 +111,39 @@ export const VerificationManager: React.FC<VerificationManagerProps> = ({
         });
         loadUserVerifications();
       } else {
-        alert(`Failed to submit verification: ${result.error}`);
+        toast.error(`Failed to submit verification: ${result.error}`);
       }
     } catch (err) {
       console.error('Error submitting verification:', err);
-      alert('Failed to submit verification. Please try again.');
+      toast.error('Failed to submit verification. Please try again.');
     }
   };
 
   const handleDelete = async (documentId: string) => {
-    if (!confirm('Are you sure you want to delete this verification document?')) {
-      return;
-    }
-
-    try {
-      const result = await deleteVerification(documentId);
-      if (result.success) {
-        alert('Verification deleted successfully');
-        loadUserVerifications();
-      } else {
-        alert(`Failed to delete verification: ${result.error}`);
+    toast('Delete Verification?', {
+      description: 'Are you sure you want to delete this document?',
+      action: {
+        label: 'Delete',
+        onClick: async () => {
+          try {
+            const result = await deleteVerification(documentId);
+            if (result.success) {
+              toast.success('Verification deleted successfully');
+              loadUserVerifications();
+            } else {
+              toast.error(`Failed to delete verification: ${result.error}`);
+            }
+          } catch (err) {
+            console.error('Error deleting verification:', err);
+            toast.error('Failed to delete verification. Please try again.');
+          }
+        }
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {}
       }
-    } catch (err) {
-      console.error('Error deleting verification:', err);
-      alert('Failed to delete verification. Please try again.');
-    }
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -160,9 +169,9 @@ export const VerificationManager: React.FC<VerificationManagerProps> = ({
     switch (userType) {
       case 'dental-doctor':
         return ['license', 'id_proof', 'clinic_proof'];
-      case 'student':
+      case 'dental-student':
         return ['certificate', 'id_proof'];
-      case 'supplier':
+      case 'dental-business':
         return ['certificate', 'id_proof', 'gst_certificate'];
       default:
         return ['id_proof'];

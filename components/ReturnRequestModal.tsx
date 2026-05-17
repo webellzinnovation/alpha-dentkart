@@ -3,13 +3,13 @@ import api from '../utils/api';
 
 interface ReturnRequestModalProps {
   orderId: string;
-  items: { id: string; name: string; quantity: number; price: number }[];
+  items: { productId: string | number; name: string; quantity: number; price: number }[];
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export const ReturnRequestModal: React.FC<ReturnRequestModalProps> = ({ orderId, items, onClose, onSuccess }) => {
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState<(string | number)[]>([]);
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,9 +24,9 @@ export const ReturnRequestModal: React.FC<ReturnRequestModalProps> = ({ orderId,
     'Other'
   ];
 
-  const toggleItem = (itemId: string) => {
+  const toggleItem = (productId: string | number) => {
     setSelectedItems(prev =>
-      prev.includes(itemId) ? prev.filter(i => i !== itemId) : [...prev, itemId]
+      prev.includes(productId) ? prev.filter(i => i !== productId) : [...prev, productId]
     );
   };
 
@@ -43,8 +43,8 @@ export const ReturnRequestModal: React.FC<ReturnRequestModalProps> = ({ orderId,
     setLoading(true);
     setError('');
     try {
-      const returnItems = items.filter(i => selectedItems.includes(i.id)).map(i => ({
-        productId: i.id,
+      const returnItems = items.filter(i => selectedItems.includes(i.productId)).map(i => ({
+        productId: String(i.productId),
         name: i.name,
         quantity: i.quantity,
         price: i.price
@@ -77,13 +77,13 @@ export const ReturnRequestModal: React.FC<ReturnRequestModalProps> = ({ orderId,
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select items to return</label>
           <div className="space-y-2">
             {items.map(item => (
-              <label key={item.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                selectedItems.includes(item.id) ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+              <label key={item.productId} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                selectedItems.includes(item.productId) ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}>
                 <input
                   type="checkbox"
-                  checked={selectedItems.includes(item.id)}
-                  onChange={() => toggleItem(item.id)}
+                  checked={selectedItems.includes(item.productId)}
+                  onChange={() => toggleItem(item.productId)}
                   className="text-primary rounded"
                 />
                 <div className="flex-1">

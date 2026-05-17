@@ -1,15 +1,18 @@
 import { Router, Request, Response } from 'express';
 import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
-import { db } from '../config/firebase';
+import { admin, db } from '../config/firebase';
 import dotenv from 'dotenv';
+import logger from '../utils/logger';
+import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { apiLimiter } from '../middleware/rateLimiter';
 
 dotenv.config();
 
 const router = Router();
 
 const WP_URL = (process.env.WP_URL || "https://alphadentkart.com").replace(/\/$/, '');
-const WP_CONSUMER_KEY = process.env.WP_CONSUMER_KEY || "ck_b41b9f56dc6245691a0d563b4e40a92e81f7b031";
-const WP_CONSUMER_SECRET = process.env.WP_CONSUMER_SECRET || "cs_49ea401b7c76be3bd64c4edf0a2f73afe5ca08b1";
+const WP_CONSUMER_KEY = process.env.WP_CONSUMER_KEY;
+const WP_CONSUMER_SECRET = process.env.WP_CONSUMER_SECRET;
 
 const WC = (WooCommerceRestApi as any).default || WooCommerceRestApi;
 const api = new (WC as any)({
@@ -17,6 +20,7 @@ const api = new (WC as any)({
     consumerKey: WP_CONSUMER_KEY,
     consumerSecret: WP_CONSUMER_SECRET,
     version: "wc/v3",
+    queryStringAuth: true,
     axiosConfig: { timeout: 60000 }
 });
 
@@ -28,87 +32,199 @@ async function fetchAll(endpoint: string, params: Record<string, any> = {}): Pro
     let results: any[] = [];
     let totalPages = 1;
 
-    do {
-        const { data, headers } = await api.get(endpoint, { ...params, per_page: BATCH_SIZE, page });
-        console.log(`Page ${page}: got ${data?.length || 0} items, total pages: ${headers?.["x-wp-totalpages"]}`);
-        results = results.concat(data);
-        totalPages = parseInt(headers?.["x-wp-totalpages"] || "1", 10);
-        page++;
-        await sleep(100);
-    } while (page <= totalPages);
+    try {
+        do {
+            const { data, headers } = await api.get(endpoint, { ...params, per_page: BATCH_SIZE, page });
+            if (data && Array.isArray(data)) {
+                results = results.concat(data);
+            }
+            totalPages = parseInt(headers?.["x-wp-totalpages"] || "1", 10);
+            page++;
+            if (page <= totalPages) await sleep(100);
+        } while (page <= totalPages);
+    } catch (error: any) {
+        logger.error(`Error fetching from ${endpoint}:`, { error: error?.response?.data || error?.message });
+        throw error;
+    }
 
-    console.log(`Total fetched: ${results.length} items`);
     return results;
 }
 
-async function syncProducts(): Promise<number> {
-    console.log("📦 Fetching products from WooCommerce...");
-    const products = await fetchAll("/products", { status: "publish" });
-    console.log(`Found ${products.length} products in WooCommerce`);
+async function getLastSyncTime(type: string): Promise<Date | null> {
+    try {
+        const doc = await db.collection('settings').doc('sync_status').get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data && data[type]) {
+                const timestamp = data[type];
+                return typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp);
+            }
+        }
+    } catch (e) {
+    } catch (e) {
+        logger.warn(`Could not fetch last sync time for ${type}`, { error: e });
+    }
+    return null;
+}
+
+async function updateLastSyncTime(type: string, time: Date = new Date()) {
+    try {
+        await db.collection('settings').doc('sync_status').set({
+            [type]: admin.firestore.Timestamp.fromDate(time),
+            [`${type}_last_success`]: admin.firestore.Timestamp.fromDate(new Date())
+        }, { merge: true });
+    } catch (e) {
+    } catch (e) {
+        logger.error(`Failed to update last sync time for ${type}`, { error: e });
+    }
+}
+
+async function syncProducts(forceFull = false): Promise<number> {
+    logger.info("📦 Fetching products from WooCommerce...");
+    
+    const params: any = { status: "publish,private,draft" };
+    const lastSync = !forceFull ? await getLastSyncTime('lastProductSync') : null;
+    
+    if (lastSync) {
+        // Go back 10 minutes to handle overlaps/clock drift
+        const afterDate = new Date(lastSync.getTime() - 10 * 60 * 1000);
+        params.after = afterDate.toISOString();
+        logger.info(`Incremental sync: fetching products modified after ${params.after}`);
+    }
+
+    const products = await fetchAll("/products", params);
+    logger.info(`Found ${products.length} products to sync`);
+
+    if (products.length === 0) return 0;
 
     let synced = 0;
-    function getOriginalImageUrl(url: string): string {
+    const getOriginalImageUrl = (url: string): string => {
         if (!url) return '';
-        // Remove WordPress thumbnail size suffix (-150x150, -300x300, etc.)
         return url.replace(/-(\d+)x(\d+)\.(\w+)$/, '.$3');
-    }
+    };
 
-    const batch = db.batch();
-
-    for (const product of products) {
-        // Get original/full-size images instead of thumbnails
-        const imageUrls = product.images?.map((img: any) => getOriginalImageUrl(img.src)) || [];
+    // Parallel processing with limited concurrency for variations
+    const processBatch = async (items: any[]) => {
+        const batch = db.batch();
         
-        const productData = {
-            wpId: product.id,
-            name: product.name,
-            slug: product.slug,
-            description: product.description,
-            shortDescription: product.short_description,
-            price: parseFloat(product.price) || 0,
-            salePrice: parseFloat(product.sale_price) || parseFloat(product.price) || 0,
-            originalPrice: parseFloat(product.regular_price) || parseFloat(product.price) || 0,
-            stock: product.stock_quantity || 0,
-            sku: product.sku || '',
-            image: imageUrls[0] || '',
-            images: imageUrls,
-            category: product.categories?.[0]?.name || 'Dental',
-            brand: product.tags?.[0]?.name || null,
-            type: product.type,
-            status: product.status,
-            createdAt: new Date(product.date_created),
-            updatedAt: new Date(product.date_modified),
-            reviews: product.rating_count || 0,
-            rating: product.average_rating || 0,
-            specs: {},
-            features: [],
-            attributes: [],
-            variations: [],
-            source: 'wordpress_sync'
-        };
-
-        const productRef = db.collection('products').doc(String(product.id));
-        batch.set(productRef, productData, { merge: true });
-        synced++;
-
-        if (synced % 50 === 0) {
-            await batch.commit();
-            console.log(`Synced ${synced}/${products.length} products`);
+        // Pre-fetch all variations in parallel for variable products in this batch
+        const variableItems = items.filter(p => p.type === 'variable');
+        const variationsMap = new Map<number, any[]>();
+        
+        if (variableItems.length > 0) {
+            logger.info(`   ↳ Parallel fetching variations for ${variableItems.length} products...`);
+            // Fetch variations with concurrency limit of 5
+            for (let i = 0; i < variableItems.length; i += 5) {
+                const chunk = variableItems.slice(i, i + 5);
+                await Promise.all(chunk.map(async (p) => {
+                    try {
+                        const vars = await fetchAll(`/products/${p.id}/variations`);
+                        variationsMap.set(p.id, vars);
+                    } catch (err) {
+                        logger.warn(`      ⚠️ Failed variations for ${p.id}`, { error: err });
+                    }
+                }));
+            }
         }
+
+        for (const product of items) {
+            const imageUrls = product.images?.map((img: any) => getOriginalImageUrl(img.src)) || [];
+            const variations: any[] = [];
+            
+            const fetchedVars = variationsMap.get(product.id);
+            if (fetchedVars) {
+                variations.push(...fetchedVars.map((v: any) => ({
+                    id: String(v.id),
+                    price: parseFloat(v.price) || 0,
+                    regularPrice: parseFloat(v.regular_price) || 0,
+                    salePrice: parseFloat(v.sale_price) || null,
+                    stock: v.manage_stock ? (v.stock_quantity ?? 0) : (v.stock_status === 'instock' ? 999 : 0),
+                    stockStatus: v.stock_status,
+                    sku: v.sku || '',
+                    image: v.image?.src || '',
+                    attributes: v.attributes || []
+                })));
+            }
+
+            const brandName = product.brands?.[0]?.name || 
+                            product.attributes?.find((a: any) => a.slug === 'pa_brand' || a.name.toLowerCase() === 'brand')?.options?.[0] ||
+                            product.tags?.[0]?.name || '';
+
+            const productData = {
+                wpId: product.id,
+                name: product.name,
+                slug: product.slug,
+                description: product.description,
+                shortDescription: product.short_description,
+                price: parseFloat(product.price) || 0,
+                salePrice: parseFloat(product.sale_price) || parseFloat(product.price) || 0,
+                originalPrice: parseFloat(product.regular_price) || parseFloat(product.price) || 0,
+                stock: product.manage_stock ? (product.stock_quantity ?? 0) : (product.stock_status === 'instock' ? 999 : 0),
+                stockStatus: product.stock_status,
+                sku: product.sku || '',
+                image: imageUrls[0] || '',
+                images: imageUrls,
+                category: product.categories?.[0]?.name || 'Dental',
+                categoryId: product.categories?.[0]?.id || null,
+                brand: brandName,
+                type: product.type,
+                status: product.status,
+                createdAt: new Date(product.date_created),
+                updatedAt: new Date(product.date_modified),
+                lastSync: new Date(),
+                reviews: product.rating_count || 0,
+                rating: parseFloat(product.average_rating) || 0,
+                specs: {
+                    weight: product.weight || '',
+                    dimensions: product.dimensions || {},
+                    sku: product.sku || '',
+                    manageStock: product.manage_stock
+                },
+                features: [],
+                attributes: product.attributes || [],
+                variations: variations,
+                source: 'wordpress_sync'
+            };
+
+            const productRef = db.collection('products').doc(String(product.id));
+            batch.set(productRef, productData, { merge: true });
+        }
+        
+        await batch.commit();
+    };
+
+    // Process all products in batches of 50
+        const chunk = products.slice(i, i + 50);
+        await processBatch(chunk);
+        synced += chunk.length;
+        logger.info(`Synced ${synced}/${products.length} products`);
+        await sleep(200);
     }
 
-    await batch.commit();
-    console.log(`✅ Synced ${synced} products`);
+    await updateLastSyncTime('lastProductSync');
     return synced;
 }
 
-async function syncOrders(): Promise<number> {
-    console.log("📋 Fetching orders from WooCommerce...");
-    const orders = await fetchAll("/orders", { per_page: 100 });
-    console.log(`Found ${orders.length} orders`);
+async function syncOrders(forceFull = false): Promise<number> {
+    logger.info("📋 Fetching orders from WooCommerce...");
+    
+    const params: any = { per_page: 100 };
+    const lastSync = !forceFull ? await getLastSyncTime('lastOrderSync') : null;
+    
+    if (lastSync) {
+        const afterDate = new Date(lastSync.getTime() - 10 * 60 * 1000);
+        params.after = afterDate.toISOString();
+        logger.info(`Incremental sync: fetching orders modified after ${params.after}`);
+    }
+
+    const orders = await fetchAll("/orders", params);
+    logger.info(`Found ${orders.length} orders to sync`);
+
+    if (orders.length === 0) return 0;
 
     let synced = 0;
-    const batch = db.batch();
+    let batch = db.batch();
+    let countInBatch = 0;
 
     for (const order of orders) {
         const customer = order.billing;
@@ -154,31 +270,51 @@ async function syncOrders(): Promise<number> {
             paymentStatus: order.payment_status === 'paid' ? 'paid' : 'pending',
             createdAt: new Date(order.date_created),
             updatedAt: new Date(order.date_modified),
+            lastSync: new Date(),
             source: 'wordpress_sync'
         };
 
         const orderRef = db.collection('orders').doc(String(order.id));
         batch.set(orderRef, orderData, { merge: true });
         synced++;
+        countInBatch++;
 
-        if (synced % 50 === 0) {
+        if (countInBatch >= 50) {
             await batch.commit();
-            console.log(`Synced ${synced}/${orders.length} orders`);
+            batch = db.batch();
+            countInBatch = 0;
+            await sleep(200);
         }
     }
 
-    await batch.commit();
-    console.log(`✅ Synced ${synced} orders`);
+    if (countInBatch > 0) {
+        await batch.commit();
+    }
+    
+    await updateLastSyncTime('lastOrderSync');
     return synced;
 }
 
-async function syncUsers(): Promise<number> {
-    console.log("👥 Fetching customers from WooCommerce...");
-    const customers = await fetchAll("/customers");
-    console.log(`Found ${customers.length} customers`);
+async function syncUsers(forceFull = false): Promise<number> {
+    logger.info("👥 Fetching customers from WooCommerce...");
+    
+    const params: any = { per_page: 100 };
+    const lastSync = !forceFull ? await getLastSyncTime('lastUserSync') : null;
+    
+    if (lastSync) {
+        const afterDate = new Date(lastSync.getTime() - 10 * 60 * 1000);
+        params.after = afterDate.toISOString();
+        logger.info(`Incremental sync: fetching users modified after ${params.after}`);
+    }
+
+    const customers = await fetchAll("/customers", params);
+    logger.info(`Found ${customers.length} customers to sync`);
+
+    if (customers.length === 0) return 0;
 
     let synced = 0;
-    const batch = db.batch();
+    let batch = db.batch();
+    let countInBatch = 0;
 
     for (const customer of customers) {
         const billing = customer.billing;
@@ -204,31 +340,39 @@ async function syncUsers(): Promise<number> {
             role: 'customer',
             isVerified: true,
             createdAt: new Date(customer.date_created),
+            lastSync: new Date(),
             source: 'wordpress_sync'
         };
 
         const userRef = db.collection('users').doc(String(customer.id));
         batch.set(userRef, userData, { merge: true });
         synced++;
+        countInBatch++;
 
-        if (synced % 50 === 0) {
+        if (countInBatch >= 50) {
             await batch.commit();
-            console.log(`Synced ${synced}/${customers.length} users`);
+            batch = db.batch();
+            countInBatch = 0;
+            await sleep(200);
         }
     }
 
-    await batch.commit();
-    console.log(`✅ Synced ${synced} users`);
+    if (countInBatch > 0) {
+        await batch.commit();
+    }
+    
+    await updateLastSyncTime('lastUserSync');
     return synced;
 }
 
 async function syncCategories(): Promise<number> {
-    console.log("📂 Fetching categories from WooCommerce...");
+    logger.info("📂 Fetching categories from WooCommerce...");
     const categories = await fetchAll("/products/categories", { per_page: 100 });
-    console.log(`Found ${categories.length} categories`);
+    logger.info(`Found ${categories.length} categories`);
 
     let synced = 0;
-    const batch = db.batch();
+    let batch = db.batch();
+    let countInBatch = 0;
 
     for (const cat of categories) {
         const categoryData = {
@@ -239,16 +383,29 @@ async function syncCategories(): Promise<number> {
             image: cat.image?.src || '',
             parent: cat.parent || 0,
             count: cat.count || 0,
+            lastSync: new Date(),
+            updatedAt: new Date(),
             source: 'wordpress_sync'
         };
 
         const catRef = db.collection('categories').doc(String(cat.id));
         batch.set(catRef, categoryData, { merge: true });
         synced++;
+        countInBatch++;
+
+        if (countInBatch >= 50) {
+            await batch.commit();
+            logger.info(`Synced ${synced}/${categories.length} categories`);
+            batch = db.batch();
+            countInBatch = 0;
+        }
     }
 
-    await batch.commit();
-    console.log(`✅ Synced ${synced} categories`);
+    if (countInBatch > 0) {
+        await batch.commit();
+    }
+    
+    logger.info(`✅ Synced ${synced} categories`);
     return synced;
 }
 
@@ -274,104 +431,149 @@ async function searchBrandLogo(brandName: string): Promise<string> {
 }
 
 async function syncBrands(): Promise<number> {
-    console.log("🏷️ Fetching tags (brands) from WooCommerce...");
+    logger.info("🏷️ Fetching tags (brands) from WooCommerce...");
     const tags = await fetchAll("/products/tags", { per_page: 100 });
-    console.log(`Found ${tags.length} tags`);
+    logger.info(`Found ${tags.length} tags in WooCommerce`);
+    
+    // Also try to fetch from pa_brand attribute if available
+    let brandsFromAttr: any[] = [];
+    try {
+        logger.info("🏷️ Checking for pa_brand attribute terms...");
+        const { data: attributes } = await api.get("products/attributes");
+        const brandAttr = attributes.find((a: any) => 
+            a.slug === "pa_brand" || a.slug === "brand" || a.name.toLowerCase() === "brand"
+        );
+        if (brandAttr) {
+            brandsFromAttr = await fetchAll(`products/attributes/${brandAttr.id}/terms`);
+            logger.info(`Found ${brandsFromAttr.length} brand terms in attributes`);
+        }
+    } catch (err) {
+        logger.info("   ⏭️ pa_brand attribute not found or inaccessible");
+    }
+
+    const allBrandTerms = [...tags, ...brandsFromAttr];
+    const uniqueBrands = Array.from(new Map(allBrandTerms.map(item => [item.name, item])).values());
+    logger.info(`Processing ${uniqueBrands.length} unique brands`);
 
     let synced = 0;
-    const batch = db.batch();
+    let batch = db.batch();
+    let countInBatch = 0;
 
-    for (const tag of tags) {
+    for (const brand of uniqueBrands) {
         const brandData = {
-            wpId: tag.id,
-            name: tag.name,
-            slug: tag.slug,
-            description: tag.description || '',
+            wpId: brand.id,
+            name: brand.name,
+            slug: brand.slug,
+            description: brand.description || '',
+            image: brand.image?.src || '',
+            count: brand.count || 0,
+            lastSync: new Date(),
+            updatedAt: new Date(),
             source: 'wordpress_sync'
         };
 
-        const brandRef = db.collection('brands').doc(String(tag.id));
+        const brandRef = db.collection('brands').doc(String(brand.id));
         batch.set(brandRef, brandData, { merge: true });
         synced++;
+        countInBatch++;
+
+        if (countInBatch >= 50) {
+            await batch.commit();
+            logger.info(`Synced ${synced}/${uniqueBrands.length} brands`);
+            batch = db.batch();
+            countInBatch = 0;
+        }
     }
 
-    await batch.commit();
-    console.log(`✅ Synced ${synced} brands`);
+    if (countInBatch > 0) {
+        await batch.commit();
+    }
+    
+    logger.info(`✅ Synced ${synced} brands`);
     return synced;
 }
 
-router.post('/products', async (req: Request, res: Response) => {
+router.post('/products', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        console.log("Starting product sync...");
-        const synced = await syncProducts();
+        const forceFull = req.query.force === 'true';
+        logger.info(`Starting product sync (forceFull: ${forceFull})...`);
+        const synced = await syncProducts(forceFull);
         res.json({ success: true, synced, message: `Synced ${synced} products from WordPress` });
     } catch (error: any) {
-        console.error('Product sync error:', error);
+        logger.error('Product sync error', { error });
         const errMsg = error?.response?.data?.message || error?.message || String(error);
         res.status(500).json({ success: false, error: errMsg });
     }
 });
 
-router.post('/orders', async (req: Request, res: Response) => {
+router.post('/orders', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        console.log("Starting order sync...");
-        const synced = await syncOrders();
+        const forceFull = req.query.force === 'true';
+        logger.info(`Starting order sync (forceFull: ${forceFull})...`);
+        const synced = await syncOrders(forceFull);
         res.json({ success: true, synced, message: `Synced ${synced} orders from WordPress` });
     } catch (error: any) {
-        console.error('Order sync error:', error);
+        logger.error('Order sync error', { error });
         const errMsg = error?.response?.data?.message || error?.message || String(error);
         res.status(500).json({ success: false, error: errMsg });
     }
 });
 
-router.post('/users', async (req: Request, res: Response) => {
+router.post('/users', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        console.log("Starting user sync...");
-        const synced = await syncUsers();
+        const forceFull = req.query.force === 'true';
+        logger.info(`Starting user sync (forceFull: ${forceFull})...`);
+        const synced = await syncUsers(forceFull);
         res.json({ success: true, synced, message: `Synced ${synced} users from WordPress` });
     } catch (error: any) {
-        console.error('User sync error:', error);
+        logger.error('User sync error', { error });
         const errMsg = error?.response?.data?.message || error?.message || String(error);
         res.status(500).json({ success: false, error: errMsg });
     }
 });
 
-router.post('/categories', async (req: Request, res: Response) => {
+router.post('/categories', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        console.log("Starting category sync...");
+        logger.info("Starting category sync...");
         const synced = await syncCategories();
         res.json({ success: true, synced, message: `Synced ${synced} categories from WordPress` });
     } catch (error: any) {
-        console.error('Category sync error:', error);
+        logger.error('Category sync error', { error });
         const errMsg = error?.response?.data?.message || error?.message || String(error);
         res.status(500).json({ success: false, error: errMsg });
     }
 });
 
-router.post('/brands', async (req: Request, res: Response) => {
+router.post('/brands', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        console.log("Starting brand sync...");
+        logger.info("Starting brand sync...");
         const synced = await syncBrands();
         res.json({ success: true, synced, message: `Synced ${synced} brands from WordPress` });
     } catch (error: any) {
-        console.error('Brand sync error:', error);
+        logger.error('Brand sync error', { error });
         const errMsg = error?.response?.data?.message || error?.message || String(error);
         res.status(500).json({ success: false, error: errMsg });
     }
 });
 
-router.post('/full', async (req: Request, res: Response) => {
+router.post('/full', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        console.log("Starting full sync...");
+        const forceFull = req.query.force === 'true';
+        logger.info(`Starting full sync (forceFull: ${forceFull})...`);
+        
+        // Use Promise.all for independent syncs to improve speed
+        // but keep products and orders separate to avoid overwhelming the API
         const categoriesSynced = await syncCategories();
-        await sleep(500);
         const brandsSynced = await syncBrands();
-        await sleep(500);
-        const productsSynced = await syncProducts();
-        await sleep(500);
-        const ordersSynced = await syncOrders();
-        await sleep(500);
-        const usersSynced = await syncUsers();
+        
+        logger.info("Starting products sync...");
+        const productsSynced = await syncProducts(forceFull);
+        
+        logger.info("Starting orders and users sync...");
+        const [ordersSynced, usersSynced] = await Promise.all([
+            syncOrders(forceFull),
+            syncUsers(forceFull)
+        ]);
 
         res.json({
             success: true,
@@ -383,7 +585,7 @@ router.post('/full', async (req: Request, res: Response) => {
             message: 'Full sync completed successfully'
         });
     } catch (error: any) {
-        console.error('Full sync error:', error);
+        logger.error('Full sync error', { error });
         const errMsg = error?.response?.data?.message || error?.message || String(error);
         res.status(500).json({ success: false, error: errMsg });
     }

@@ -26,6 +26,28 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Global Error Handling: Handle 401 Unauthorized globally
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            console.error('🚫 Global Auth Failure (401): Session expired or invalid.');
+            
+            // Clear local stale auth data
+            localStorage.setItem('isAdmin', 'false');
+            localStorage.removeItem('alpha_user');
+            
+            // Force redirect to login if we are in admin area or if session is dead
+            if (window.location.pathname.includes('/admin')) {
+                window.location.href = '/admin-login';
+            } else if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 // Auth API
 export const authAPI = {
     register: async (data: { email: string; password: string; name: string; phone?: string }) => {
@@ -76,16 +98,55 @@ export const productsAPI = {
         return response.data;
     },
 
-    getById: async (id: number) => {
+    getById: async (id: number | string) => {
         const response = await api.get(`/products/${id}`);
         return response.data;
     },
+
+    create: async (data: any) => {
+        const response = await api.post('/products', data);
+        return response.data;
+    },
+
+    update: async (id: number | string, data: any) => {
+        const response = await api.put(`/products/${id}`, data);
+        return response.data;
+    },
+
+    delete: async (id: number | string) => {
+        const response = await api.delete(`/products/${id}`);
+        return response.data;
+    },
+
+    sync: async (force = false) => {
+        const response = await api.post(`/sync/full${force ? '?force=true' : ''}`);
+        return response.data;
+    },
+    syncProducts: async (force = false) => {
+        const response = await api.post(`/sync/products${force ? '?force=true' : ''}`);
+        return response.data;
+    }
 };
 
 // Categories API
 export const categoriesAPI = {
     getAll: async () => {
         const response = await api.get('/categories');
+        return response.data;
+    },
+
+    create: async (data: any) => {
+        const response = await api.post('/categories', data);
+        return response.data;
+    },
+
+    update: async (id: number | string, data: any) => {
+        const response = await api.put(`/categories/${id}`, data);
+        return response.data;
+    },
+
+    delete: async (id: number | string) => {
+        const response = await api.delete(`/categories/${id}`);
         return response.data;
     },
 };
@@ -96,14 +157,26 @@ export const brandsAPI = {
         const response = await api.get('/brands');
         return response.data;
     },
-    update: async (id: number, data: any) => {
+    update: async (id: number | string, data: any) => {
+        const response = await api.put(`/brands/${id}`, data);
+        return response.data;
+    },
+    updateFeatured: async (id: number | string, data: any) => {
         const response = await api.patch(`/brands/${id}/featured`, data);
         return response.data;
     },
     reorder: async (brands: any[]) => {
         const response = await api.patch('/brands/featured/reorder', { brands });
         return response.data;
-    }
+    },
+    create: async (data: any) => {
+        const response = await api.post('/brands', data);
+        return response.data;
+    },
+    delete: async (id: number | string) => {
+        const response = await api.delete(`/brands/${id}`);
+        return response.data;
+    },
 };
 
 // Hero Slides API
@@ -159,19 +232,38 @@ export const ordersAPI = {
         return response.data;
     },
     
-    updateStatus: async (id: string, status: string) => {
-        const response = await api.put(`/orders/${id}/status`, { status });
+    updateStatus: async (id: string, status: string, trackingInfo?: { courierName?: string; trackingNumber?: string; trackingUrl?: string }) => {
+        const response = await api.patch(`/orders/${id}/status`, { status, ...trackingInfo });
         return response.data;
     }
 };
 
 // Users API - uses longer timeout for Firebase Auth which can be slow
 export const usersAPI = {
-    getAll: async (params?: { limit?: number }) => {
+    getAll: async (params?: { limit?: number; pageToken?: string; search?: string }) => {
         const response = await api.get('/users/all', { 
             params,
             timeout: 60000 // 60 second timeout for users endpoint
         });
+        return response.data;
+    },
+    update: async (id: number | string, data: any) => {
+        const response = await api.put(`/users/${id}`, data);
+        return response.data;
+    },
+    updateByEmail: async (email: string, data: any) => {
+        const response = await api.put('/users/by-email', { email, ...data });
+        return response.data;
+    },
+    getByEmail: async (email: string) => {
+        const response = await api.get('/users/all', { 
+            params: { email, limit: 1 },
+            timeout: 30000
+        });
+        return response.data;
+    },
+    delete: async (id: number | string) => {
+        const response = await api.delete(`/users/${id}`);
         return response.data;
     }
 };
@@ -183,7 +275,11 @@ export const reviewsAPI = {
         return response.data;
     },
     getProductReviews: async (productId: number | string) => {
-        const response = await api.get(`/reviews/product/${productId}`);
+        const response = await api.get(`/reviews/products/${productId}`);
+        return response.data;
+    },
+    create: async (data: { productId: number | string; rating: number; title: string; content: string }) => {
+        const response = await api.post('/reviews', data);
         return response.data;
     },
     delete: async (id: string) => {
@@ -192,6 +288,80 @@ export const reviewsAPI = {
     },
     moderate: async (id: string, isApproved: boolean) => {
         const response = await api.put(`/reviews/${id}/moderate`, { isApproved });
+        return response.data;
+    }
+};
+
+// Order Cancellation API
+export const orderCancellationAPI = {
+    checkEligibility: async (orderId: string) => {
+        const response = await api.get(`/order-cancellation/check/${orderId}`);
+        return response.data;
+    },
+    cancel: async (orderId: string, reason: string) => {
+        const response = await api.post(`/order-cancellation/cancel/${orderId}`, { reason });
+        return response.data;
+    },
+    getReasons: async () => {
+        const response = await api.get('/order-cancellation/reasons');
+        return response.data;
+    }
+};
+
+// Returns API
+export const returnsAPI = {
+    create: async (data: { 
+        orderId: string; 
+        orderItemId: string; 
+        reason: string; 
+        description: string;
+        condition: string;
+        refundType: string;
+    }) => {
+        const response = await api.post('/returns', data);
+        return response.data;
+    },
+    getMyReturns: async () => {
+        const response = await api.get('/returns/me');
+        return response.data;
+    },
+    getPolicy: async () => {
+        const response = await api.get('/returns/policy');
+        return response.data;
+    }
+};
+
+// Notifications API
+export const notificationsAPI = {
+    send: async (data: { to: string; subject: string; message: string; isHtml?: boolean }) => {
+        const response = await api.post('/notifications/send', data);
+        return response.data;
+    },
+
+    sendTracking: async (data: { 
+        to: string; 
+        orderId: string; 
+        customerName: string; 
+        trackingProvider: string; 
+        trackingNumber: string; 
+        trackingUrl?: string; 
+        orderTotal?: number 
+    }) => {
+        const response = await api.post('/notifications/tracking', data);
+        return response.data;
+    },
+
+    sendOrderStatus: async (data: { 
+        to: string; 
+        orderId: string; 
+        customerName: string; 
+        orderStatus: string; 
+        orderTotal: number; 
+        orderDate: string;
+        trackingNumber?: string;
+        courierName?: string;
+    }) => {
+        const response = await api.post('/notifications/order-status', data);
         return response.data;
     }
 };
@@ -238,6 +408,106 @@ export const couponsAPI = {
         const response = await api.post('/coupons/validate', { code, orderAmount });
         return response.data;
     },
+};
+
+// Verification API
+export const verificationAPI = {
+    submit: async (data: any) => {
+        const response = await api.post('/verification/submit', data);
+        return response.data;
+    },
+    getUserDocuments: async (userId: string) => {
+        const response = await api.get(`/verification/user/${userId}`);
+        return response.data;
+    },
+    getAll: async (params?: { status?: string; documentType?: string; limit?: number; offset?: number }) => {
+        const response = await api.get('/verification/all', { params });
+        return response.data;
+    },
+    updateStatus: async (id: string, data: { status: 'approved' | 'rejected'; notes?: string; rejectionReason?: string }) => {
+        const response = await api.put(`/verification/${id}/status`, data);
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/verification/${id}`);
+        return response.data;
+    },
+    getStats: async () => {
+        const response = await api.get('/verification/stats');
+        return response.data;
+    },
+    getAuditLogs: async (userId: string) => {
+        const response = await api.get(`/verification/audit-logs/${userId}`);
+        return response.data;
+    }
+};
+
+// Wishlist API
+export const wishlistAPI = {
+    get: async () => {
+        const response = await api.get('/wishlist');
+        return response.data;
+    },
+    add: async (productId: string | number) => {
+        const response = await api.post('/wishlist', { productId });
+        return response.data;
+    },
+    remove: async (productId: string | number) => {
+        const response = await api.delete(`/wishlist/${productId}`);
+        return response.data;
+    },
+    sync: async (items: (string | number)[]) => {
+        const response = await api.post('/wishlist/sync', { items });
+        return response.data;
+    }
+};
+
+// Cart API
+export const cartAPI = {
+    get: async () => {
+        const response = await api.get('/cart');
+        return response.data;
+    },
+    sync: async (items: any[]) => {
+        const response = await api.post('/cart/sync', { items });
+        return response.data;
+    },
+    clear: async () => {
+        const response = await api.delete('/cart');
+        return response.data;
+    }
+};
+
+// Chat Sessions API (Admin)
+export const chatSessionsAPI = {
+    getAll: async () => {
+        const response = await api.get('/chat-sessions');
+        return response.data;
+    },
+    getById: async (id: string) => {
+        const response = await api.get(`/chat-sessions/${id}`);
+        return response.data;
+    },
+    create: async (data: any) => {
+        const response = await api.post('/chat-sessions', data);
+        return response.data;
+    },
+    addMessage: async (sessionId: string, text: string, sender: 'user' | 'bot' | 'agent', senderName?: string) => {
+        const response = await api.post(`/chat-sessions/${sessionId}/messages`, {
+            text,
+            sender,
+            senderName
+        });
+        return response.data;
+    },
+    updateStatus: async (sessionId: string, status: 'ai' | 'admin' | 'closed', adminName?: string, unreadCount?: number) => {
+        const response = await api.patch(`/chat-sessions/${sessionId}/status`, {
+            status,
+            adminName,
+            unreadCount
+        });
+        return response.data;
+    }
 };
 
 export default api;

@@ -12,7 +12,7 @@ export interface AuthRequest extends Request {
 
 export function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
     const token = req.cookies.__session;
-
+    
     if (!token) {
         return res.status(401).json({ error: 'Authentication required' });
     }

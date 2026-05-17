@@ -3,6 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
 import { DeliveryEstimator } from './DeliveryEstimator';
+import { Helmet } from 'react-helmet-async';
+import { WriteReviewModal } from './WriteReviewModal';
+import ReviewDisplay from './ReviewDisplay';
+import { reviewsAPI } from '../utils/api';
+import { Review } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
+
 
 const stripHtml = (html: string) => {
   if (!html) return '';
@@ -61,6 +68,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   const [selectedImage, setSelectedImage] = useState(product.image);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   // Attribute State
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
@@ -72,6 +80,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     specs: false,
     reviews: false
   });
+  const [productReviews, setProductReviews] = useState<Review[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
 
   // Initialize defaults
   useEffect(() => {
@@ -95,6 +105,27 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [product]);
+
+  const fetchReviews = async () => {
+    if (!product.id) return;
+    setIsLoadingReviews(true);
+    try {
+      const data = await reviewsAPI.getProductReviews(product.id);
+      if (data.reviews) {
+        setProductReviews(data.reviews);
+      }
+    } catch (err) {
+      console.error('Failed to fetch reviews:', err);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    if (openSections.reviews && productReviews.length === 0) {
+      fetchReviews();
+    }
+  }, [openSections.reviews]);
 
   // Update price/image based on selection
   useEffect(() => {
@@ -191,6 +222,52 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
   return (
     <div className="animate-fade-in">
+      <Helmet>
+        <title>{product.seoTitle || `${product.name} | Alpha Dentkart`}</title>
+        <meta name="description" content={product.seoDescription || product.shortDescription || stripHtml(product.description).substring(0, 160)} />
+        <meta name="keywords" content={product.seoKeywords || `${product.name}, dental supplies, ${product.category}, ${product.brand}`} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="product" />
+        <meta property="og:title" content={product.seoTitle || product.name} />
+        <meta property="og:description" content={product.seoDescription || product.shortDescription || stripHtml(product.description).substring(0, 160)} />
+        <meta property="og:image" content={product.image} />
+        <meta property="og:url" content={window.location.href} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={product.seoTitle || product.name} />
+        <meta name="twitter:description" content={product.seoDescription || product.shortDescription || stripHtml(product.description).substring(0, 160)} />
+        <meta name="twitter:image" content={product.image} />
+
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.name,
+            "image": [product.image, ...(product.images || [])],
+            "description": stripHtml(product.description),
+            "brand": {
+              "@type": "Brand",
+              "name": product.brand
+            },
+            "offers": {
+              "@type": "Offer",
+              "url": window.location.href,
+              "priceCurrency": "INR",
+              "price": product.price,
+              "itemCondition": "https://schema.org/NewCondition",
+              "availability": "https://schema.org/InStock"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": product.rating,
+              "reviewCount": product.reviews || 1
+            }
+          })}
+        </script>
+      </Helmet>
       {/* Breadcrumbs */}
       <div className="text-sm text-gray-500 mb-6 flex items-center gap-2">
         <span className="cursor-pointer hover:text-primary" onClick={() => onNavigateBack()}>Home</span>
@@ -205,11 +282,14 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
         <div className="lg:sticky lg:top-24 space-y-4 self-start">
           <div className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-2xl p-8 flex items-center justify-center h-[400px] sm:h-[500px] relative group overflow-hidden">
             {/* Main Image - Clickable for Lightbox */}
-            <img
+            <OptimizedImageMemo
               src={selectedImage}
               alt={product.name}
               onClick={() => setIsLightboxOpen(true)}
               className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500 cursor-pointer"
+              width={600}
+              height={600}
+              priority={true}
             />
 
             {/* Badge */}
@@ -249,7 +329,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
                 }}
                 className={`w-20 h-20 flex-shrink-0 bg-white dark:bg-surface-dark border rounded-xl p-2 flex items-center justify-center transition-all ${currentImageIndex === idx ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200 dark:border-gray-700 hover:border-primary'}`}
               >
-                <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                <OptimizedImageMemo src={img} alt={`View ${idx + 1}`} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" width={100} height={100} />
               </button>
             ))}
           </div>
@@ -277,7 +357,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
           <div className="flex items-end gap-3 mb-6">
             <span className="text-4xl font-bold text-primary">₹{(currentPrice || 0).toLocaleString('en-IN')}</span>
             {currentOriginalPrice && (
-              <span className="text-xl text-gray-400 line-through mb-1">₹{currentOriginalPrice.toLocaleString('en-IN')}</span>
+              <span className="text-xl text-gray-400 line-through mb-1">₹{(currentOriginalPrice ?? 0).toLocaleString('en-IN')}</span>
             )}
             {currentOriginalPrice && (
               <span className="text-sm font-bold text-green-600 mb-2 ml-2">
@@ -454,19 +534,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               </button>
               <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${openSections.reviews ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                 <div className="overflow-hidden">
-                  <div className="p-8 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700">
-                    <div className="text-center">
-                      <div className="text-yellow-400 text-2xl mb-2">
-                        {[...Array(5)].map((_, i) => (
-                          <i key={i} className={`${i < Math.floor(product.rating) ? 'fas' : (i < product.rating ? 'fas fa-star-half-alt' : 'far')} fa-star`}></i>
-                        ))}
+                  <div className="p-4 md:p-8 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700">
+                    {isLoadingReviews ? (
+                      <div className="flex justify-center py-8">
+                        <i className="fas fa-spinner fa-spin text-primary text-2xl"></i>
                       </div>
-                      <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-1">{product.rating} out of 5</h4>
-                      <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">Based on {product.reviews || 0} customer ratings</p>
-                      <button className="border border-primary text-primary px-6 py-2 rounded-lg font-medium hover:bg-primary hover:text-white transition-colors text-sm">
-                        Write a Review
-                      </button>
-                    </div>
+                    ) : (
+                      <ReviewDisplay 
+                        productId={product.id} 
+                        reviews={productReviews}
+                        onWriteReview={() => setIsReviewModalOpen(true)}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -518,10 +597,12 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Large Image */}
-            <img
+            <OptimizedImageMemo
               src={selectedImage}
               alt={product.name}
               className="max-w-full max-h-[90vh] object-contain"
+              width={1200}
+              height={1200}
             />
 
             {/* Navigation Arrows */}
@@ -550,6 +631,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
             </div>
           </div>
         </div>
+      )}
+      {/* Review Modal */}
+      {isReviewModalOpen && (
+        <WriteReviewModal
+          productId={product.id}
+          productName={product.name}
+          onClose={() => setIsReviewModalOpen(false)}
+          onSuccess={() => {
+            setIsReviewModalOpen(false);
+            alert('Review submitted successfully! It will be visible after approval.');
+          }}
+        />
       )}
     </div>
   );

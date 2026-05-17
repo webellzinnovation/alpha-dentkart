@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import { HelmetProvider } from 'react-helmet-async';
 import App from './App';
 
 const rootElement = document.getElementById('root');
@@ -15,9 +16,11 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
+        <HelmetProvider>
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        </HelmetProvider>
       </BrowserRouter>
     </ErrorBoundary>
   </React.StrictMode>

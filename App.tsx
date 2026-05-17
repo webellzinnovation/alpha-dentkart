@@ -1,9 +1,11 @@
 
 import React, { useRef, useState, useMemo, useEffect, Suspense, lazy } from 'react';
+import { Toaster, toast } from 'sonner';
 import { Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Loading } from './components/Loading';
+import OptimizedImageMemo from './components/OptimizedImage';
 import { BrandScroll } from './components/BrandScroll';
 import { ProductCard } from './components/ProductCard';
 import { SkeletonLoader, ProductCardSkeleton } from './components/SkeletonLoader';
@@ -17,7 +19,9 @@ import { QuickReorder } from './components/QuickReorder';
 import { GuestCheckout } from './components/GuestCheckout';
 import { ProductModal } from './components/ProductModal';
 const Login = lazy(() => import('./components/Login').then(m => ({ default: m.Login })));
+const Register = lazy(() => import('./components/Register').then(m => ({ default: m.Register })));
 const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const ForgotPassword = lazy(() => import('./components/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
 
 // Lazy load heavy components for code splitting
 const ProductDetail = lazy(() => import('./components/ProductDetail'));
@@ -34,14 +38,54 @@ const TermsOfService = lazy(() => import('./components/TermsOfService'));
 const AdminLogin = lazy(() => import('./components/AdminLogin').then(m => ({ default: m.AdminLogin })));
 import CookieConsent from './components/CookieConsent';
 import { PROMOS, HERO_SLIDES, CATEGORIES, BRAND_PROFILES } from './constants';
-import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile, HomepageSettings } from './types';
+import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile, HomepageSettings, ChatSession } from './types';
 import cache, { CACHE_KEYS, CACHE_TTL } from './utils/cache';
 // import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
 // import { MOCK_USER } from './data/mockData';
 import { ordersAPI } from './utils/api';
+import { useAuth } from './hooks/useAuth';
+import { useCart } from './hooks/useCart';
+import { useWishlist } from './hooks/useWishlist';
 
-type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'dashboard' | 'admin-dashboard' | 'admin-login' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
+/**
+ * Transforms API product data into the local Product type
+ */
+const transformProducts = (products: any[]): Product[] => {
+  return products.map((p: any) => ({
+    id: p.id,
+    name: p.name || 'Unknown Product',
+    category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
+    price: p.price || 0,
+    originalPrice: p.originalPrice || p.price,
+    rating: p.rating || 0,
+    reviews: p.reviews || 0,
+    image: p.image || p.images?.[0] || '/placeholder.png',
+    badge: p.badge,
+    badgeColor: p.badgeColor,
+    badgeId: p.badgeId,
+    timer: p.timer,
+    brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+    description: p.description,
+    features: p.features || [],
+    specs: p.specs || {},
+    images: p.images || [p.image],
+    attributes: p.attributes || [],
+    variations: p.variations || [],
+    shortDescription: p.shortDescription,
+    weight: p.weight,
+    seoTitle: p.seoTitle,
+    seoDescription: p.seoDescription,
+    seoKeywords: p.seoKeywords,
+    stock: (p.stock === undefined || p.stock === null) ? 9999 : p.stock,
+    // Additional fields from API
+    slug: p.slug,
+    type: p.type,
+    sku: p.sku,
+  }));
+};
+
+type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'register' | 'forgot-password' | 'dashboard' | 'admin-dashboard' | 'admin-login' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
 
 function App() {
   const navigate = useNavigate();
@@ -56,6 +100,8 @@ function App() {
     if (path === 'categories') return 'categories';
     if (path === 'wishlist') return 'wishlist';
     if (path === 'login') return 'login';
+    if (path === 'register') return 'register';
+    if (path === 'forgot-password') return 'forgot-password';
     if (path === 'dashboard') return 'dashboard';
     if (path === 'admin') return 'admin-dashboard';
     if (path === 'admin-login') return 'admin-login';
@@ -65,6 +111,42 @@ function App() {
     if (path === 'terms-of-service') return 'terms-of-service';
     return 'home';
   });
+
+  // Auth State (Moved up to fix hoisting)
+  const {
+    isLoggedIn, setIsLoggedIn,
+    user, setUser,
+    isAdmin, setIsAdmin
+  } = useAuth();
+
+  // App Data State (Moved up to fix ReferenceError in useCart/useWishlist)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalProductCount, setTotalProductCount] = useState<number>(0);
+  const [orders, setOrders] = useState<Order[]>(() => {
+    const saved = localStorage.getItem('alpha_orders');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<BrandProfile[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [promotionalTiles, setPromotionalTiles] = useState<PromotionalTile[]>([]);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+
+  const {
+    cart, setCart,
+    isCartOpen, setIsCartOpen,
+    addToCart, removeFromCart,
+    updateCartQuantity, clearCart
+  } = useCart(user, isAdmin, products);
+
+  const {
+    wishlist, setWishlist,
+    toggleWishlist, isInWishlist
+  } = useWishlist(user, isAdmin, products);
 
 
   const [shopCategory, setShopCategory] = useState<string | null>(null);
@@ -78,20 +160,9 @@ function App() {
   const [loadProgress, setLoadProgress] = useState(0);
   const [showSkeletons, setShowSkeletons] = useState(false);
 
-  // App Data State (Initially Empty - Populated by Migration Data)
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('alpha_orders');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<BrandProfile[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
 
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-  const [promotionalTiles, setPromotionalTiles] = useState<PromotionalTile[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAdminLoading, setIsAdminLoading] = useState(false);
 
   // STALE-WHILE-REVALIDATE: Load data with caching for instant display
   useEffect(() => {
@@ -146,29 +217,58 @@ function App() {
 
         setLoadProgress(20);
 
-        // Fetch products FIRST (critical), then others in parallel
-        console.log("📡 Fetching products from API...");
-        let productsResponse;
-        try {
-productsResponse = await productsAPI.getAll({ limit: 100 });
-          console.log(`📦 Products API response received, type:`, typeof productsResponse);
-          console.log(`📦 Products has products key:`, productsResponse?.products !== undefined);
-        } catch (err) {
-          console.error("❌ Products API call failed:", err);
-          throw err; // Re-throw to trigger catch block
-        }
+        const savedIsAdmin = localStorage.getItem('isAdmin') === 'true';
+        const fetchLimit = savedIsAdmin ? 5000 : 200;
         
-        setLoadProgress(40);
-
-        // Then load other data in parallel
-        const [categoriesResponse, brandsResponse, slidesResponse, tilesResponse, settingsResponse, authResponse] = await Promise.allSettled([
+        // Parallel fetch for ALL data to minimize waterfalls
+        console.log(`📡 Starting parallel fetch for products (limit: ${fetchLimit}) and other resources...`);
+        
+        const fetchPromises = [
+          productsAPI.getAll({ limit: fetchLimit }),
           categoriesAPI.getAll(),
           brandsAPI.getAll(),
           heroSlidesAPI.getAll(),
           promotionalTilesAPI.getAll(),
           settingsAPI.get(),
           authAPI.me()
-        ]);
+        ];
+
+        // Pre-emptively fetch admin data if likely admin to avoid secondary waterfall
+        let adminDataIndices: Record<string, number> = {};
+        if (savedIsAdmin) {
+          const { reviewsAPI, chatSessionsAPI } = await import('./utils/api');
+          adminDataIndices.reviews = fetchPromises.length;
+          fetchPromises.push(reviewsAPI.getAllAdmin());
+          
+          adminDataIndices.chatSessions = fetchPromises.length;
+          fetchPromises.push(chatSessionsAPI.getAll());
+          
+          // Also fetch first page of users/customers
+          adminDataIndices.users = fetchPromises.length;
+          const usersPerPage = 100;
+          fetchPromises.push(usersAPI.getAll({ limit: usersPerPage, getTotal: true }));
+        }
+
+        const results = await Promise.allSettled(fetchPromises);
+        
+        const productsResult = results[0];
+        const categoriesResponse = results[1];
+        const brandsResponse = results[2];
+        const slidesResponse = results[3];
+        const tilesResponse = results[4];
+        const settingsResponse = results[5];
+        const authResponse = results[6];
+        
+        // Extract productsResponse from settled result
+        let productsResponse: any = null;
+        if (productsResult.status === 'fulfilled') {
+          productsResponse = productsResult.value;
+        } else {
+          console.error("❌ Products API call failed:", productsResult.reason);
+          // If critical data fails, we might want to throw, but since we have cache, let's proceed
+        }
+
+        setLoadProgress(60);
 
         setLoadProgress(70);
 
@@ -176,6 +276,10 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
         let freshProducts: any[] = [];
         if (productsResponse && productsResponse.products) {
           freshProducts = productsResponse.products;
+          if (productsResponse.pagination && productsResponse.pagination.total) {
+            setTotalProductCount(productsResponse.pagination.total);
+            console.log(`📊 API reports ${productsResponse.pagination.total} total products`);
+          }
           console.log(`✅ Products response has ${freshProducts.length} products`);
         } else if (productsResponse && Array.isArray(productsResponse)) {
           freshProducts = productsResponse;
@@ -184,38 +288,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
           console.error("❌ Products response structure unexpected:", productsResponse);
         }
 
-        // Transform products to ensure they match Product type
-        const transformedProducts = freshProducts.map((p: any) => ({
-          id: p.id,
-          name: p.name || 'Unknown Product',
-          category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
-          price: p.price || 0,
-          originalPrice: p.originalPrice || p.price,
-          rating: p.rating || 0,
-          reviews: p.reviews || 0,
-          image: p.image || p.images?.[0] || '/placeholder.png',
-          badge: p.badge,
-          badgeColor: p.badgeColor,
-          badgeId: p.badgeId,
-          timer: p.timer,
-          brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
-          description: p.description,
-          features: p.features || [],
-          specs: p.specs || {},
-          images: p.images || [p.image],
-          attributes: p.attributes || [],
-          variations: p.variations || [],
-          shortDescription: p.shortDescription,
-          weight: p.weight,
-          seoTitle: p.seoTitle,
-          seoDescription: p.seoDescription,
-          seoKeywords: p.seoKeywords,
-          stock: p.stock ?? 10,
-          // Additional fields from API
-          slug: p.slug,
-          type: p.type,
-          sku: p.sku,
-        }));
+        const transformedProducts = transformProducts(freshProducts);
 
         if (transformedProducts.length > 0) {
           setProducts(transformedProducts);
@@ -294,6 +367,69 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
           setIsAdmin(meUser.role === 'admin');
           localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
           setIsLoggedIn(true);
+          console.log("👤 User session verified:", meUser.email, "Role:", meUser.role);
+        } else {
+          // If auth failed but we thought we were admin/logged in, reset state to stop 401 loops
+          if (savedIsAdmin || isLoggedIn) {
+            console.warn("⚠️ Authentication session invalid or expired. Resetting local auth state.");
+            setIsAdmin(false);
+            setUser(null);
+            setIsLoggedIn(false);
+            localStorage.setItem('isAdmin', 'false');
+            localStorage.removeItem('alpha_user');
+          }
+        }
+
+        // Process pre-emptively fetched Admin Data
+        if (savedIsAdmin) {
+          // Reviews
+          if (adminDataIndices.reviews !== undefined) {
+            const reviewsResult = results[adminDataIndices.reviews];
+            if (reviewsResult.status === 'fulfilled' && reviewsResult.value) {
+              const reviewsData = reviewsResult.value.reviews || reviewsResult.value;
+              if (Array.isArray(reviewsData)) {
+                const stripHtml = (html: string) => html ? html.replace(/<[^>]*>/g, '').trim() : '';
+                const mappedReviews = reviewsData.map((r: any) => ({
+                  id: r.id,
+                  product: r.productId || r.productName || 'Unknown Product',
+                  user: r.reviewer || r.userId || 'Anonymous',
+                  rating: r.rating || 0,
+                  comment: stripHtml(r.content || r.title || ''),
+                  date: r.createdAt?._seconds 
+                    ? new Date(r.createdAt._seconds * 1000).toLocaleDateString()
+                    : (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Unknown'),
+                  isApproved: r.isApproved
+                }));
+                setReviews(mappedReviews);
+              }
+            }
+          }
+          
+          // Chat Sessions
+          if (adminDataIndices.chatSessions !== undefined) {
+            const chatRes = results[adminDataIndices.chatSessions];
+            if (chatRes.status === 'fulfilled') {
+              setChatSessions(chatRes.value);
+            }
+          }
+
+          // Users
+          if (adminDataIndices.users !== undefined) {
+            const usersRes = results[adminDataIndices.users];
+            if (usersRes.status === 'fulfilled') {
+              const userData = usersRes.value;
+              if (userData && userData.users) {
+                setUsers(userData.users);
+                if (userData.total) {
+                  setTotalUsersCount(userData.total);
+                  setTotalUsersPages(Math.ceil(userData.total / 100));
+                }
+                if (userData.nextPageToken) {
+                  setUsersPageToken(userData.nextPageToken);
+                }
+              }
+            }
+          }
         }
 
         setLoadProgress(100);
@@ -343,7 +479,9 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
       const { productsAPI, categoriesAPI, brandsAPI, heroSlidesAPI, settingsAPI } = api;
 
       // Fetch products first
-      const productsResponse = await productsAPI.getAll({ limit: 100 });
+      const isAdminUser = localStorage.getItem('isAdmin') === 'true';
+      const fetchLimit = isAdminUser ? 5000 : 200;
+      const productsResponse = await productsAPI.getAll({ limit: fetchLimit });
       
       // Then others
       const [categoriesResponse, brandsResponse, slidesResponse, settingsResponse] = await Promise.allSettled([
@@ -563,6 +701,8 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
       setCurrentView('wishlist');
     } else if (path === '/login') {
       setCurrentView('login');
+    } else if (path === '/register') {
+      setCurrentView('register');
     } else if (path === '/dashboard') {
       setCurrentView('dashboard');
     } else if (path === '/admin') {
@@ -621,6 +761,8 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
       newPath = '/wishlist';
     } else if (currentView === 'login') {
       newPath = '/login';
+    } else if (currentView === 'register') {
+      newPath = '/register';
     } else if (currentView === 'dashboard') {
       newPath = '/dashboard';
     } else if (currentView === 'admin-dashboard') {
@@ -709,48 +851,13 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
     }
   }, [settings.general]);
 
-  // Auth State
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('isAdmin') === 'true');
 
-  // Cleanup lingering demo user from localStorage
-  useEffect(() => {
-    // Check for demo user emails or names
-    if (user && (user.email === 'rajesh@dentkart.com' || user.name === 'Dr. Rajesh Koothrappali')) {
-      console.log("Cleaning up demo user");
-      setUser(null);
-      setIsLoggedIn(false);
-      localStorage.removeItem('alpha_user');
-      window.location.reload();
-    }
-  }, [user]);
-
-  // Cart & Wishlist State
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('alpha_cart');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [wishlist, setWishlist] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('alpha_wishlist');
-    return saved ? JSON.parse(saved) : [];
-  });
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>(() => {
     const saved = localStorage.getItem('alpha_recently_viewed');
     return saved ? JSON.parse(saved) : [];
   });
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isGuestCheckout, setIsGuestCheckout] = useState(false);
-
-  // Persist Cart & Wishlist
-  useEffect(() => {
-    localStorage.setItem('alpha_cart', JSON.stringify(cart));
-  }, [cart]);
-
-  useEffect(() => {
-    localStorage.setItem('alpha_wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
 
 
 
@@ -769,31 +876,29 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
     }
   }, [orders, user]);
 
+  const refreshOrders = async () => {
+    if (user && !isAdmin) {
+      try {
+        const response = await ordersAPI.getMyOrders();
+        if (response.orders) {
+          setOrders(prev => {
+            const otherOrders = prev.filter(o => o.userId !== user.id && o.userId !== user.email);
+            return [...response.orders, ...otherOrders];
+          });
+          setUser({ ...user, orders: response.orders });
+        }
+      } catch (error: any) {
+        if (error.response?.status !== 401) {
+          console.error('Failed to refresh orders:', error);
+        }
+      }
+    }
+  };
+
   // Fetch user orders on login
   useEffect(() => {
     if (user && !isAdmin) {
-      const fetchUserOrders = async () => {
-        if (!user) return;
-        try {
-          const response = await ordersAPI.getMyOrders();
-          if (response.orders && response.orders.length > 0) {
-            // Merge with existing orders
-            setOrders(prev => {
-              const existingIds = new Set(prev.map(o => o.id));
-              const newOrders = response.orders.filter((o: any) => !existingIds.has(o.id));
-              return [...newOrders, ...prev];
-            });
-            // Also update user orders
-            setUser({ ...user, orders: response.orders });
-          }
-        } catch (error: any) {
-          // Silently ignore 401 errors (not logged in)
-          if (error.response?.status !== 401) {
-            console.error('Failed to fetch user orders:', error);
-          }
-        }
-      };
-      fetchUserOrders();
+      refreshOrders();
     }
   }, [user, isAdmin]);
 
@@ -848,6 +953,10 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
     else if (page === 'login') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setCurrentView('login');
+    }
+    else if (page === 'register') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setCurrentView('register');
     }
     else if (page === 'dashboard') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -954,7 +1063,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
   // SECURE Auth Logic - Uses Backend API
   const handleLogin = async (email?: string, password?: string) => {
     if (!email || !password) {
-      alert('Please enter email and password');
+      toast.error('Please enter email and password');
       return;
     }
 
@@ -994,7 +1103,39 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {
       console.error('Login error:', error);
-      alert(error.response?.data?.error || 'Login failed. Please check your credentials.');
+      toast.error(error.response?.data?.error || 'Login failed. Please check your credentials.');
+    }
+  };
+
+  const handleRegister = async (data: any) => {
+    try {
+      const { authAPI } = await import('./utils/api');
+      const response = await authAPI.register(data);
+      
+      // Auto login after registration
+      if (response.user) {
+        setUser({
+          ...response.user,
+          phone: response.user.phone || '',
+          avatar: response.user.avatar || '',
+          addresses: [],
+          isVerified: false,
+          cart: [],
+          wishlist: [],
+          orders: [],
+          recentlyViewed: [],
+        });
+        setIsLoggedIn(true);
+        setCurrentView('dashboard');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Just show success and navigate to login
+        toast.success('Registration successful! Please login.');
+        setCurrentView('login');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast.error(error.response?.data?.error || 'Registration failed. Please try again.');
     }
   };
 
@@ -1063,66 +1204,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const toggleWishlist = (product: Product) => {
-    setWishlist(prev => {
-      const exists = prev.some(p => p.id === product.id);
-      let newWishlist;
-      if (exists) {
-        newWishlist = prev.filter(p => p.id !== product.id);
-      } else {
-        newWishlist = [...prev, product];
-      }
-      return newWishlist;
-    });
-  };
 
-  const addToCart = (product: Product, selectedAttributes?: Record<string, string>) => {
-    const attrString = selectedAttributes
-      ? Object.entries(selectedAttributes).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `${k}:${v}`).join('|')
-      : '';
-    const cartItemId = `${product.id}-${attrString}`;
-
-    setCart(prev => {
-      const existingIndex = prev.findIndex(item => item.cartItemId === cartItemId);
-      let newCart;
-      if (existingIndex > -1) {
-        newCart = [...prev];
-        newCart[existingIndex].quantity += 1;
-      } else {
-        newCart = [...prev, {
-          ...product,
-          quantity: 1,
-          selectedAttributes,
-          cartItemId
-        }];
-      }
-
-      return newCart;
-    });
-    setIsCartOpen(true);
-  };
-
-  const updateCartQuantity = (cartItemId: string, delta: number) => {
-    setCart(prev => {
-      const newCart = prev.map(item => {
-        if (item.cartItemId === cartItemId) {
-          const newQuantity = Math.max(1, item.quantity + delta);
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      });
-
-      return newCart;
-    });
-  };
-
-  const removeFromCart = (cartItemId: string) => {
-    setCart(prev => {
-      const newCart = prev.filter(item => item.cartItemId !== cartItemId);
-
-      return newCart;
-    });
-  };
 
 
 
@@ -1130,7 +1212,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
     if (!user) return;
 
     if (!user.addresses || user.addresses.length === 0) {
-      alert('Please add a shipping address before placing an order.');
+      toast.error('Please add a shipping address before placing an order.');
       return;
     }
 
@@ -1185,7 +1267,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
 
 
 
-      alert('Order placed successfully! Order ID: ' + newOrder.id);
+      toast.success('Order placed successfully! Order ID: ' + newOrder.id);
       setCurrentView('dashboard');
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -1193,7 +1275,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
       console.error('Failed to create order on backend:', error);
       const serverError = error.response?.data?.error || error.response?.data?.message || 'Unknown server error';
       console.error('Server error details:', serverError);
-      alert(`Order creation failed: ${serverError}`);
+      toast.error(`Order creation failed: ${serverError}`);
     } finally {
       setIsDataLoading(false);
     }
@@ -1257,43 +1339,102 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
   useEffect(() => {
     if (isAdmin || currentView === 'admin-dashboard') {
       const loadAdminData = async () => {
+        setIsAdminLoading(true);
         try {
-          // Fetch orders
-          const ordersResponse = await ordersAPI.getAllAdmin({ limit: 500 });
-          if (ordersResponse.orders) {
-            setOrders(ordersResponse.orders);
-            localStorage.setItem('alpha_orders', JSON.stringify(ordersResponse.orders));
-          }
+          console.log("📡 Admin detected, starting background data fetch...");
           
-          // Fetch reviews
-          const { reviewsAPI } = await import('./utils/api');
-          try {
-            const reviewsResponse = await reviewsAPI.getAllAdmin();
-            if (reviewsResponse.reviews) {
-              // Helper to strip HTML tags
-              const stripHtml = (html: string) => html ? html.replace(/<[^>]*>/g, '').trim() : '';
-              // Map reviews to expected format
-              const mappedReviews = reviewsResponse.reviews.map((r: any) => ({
-                id: r.id,
-                product: r.productId || r.productName || 'Unknown Product',
-                user: r.reviewer || r.userId || 'Anonymous',
-                rating: r.rating || 0,
-                comment: stripHtml(r.content || r.title || ''),
-                date: r.createdAt?._seconds 
-                  ? new Date(r.createdAt._seconds * 1000).toLocaleDateString()
-                  : (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Unknown'),
-                isApproved: r.isApproved
-              }));
-              setReviews(mappedReviews);
-            }
-          } catch (reviewError) {
-            console.warn('Reviews API failed:', reviewError);
-          }
+          // Helper to strip HTML tags
+          const stripHtml = (html: string) => html ? html.replace(/<[^>]*>/g, '').trim() : '';
+
+          // 1. Fetch Users, Orders, Reviews and Chat Sessions in parallel (The primary admin data)
+          const { reviewsAPI, chatSessionsAPI, productsAPI } = await import('./utils/api');
           
-          // Fetch users using pagination
-          await fetchUsersPage(1);
+          const primaryAdminPromises = [
+            ordersAPI.getAllAdmin({ limit: 500 }).catch(err => { console.warn('Orders API failed:', err); return null; }),
+            reviewsAPI.getAllAdmin().catch(err => { console.warn('Reviews API failed:', err); return null; }),
+            chatSessionsAPI.getAll().catch(err => { console.warn('Chat Sessions API failed:', err); return null; }),
+            fetchUsersPage(1).catch(err => { console.warn('Initial users fetch failed:', err); return null; })
+          ];
+
+          const [ordersRes, reviewsRes, chatSessionsRes, usersRes] = await Promise.all(primaryAdminPromises);
+
+          // Update state as soon as we have data
+          if (ordersRes && ordersRes.orders) {
+            setOrders(ordersRes.orders);
+            localStorage.setItem('alpha_orders', JSON.stringify(ordersRes.orders));
+          }
+
+          if (reviewsRes && reviewsRes.reviews) {
+            const mappedReviews = reviewsRes.reviews.map((r: any) => ({
+              id: r.id,
+              product: r.productId || r.productName || 'Unknown Product',
+              user: r.reviewer || r.userId || 'Anonymous',
+              rating: r.rating || 0,
+              comment: stripHtml(r.content || r.title || ''),
+              date: r.createdAt?._seconds 
+                ? new Date(r.createdAt._seconds * 1000).toLocaleDateString()
+                : (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Unknown'),
+              isApproved: r.isApproved
+            }));
+            setReviews(mappedReviews);
+          }
+
+          if (chatSessionsRes) {
+            setChatSessions(chatSessionsRes);
+          }
+
+          // 2. Fetch full catalog in background if needed (This is heavy)
+          const needsProducts = products.length === 0 || (totalProductCount > 0 && products.length < totalProductCount) || (products.length < 200 && totalProductCount === 0);
+          
+          if (needsProducts) {
+            console.log(`📡 Background sync: catalog incomplete (${products.length}/${totalProductCount})`);
+            
+            const batchSize = 100; // Smaller batches are more stable for WordPress/API
+            const endPage = Math.ceil((totalProductCount || 3000) / batchSize);
+            
+            // Limit concurrent batches to avoid overloading
+            const processBatches = async () => {
+              const allBatches = [];
+              for (let p = 1; p <= endPage; p++) {
+                allBatches.push(p);
+              }
+              
+              // Process in chunks of 5 parallel requests
+              const chunkSize = 5;
+              for (let i = 0; i < allBatches.length; i += chunkSize) {
+                const chunk = allBatches.slice(i, i + chunkSize);
+                const results = await Promise.all(
+                  chunk.map(page => productsAPI.getAll({ page, limit: batchSize }))
+                );
+                
+                let chunkProducts: any[] = [];
+                results.forEach(res => {
+                  if (res && res.products) chunkProducts = [...chunkProducts, ...res.products];
+                  else if (Array.isArray(res)) chunkProducts = [...chunkProducts, ...res];
+                });
+                
+                if (chunkProducts.length > 0) {
+                  const transformed = transformProducts(chunkProducts);
+                  setProducts(prev => {
+                    const existingIds = new Set(prev.map(p => p.id));
+                    const uniqueNew = transformed.filter(p => p.id && !existingIds.has(p.id));
+                    if (uniqueNew.length === 0) return prev;
+                    const updated = [...prev, ...uniqueNew];
+                    cache.set(CACHE_KEYS.PRODUCTS, updated, CACHE_TTL.PRODUCTS);
+                    return updated;
+                  });
+                }
+              }
+              console.log("✅ Background catalog sync complete");
+            };
+            
+            processBatches().catch(err => console.error('Catalog sync error:', err));
+          }
+
         } catch (error) {
-          console.error('Failed to load admin data:', error);
+          console.error('Failed to load general admin data:', error);
+        } finally {
+          setIsAdminLoading(false);
         }
       };
       loadAdminData();
@@ -1330,18 +1471,21 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
         while (fetchPage <= targetPage && nextToken) {
           const cacheBuster = Date.now();
           const isLastFetch = fetchPage === targetPage;
-          let url = `/api/v1/users/all?limit=${usersPerPage}&pageToken=${encodeURIComponent(nextToken)}&_cb=${cacheBuster}`;
+          
+          const params: any = {
+            limit: usersPerPage,
+            pageToken: nextToken,
+            _cb: cacheBuster
+          };
+          
           if (isLastFetch) {
-            url += '&getTotal=true'; // Get total on final fetch
+            params.getTotal = true;
           }
           
-          console.log(`📡 Sequential fetch: page ${fetchPage}, url: ${url}`);
+          console.log(`📡 Sequential fetch via usersAPI: page ${fetchPage}`);
           
-          const response = await fetch(url, {
-            credentials: 'include',
-            headers: { 'Cache-Control': 'no-cache' }
-          });
-          const data = await response.json();
+          const { usersAPI } = await import('./utils/api');
+          const data = await usersAPI.getAll(params);
           
           if (isLastFetch) {
             // This is our target page
@@ -1386,41 +1530,37 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
             console.log('⚠️ No more pages available');
             break;
           }
-          
           fetchPage++;
         }
-        
         setIsLoadingUsersPage(false);
         return;
       }
       
-      // Normal fetch with available token
       const cacheBuster = Date.now();
-      let url = `/api/v1/users/all?limit=${usersPerPage}&_cb=${cacheBuster}`;
+      const params: any = { 
+        limit: usersPerPage, 
+        _cb: cacheBuster 
+      };
       
-      // On first load (page 1), get total count
       if (targetPage === 1 && !pageToken) {
-        url += '&getTotal=true';
+        params.getTotal = true;
       }
       
       if (pageToken) {
-        url = `/api/v1/users/all?limit=${usersPerPage}&pageToken=${encodeURIComponent(pageToken)}&_cb=${cacheBuster}`;
+        params.pageToken = pageToken;
       }
       
-      console.log(`📡 Fetching users page ${targetPage}, url: ${url}`);
+      console.log(`📡 Fetching users page ${targetPage}...`);
       
-      const response = await fetch(url, {
-        credentials: 'include',
-        headers: { 'Cache-Control': 'no-cache' }
-      });
-      const data = await response.json();
+      const { usersAPI } = await import('./utils/api');
+      const data = await usersAPI.getAll(params);
       
-      if (data.users && data.users.length > 0) {
+      if (data && data.users) {
         setUsers(data.users);
       }
       
       // Update total count
-      if (data.total && data.total > 0) {
+      if (data && data.total && data.total > 0) {
         setTotalUsersCount(data.total);
         const pages = Math.ceil(data.total / usersPerPage);
         setTotalUsersPages(pages);
@@ -1428,7 +1568,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
       }
       
       // Store next page token for next page
-      if (data.nextPageToken) {
+      if (data && data.nextPageToken) {
         setUsersPageTokens(prev => {
           const newMap = new Map(prev);
           newMap.set(targetPage + 1, data.nextPageToken);
@@ -1436,7 +1576,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
         });
       }
       
-      setUsersPageToken(data.nextPageToken || null);
+      setUsersPageToken(data && data.nextPageToken || null);
       setUsersPage(targetPage);
       
       return data;
@@ -1450,14 +1590,17 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
 
   if ((currentView as ViewState) === 'admin-login') {
     return (
-      <Suspense fallback={<Loading fullScreen message="Loading Admin Login..." />}>
-        <AdminLogin
-          onAdminLogin={handleAdminLogin}
-          onNavigateToUserLogin={() => handleNavigate('login')}
-          isAdmin={isAdmin}
-          user={user}
-        />
-      </Suspense>
+      <>
+        <Suspense fallback={<Loading fullScreen message="Loading Admin Login..." />}>
+          <AdminLogin
+            onAdminLogin={handleAdminLogin}
+            onNavigateToUserLogin={() => handleNavigate('login')}
+            isAdmin={isAdmin}
+            user={user}
+          />
+        </Suspense>
+        <Toaster position="bottom-right" expand={true} richColors />
+      </>
     );
   }
 
@@ -1476,50 +1619,66 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
     }
 
     return (
-      <AdminDashboard
-        products={products}
-        setProducts={setProducts}
-        orders={orders}
-        setOrders={setOrders}
-        reviews={reviews}
-        setReviews={setReviews}
-        categories={categories}
-        setCategories={setCategories}
-        brands={brands}
-        setBrands={setBrands}
-        users={users}
-        setUsers={setUsers}
-        onLogout={handleLogout}
-        onVisitSite={navigateToHome}
-        settings={settings}
-        setSettings={setSettings}
-        heroSlides={heroSlides}
-        onAddHeroSlide={handleAddHeroSlide}
-        onUpdateHeroSlide={handleUpdateHeroSlide}
-        onDeleteHeroSlide={handleDeleteHeroSlide}
-        onReorderHeroSlides={handleReorderHeroSlides}
-        promotionalTiles={promotionalTiles}
-        onUpdatePromotionalTile={handleUpdatePromotionalTile}
-        onToggleBrandFeatured={handleToggleBrandFeatured}
-        onReorderFeaturedBrands={handleReorderFeaturedBrands}
-        onSaveSettings={handleSaveHomepageSettings}
-        usersPage={usersPage}
-        totalUsersCount={totalUsersCount}
-        totalUsersPages={totalUsersPages}
-        onUsersPageChange={fetchUsersPage}
-        isLoadingUsersPage={isLoadingUsersPage}
-      />
+      <>
+        <AdminDashboard
+          products={products}
+          setProducts={setProducts}
+          orders={orders}
+          setOrders={setOrders}
+          reviews={reviews}
+          setReviews={setReviews}
+          chatSessions={chatSessions}
+          setChatSessions={setChatSessions}
+          categories={categories}
+          setCategories={setCategories}
+          brands={brands}
+          setBrands={setBrands}
+          users={users}
+          setUsers={setUsers}
+          onLogout={handleLogout}
+          onVisitSite={navigateToHome}
+          settings={settings}
+          setSettings={setSettings}
+          heroSlides={heroSlides}
+          onAddHeroSlide={handleAddHeroSlide}
+          onUpdateHeroSlide={handleUpdateHeroSlide}
+          onDeleteHeroSlide={handleDeleteHeroSlide}
+          onReorderHeroSlides={handleReorderHeroSlides}
+          promotionalTiles={promotionalTiles}
+          onUpdatePromotionalTile={handleUpdatePromotionalTile}
+          onToggleBrandFeatured={handleToggleBrandFeatured}
+          onReorderFeaturedBrands={handleReorderFeaturedBrands}
+          onSaveSettings={handleSaveHomepageSettings}
+          usersPage={usersPage}
+          totalUsersCount={totalUsersCount}
+          totalUsersPages={totalUsersPages}
+          onUsersPageChange={fetchUsersPage}
+          isLoadingUsersPage={isLoadingUsersPage}
+          isLoadingProducts={isDataLoading || isAdminLoading}
+        />
+        <Toaster position="bottom-right" expand={true} richColors />
+      </>
     );
   }
 
   // Theme 2 Demo Page
   if (currentView === 'theme2-demo') {
-    return <Theme2Demo />;
+    return (
+      <>
+        <Theme2Demo />
+        <Toaster position="bottom-right" expand={true} richColors />
+      </>
+    );
   }
 
   // Theme 3 Demo Page
   if (currentView === 'theme3-demo') {
-    return <Theme3Demo />;
+    return (
+      <>
+        <Theme3Demo />
+        <Toaster position="bottom-right" expand={true} richColors />
+      </>
+    );
   }
 
   console.log("App Render:", { currentView, selectedProductId: selectedProduct?.id, productsCount: products.length });
@@ -1527,14 +1686,17 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
   // Show loading state while data is being fetched (prevents flash of wrong content on direct URL access)
   if (isDataLoading) {
     return (
-      <Loading 
-        fullScreen 
-        message="Loading Alpha Dentkart..." 
-        showProgress={true}
-        progress={loadProgress}
-        error={dataLoadError}
-        onRetry={retryDataLoad}
-      />
+      <>
+        <Loading 
+          fullScreen 
+          message="Loading Alpha Dentkart..." 
+          showProgress={true}
+          progress={loadProgress}
+          error={dataLoadError}
+          onRetry={retryDataLoad}
+        />
+        <Toaster position="bottom-right" expand={true} richColors />
+      </>
     );
   }
 
@@ -1569,6 +1731,8 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
         onRemoveItem={removeFromCart}
         onStartShopping={() => navigateToShop()}
         user={user}
+        appliedCoupon={appliedCoupon}
+        onApplyCoupon={setAppliedCoupon}
         onCheckout={() => {
           setIsCartOpen(false);
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1657,7 +1821,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
                       <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] bg-white dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:border-primary/30 group-hover:shadow-premium transition-all duration-500 overflow-hidden relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         {cat.image ? (
-                          <img src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" />
+                          <OptimizedImageMemo src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" width={100} height={100} />
                         ) : (
                           <i className={`${cat.icon || 'fas fa-tooth'} text-2xl md:text-4xl group-hover:scale-110 group-hover:text-primary transition-transform duration-500`}></i>
                         )}
@@ -1677,7 +1841,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
                         <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] bg-white dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:border-primary/30 group-hover:shadow-premium transition-all duration-500 overflow-hidden relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           {cat.image ? (
-                            <img src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" />
+                            <OptimizedImageMemo src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" width={100} height={100} />
                           ) : (
                             <i className={`${cat.icon || 'fas fa-tooth'} text-2xl md:text-4xl group-hover:scale-110 group-hover:text-primary transition-transform duration-500`}></i>
                           )}
@@ -1695,7 +1859,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
                         <div className="w-20 h-20 md:w-28 md:h-28 rounded-[2rem] bg-white dark:bg-surface-dark shadow-soft border border-gray-100 dark:border-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 group-hover:border-primary/30 group-hover:shadow-premium transition-all duration-500 overflow-hidden relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           {cat.image ? (
-                            <img src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" />
+                            <OptimizedImageMemo src={cat.image} alt={cat.name} className="w-12 h-12 md:w-16 md:h-16 object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500" width={100} height={100} />
                           ) : (
                             <i className={`${cat.icon || 'fas fa-tooth'} text-2xl md:text-4xl group-hover:scale-110 group-hover:text-primary transition-transform duration-500`}></i>
                           )}
@@ -1762,7 +1926,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white leading-tight mb-2">{promo.title}</h3>
                       <p className="text-primary font-bold text-sm">{promo.price}</p>
                     </div>
-                    <img alt={promo.title} className="w-28 h-28 md:w-32 md:h-32 object-contain absolute -right-2 -bottom-2 md:right-4 group-hover:scale-110 transition-transform duration-500" src={promo.image} />
+                    <OptimizedImageMemo alt={promo.title} className="w-28 h-28 md:w-32 md:h-32 object-contain absolute -right-2 -bottom-2 md:right-4 group-hover:scale-110 transition-transform duration-500" src={promo.image} width={200} height={200} />
                   </div>
                 ))}
               </div>
@@ -1921,11 +2085,23 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
           )}
 
           {currentView === 'login' && (
-            <Login onLogin={handleLogin} />
+            <Login 
+              onLogin={handleLogin} 
+              onNavigateToRegister={() => setCurrentView('register')} 
+              onNavigateToForgotPassword={() => setCurrentView('forgot-password')}
+            />
+          )}
+
+          {currentView === 'register' && (
+            <Register onRegister={handleRegister} onNavigateToLogin={() => setCurrentView('login')} />
+          )}
+
+          {currentView === 'forgot-password' && (
+            <ForgotPassword onNavigateBack={() => setCurrentView('login')} />
           )}
 
           {currentView === 'dashboard' && user && (
-            <Dashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />
+            <Dashboard user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} refreshOrders={refreshOrders} />
           )}
 
           {currentView === 'privacy-policy' && (
@@ -1963,7 +2139,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
                 onOrderSuccess={(orderId) => {
                   setCart([]);
                   setIsGuestCheckout(false);
-                  alert('Order placed successfully! Order ID: ' + orderId);
+                  toast.success('Order placed successfully! Order ID: ' + orderId);
                   setCurrentView('shop');
                 }}
                 onCancel={() => {
@@ -2007,6 +2183,8 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
                 onPlaceOrder={handlePlaceOrder}
                 onNavigateBack={() => navigateToShop()}
                 razorpayKey={settings.payment?.razorpay?.keyId}
+                appliedCoupon={appliedCoupon}
+                onApplyCoupon={setAppliedCoupon}
               />
             </div>
           )}
@@ -2062,6 +2240,7 @@ productsResponse = await productsAPI.getAll({ limit: 100 });
 
       {(currentView as string) !== 'admin-dashboard' && <Footer />}
       <CookieConsent />
+      <Toaster position="bottom-right" expand={true} richColors />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { User } from '../types';
 
 export const MOCK_USER: User = {
+    uid: 'rajesh_123',
     name: "Dr. Rajesh Koothrappali",
     email: "rajesh@dentkart.com",
     phone: "+91 98765 43210",

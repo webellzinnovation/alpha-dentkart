@@ -3,7 +3,7 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     // Verification documents - only accessible by owner and admin
-    match /verification-documents/{userId}/{allPaths=**} {
+    match /verifications/{userId}/{allPaths=**} {
       allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
       allow write: if request.auth != null && request.auth.uid == userId &&
                      request.resource.size < 10 * 1024 * 1024 && // 10MB limit

@@ -16,7 +16,7 @@ export interface Coupon {
     expiresAt: string;
     applicableProducts?: string; // JSON array
     applicableCategories?: string; // JSON array
-    userType?: 'all' | 'regular' | 'dental-doctor' | 'student' | 'supplier';
+    userType?: 'all' | 'regular' | 'dental-doctor' | 'dental-student' | 'dental-business';
     createdAt: string;
     updatedAt: string;
 }

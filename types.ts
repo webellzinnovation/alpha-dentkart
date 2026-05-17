@@ -154,13 +154,20 @@ export interface Address {
   isDefault: boolean;
 }
 
+export interface OrderStatusUpdate {
+  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected';
+  timestamp: string;
+  note?: string;
+  updatedBy?: string;
+}
+
 export interface Order {
   id: string;
   userId?: string;
   date: string;
-  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected';
   total: number;
-  items: { name: string; quantity: number; price: number }[];
+  items: { productId: string | number; name: string; quantity: number; price: number }[];
   customerName?: string;
   shippingAddress?: Address;
   paymentId?: string; // Razorpay payment ID
@@ -179,10 +186,12 @@ export interface Order {
   trackingNumber?: string;
   courierName?: string;
   estimatedDelivery?: string;
+  statusHistory?: OrderStatusUpdate[];
 }
 
 
 export interface User {
+  uid: string;
   name: string;
   email: string;
   phone: string;
@@ -193,7 +202,7 @@ export interface User {
   wishlist: Product[];
 
   // User Type System
-  userType: 'dental-doctor' | 'student' | 'supplier' | 'regular';
+  userType: 'dental-doctor' | 'dental-student' | 'dental-business' | 'regular';
 
   // Dental Doctor Information
   dentalDoctorInfo?: {
@@ -206,7 +215,7 @@ export interface User {
   };
 
   // Student Information
-  studentInfo?: {
+  dentalStudentInfo?: {
     studentId: string;
     institution: string;
     course: string;
@@ -214,8 +223,8 @@ export interface User {
     expectedGraduation?: string;
   };
 
-  // Supplier Information
-  supplierInfo?: {
+  // Business Information
+  dentalBusinessInfo?: {
     gstNumber: string;
     businessName: string;
     businessType: string;
@@ -284,4 +293,25 @@ export interface StockNotification {
   userName: string;
   subscribedDate: string;
   notified: boolean;
-}
+}
+
+export interface ChatMessage {
+    id: string;
+    role: 'user' | 'model' | 'admin';
+    text: string;
+    timestamp: string;
+    senderName?: string;
+}
+
+export interface ChatSession {
+    id: string;
+    customerId: string;
+    customerName: string;
+    customerEmail: string;
+    messages: ChatMessage[];
+    status: 'ai' | 'admin' | 'closed';
+    startedAt: string;
+    lastMessageAt: string;
+    assignedAdmin?: string;
+    unreadCount?: number;
+}

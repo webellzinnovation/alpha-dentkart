@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { User, Category, Product } from '../types';
 import { CustomDropdown } from './CustomDropdown';
+import OptimizedImageMemo from './OptimizedImage';
+import { productsAPI } from '../utils/api';
 
 interface HeaderProps {
   onNavigate: (page: 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'login' | 'dashboard', category?: string) => void;
@@ -41,7 +43,37 @@ const HeaderComponent: React.FC<HeaderProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
+  const [isCartHovered, setIsCartHovered] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isRecentlyViewedOpen, setIsRecentlyViewedOpen] = useState(false);
+
+  // Search Suggestions State
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSearchingSuggestions, setIsSearchingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (localSearch.trim().length >= 2) {
+        setIsSearchingSuggestions(true);
+        try {
+          const response = await productsAPI.getAll({ search: localSearch, limit: 5 });
+          setSuggestions(response.products || []);
+          setShowSuggestions(true);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+        } finally {
+          setIsSearchingSuggestions(false);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [localSearch]);
 
   useEffect(() => {
     setLocalSearch(searchQuery);
@@ -120,16 +152,51 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             </div>
 
             {/* Search Bar - Integrated & Always Visible on Mobile */}
-            <form onSubmit={handleSearchSubmit} className="relative group">
-              <input
-                type="text"
-                placeholder="Search Alpha Dentkart..."
-                className="w-full h-12 bg-gray-100 dark:bg-gray-800 border-none rounded-2xl pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-              <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors"></i>
-            </form>
+            <div className="relative group">
+              <form onSubmit={handleSearchSubmit}>
+                <input
+                  type="text"
+                  placeholder="Search Alpha Dentkart..."
+                  className="w-full h-12 bg-gray-100 dark:bg-gray-800 border-none rounded-2xl pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  onFocus={() => localSearch.length >= 2 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                />
+                <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors"></i>
+              </form>
+
+              {/* Suggestions Dropdown (Mobile) */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 shadow-2xl rounded-2xl border border-gray-100 dark:border-gray-800 z-50 overflow-hidden">
+                  <div className="p-2">
+                    {suggestions.map((product) => (
+                      <div
+                        key={product.id}
+                        onClick={() => {
+                          onNavigate('product', product.id);
+                          setLocalSearch('');
+                          setShowSuggestions(false);
+                        }}
+                        className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl cursor-pointer transition-colors"
+                      >
+                        <OptimizedImageMemo src={product.image} alt={product.name} className="w-10 h-10 object-contain rounded bg-white" width={40} height={40} />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">{product.name}</h4>
+                          <p className="text-xs text-primary font-bold">₹{(product.price ?? 0).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div
+                      onClick={handleSearchSubmit}
+                      className="p-3 text-center border-t border-gray-50 dark:border-gray-800 mt-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-b-xl"
+                    >
+                      <span className="text-xs font-bold text-gray-500">View all results for "{localSearch}"</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
 
@@ -139,16 +206,19 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             {/* Logo */}
             <div className="flex items-center gap-4 flex-shrink-0">
               <a onClick={() => onNavigate('home')} className="flex items-center gap-3 cursor-pointer group active:scale-95 transition-transform origin-left">
-                <img
+                <OptimizedImageMemo
                   src="/Alpha-dentkart-logo-600p.png"
                   alt="Alpha DentKart"
                   className="h-10 sm:h-12 object-contain group-hover:scale-105 transition-transform duration-300"
+                  width={200}
+                  height={50}
+                  priority={true}
                 />
               </a>
             </div>
 
             {/* Search Bar - Desktop (Centered/Left aligned) */}
-            <form onSubmit={handleSearchSubmit} className="hidden lg:flex flex-1 max-w-2xl xl:max-w-3xl mx-4 xl:mx-6 bg-gray-100 dark:bg-gray-800 rounded-full p-1 border border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all items-center">
+            <div className="hidden lg:flex flex-1 max-w-2xl xl:max-w-3xl mx-4 xl:mx-6 bg-gray-100 dark:bg-gray-800 rounded-full p-1 border border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all items-center relative">
               <div className="w-36 lg:w-44 flex-shrink-0 border-r border-gray-300 dark:border-gray-600 relative h-full">
                 <CustomDropdown
                   value="All Categories"
@@ -158,17 +228,61 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                   bgColor="bg-gray-100 dark:bg-gray-800"
                 />
               </div>
-              <input
-                className="flex-1 bg-transparent border-none focus:ring-0 focus:border-none outline-none px-4 text-sm text-gray-800 dark:text-white placeholder-gray-400 h-full"
-                placeholder="Search products..."
-                type="text"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-              <button type="submit" className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-primary transition-colors hover:bg-white dark:hover:bg-gray-700 shadow-sm">
-                <i className="fas fa-search text-sm"></i>
-              </button>
-            </form>
+              <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center h-full">
+                <input
+                  className="flex-1 bg-transparent border-none focus:ring-0 focus:border-none outline-none px-4 text-sm text-gray-800 dark:text-white placeholder-gray-400 h-full"
+                  placeholder="Search products..."
+                  type="text"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  onFocus={() => localSearch.length >= 2 && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                />
+                <button type="submit" className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 hover:text-primary transition-colors hover:bg-white dark:hover:bg-gray-700 shadow-sm">
+                  <i className="fas fa-search text-sm"></i>
+                </button>
+              </form>
+
+              {/* Suggestions Dropdown (Desktop) */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-surface-dark shadow-2xl rounded-2xl border border-gray-100 dark:border-gray-800 z-50 overflow-hidden animate-fade-in-up">
+                  <div className="p-3">
+                    <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product Matches</div>
+                    {suggestions.map((product) => (
+                      <div
+                        key={product.id}
+                        onClick={() => {
+                          onNavigate('product', product.id);
+                          setLocalSearch('');
+                          setShowSuggestions(false);
+                        }}
+                        className="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
+                      >
+                        <div className="w-12 h-12 rounded-lg bg-gray-50 dark:bg-gray-800 p-1 flex items-center justify-center">
+                          <OptimizedImageMemo src={product.image} alt={product.name} className="w-full h-full object-contain" width={48} height={48} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">{product.name}</h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-sm font-bold text-primary">₹{(product.price ?? 0).toLocaleString()}</span>
+                            {product.originalPrice && (
+                              <span className="text-xs text-gray-400 line-through">₹{(product.originalPrice ?? 0).toLocaleString()}</span>
+                            )}
+                          </div>
+                        </div>
+                        <i className="fas fa-chevron-right text-[10px] text-gray-300"></i>
+                      </div>
+                    ))}
+                    <div
+                      onClick={handleSearchSubmit}
+                      className="p-3 text-center border-t border-gray-100 dark:border-gray-800 mt-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-b-xl group/view-all"
+                    >
+                      <span className="text-xs font-bold text-gray-500 group-hover/view-all:text-primary transition-colors">View all results for "{localSearch}"</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Desktop Icons / Actions */}
             <div className="hidden lg:flex items-center gap-6 xl:gap-10 flex-shrink-0">
@@ -232,7 +346,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                   <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide">Cart</span>
                   <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">
                     {settings.general.currency === 'INR' ? '₹' : settings.general.currency}
-                    {cartTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    {(cartTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </a>
@@ -324,16 +438,18 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                           }}
                           className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors text-left"
                         >
-                          <img
+                          <OptimizedImageMemo
                             src={product.image}
                             alt={product.name}
                             className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-600"
+                            width={48}
+                            height={48}
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-800 dark:text-white truncate">{product.name}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                               {settings.general.currency === 'INR' ? '₹' : settings.general.currency}
-                              {product.price.toLocaleString('en-IN')}
+                              {(product.price ?? 0).toLocaleString('en-IN')}
                             </p>
                           </div>
                         </button>
@@ -463,7 +579,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
               }}
             >
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary shadow-sm">
-                <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                <OptimizedImageMemo src={user.avatar} alt="Avatar" className="w-full h-full object-cover" width={40} height={40} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name}</p>

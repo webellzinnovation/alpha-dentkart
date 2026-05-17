@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { db } from '../config/firebase';
+import { db, admin } from '../config/firebase';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import logger from '../utils/logger';
@@ -50,10 +50,15 @@ export const cancelOrder = async (req: AuthRequest, res: Response) => {
 
         // Update order status
         await orderRef.update({
-            status: 'cancelled',
+            status: 'Cancelled',
             cancellationReason: reason,
             cancellationComments: comments,
-            cancelledAt: new Date().toISOString()
+            cancelledAt: new Date().toISOString(),
+            statusHistory: admin.firestore.FieldValue.arrayUnion({
+                status: 'Cancelled',
+                timestamp: new Date().toISOString(),
+                note: `Order cancelled. Reason: ${reason}. ${comments ? 'Comments: ' + comments : ''}`
+            })
         });
 
         // Add to return requests/transactions if refund needed?
@@ -111,9 +116,14 @@ export const bulkCancelOrders = async (req: AuthRequest, res: Response) => {
                 }
 
                 await orderRef.update({
-                    status: 'cancelled',
+                    status: 'Cancelled',
                     cancellationReason: reason,
-                    cancelledAt: new Date().toISOString()
+                    cancelledAt: new Date().toISOString(),
+                    statusHistory: admin.firestore.FieldValue.arrayUnion({
+                        status: 'Cancelled',
+                        timestamp: new Date().toISOString(),
+                        note: `Order cancelled in bulk. Reason: ${reason}`
+                    })
                 });
 
                 results.push({ orderId, success: true });

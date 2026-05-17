@@ -26,9 +26,9 @@ export async function chatWithAI(req: Request, res: Response) {
 
         const result = await chat.sendMessage({ message });
 
-        res.json({ response: result.text });
+        return res.json({ response: result.text });
     } catch (error: any) {
         logger.error('AI Error:', error);
-        res.status(500).json({ error: 'AI service error' });
+        return res.status(500).json({ error: 'AI service error' });
     }
 }

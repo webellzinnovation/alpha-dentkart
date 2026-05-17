@@ -138,54 +138,114 @@ export class DeliveryEstimationService {
     error?: string;
   }> {
     try {
-      const validPincodes: Record<string, any> = {
-        '600001': { city: 'Chennai', state: 'Tamil Nadu', deliveryDays: 2, codAvailable: true },
-        '600002': { city: 'Chennai', state: 'Tamil Nadu', deliveryDays: 2, codAvailable: true },
-        '400001': { city: 'Mumbai', state: 'Maharashtra', deliveryDays: 3, codAvailable: true },
-        '400002': { city: 'Mumbai', state: 'Maharashtra', deliveryDays: 3, codAvailable: true },
-        '110001': { city: 'Delhi', state: 'Delhi', deliveryDays: 4, codAvailable: true },
-        '560001': { city: 'Bangalore', state: 'Karnataka', deliveryDays: 3, codAvailable: true },
-        '500001': { city: 'Hyderabad', state: 'Telangana', deliveryDays: 3, codAvailable: true },
-        '700001': { city: 'Kolkata', state: 'West Bengal', deliveryDays: 4, codAvailable: true },
-        '380001': { city: 'Ahmedabad', state: 'Gujarat', deliveryDays: 3, codAvailable: true }
-      };
-
-      const pincodeData = validPincodes[pincode];
-      if (!pincodeData) {
-        return { isValid: false, city: '', state: '', serviceable: false, deliveryDays: 0, codAvailable: false, error: 'Pincode not serviceable' };
+      // 1. Basic format check
+      if (!/^\d{6}$/.test(pincode)) {
+        return { isValid: false, city: '', state: '', serviceable: false, deliveryDays: 0, codAvailable: false, error: 'Invalid pincode format' };
       }
 
+      // 2. High-priority known cities (Fast delivery zones)
+      const majorCities: Record<string, any> = {
+        '600001': { city: 'Chennai', state: 'Tamil Nadu', deliveryDays: 1, codAvailable: true },
+        '600106': { city: 'Arumbakkam (Store)', state: 'Tamil Nadu', deliveryDays: 1, codAvailable: true },
+        '560001': { city: 'Bangalore', state: 'Karnataka', deliveryDays: 2, codAvailable: true },
+        '500001': { city: 'Hyderabad', state: 'Telangana', deliveryDays: 2, codAvailable: true },
+        '400001': { city: 'Mumbai', state: 'Maharashtra', deliveryDays: 3, codAvailable: true },
+        '110001': { city: 'Delhi', state: 'Delhi', deliveryDays: 4, codAvailable: true },
+        '700001': { city: 'Kolkata', state: 'West Bengal', deliveryDays: 5, codAvailable: true },
+        '380001': { city: 'Ahmedabad', state: 'Gujarat', deliveryDays: 3, codAvailable: true },
+        '682001': { city: 'Kochi', state: 'Kerala', deliveryDays: 2, codAvailable: true },
+        '641001': { city: 'Coimbatore', state: 'Tamil Nadu', deliveryDays: 2, codAvailable: true },
+        '625001': { city: 'Madurai', state: 'Tamil Nadu', deliveryDays: 2, codAvailable: true }
+      };
+
+      if (majorCities[pincode]) {
+        return { isValid: true, ...majorCities[pincode], serviceable: true };
+      }
+
+      // 3. Region detection based on first digit
+      // In India: 1,2: North, 3,4: West, 5,6: South, 7,8: East
+      const firstDigit = pincode[0];
+      const regionData: Record<string, { state: string; days: number }> = {
+        '1': { state: 'North India', days: 5 },
+        '2': { state: 'North India', days: 5 },
+        '3': { state: 'West India', days: 4 },
+        '4': { state: 'West India', days: 4 },
+        '5': { state: 'South India', days: 3 },
+        '6': { state: 'South India', days: 2 }, // Store is here
+        '7': { state: 'East India', days: 6 },
+        '8': { state: 'East India', days: 6 }
+      };
+
+      const region = regionData[firstDigit];
+      if (!region) {
+        return { isValid: false, city: '', state: '', serviceable: false, deliveryDays: 0, codAvailable: false, error: 'Region not serviceable' };
+      }
+
+      // Default fallback for any valid-looking Indian pincode
       return {
         isValid: true,
-        city: pincodeData.city,
-        state: pincodeData.state,
+        city: 'Local Area',
+        state: region.state,
         serviceable: true,
-        deliveryDays: pincodeData.deliveryDays,
-        codAvailable: pincodeData.codAvailable
+        deliveryDays: region.days,
+        codAvailable: true
       };
     } catch (error) {
       return { isValid: false, city: '', state: '', serviceable: false, deliveryDays: 0, codAvailable: false };
     }
   }
 
+  private readonly categoryWeights: Record<string, number> = {
+    'Equipments': 5.0,
+    'Instruments': 0.5,
+    'Endodontics': 0.2,
+    'Restorative': 0.3,
+    'Oral Surgery': 0.8,
+    'Orthodontics': 0.4,
+    'Prosthodontics': 1.0,
+    'General Dentistry': 0.5,
+    'Bonds Etchants': 0.2,
+    'Articulating Paper': 0.1,
+    'Paedodontics': 0.3,
+    'Periodontics': 0.4,
+    'Bleaching Products': 0.3,
+    'Students Section': 1.0,
+    'Sterilization Product': 0.6,
+    'Bibs Apron And Drapes': 2.0,
+    'Barrier And Sterilization': 1.5,
+    'All Products': 0.5
+  };
+
   private async getProductWeight(productId: string): Promise<number> {
     try {
+      if (productId === 'mock') return 0.5;
+      
       const doc = await db.collection('products').doc(productId).get();
       if (doc.exists) {
         const product = doc.data();
-        // Assuming price-based estimation as before, or real weight if available
         if (product) {
-          if (product.weight) return product.weight; // If weight exists
-          // Heuristic based on price if weight missing
+          // 1. Use actual weight if available
+          if (product.weight && typeof product.weight === 'number' && product.weight > 0) {
+            return product.weight;
+          }
+          
+          // 2. Use category-based weight fallback
+          if (product.category && this.categoryWeights[product.category]) {
+            return this.categoryWeights[product.category];
+          }
+
+          // 3. Heuristic based on price if weight and category mapping missing
           const price = product.price || 0;
-          if (price > 50000) return 2.0;
-          if (price > 10000) return 1.0;
-          if (price > 1000) return 0.5;
-          return 0.2;
+          if (price > 100000) return 10.0; // Large equipment
+          if (price > 50000) return 5.0;  // Medium equipment
+          if (price > 10000) return 2.0;  // Heavy instrument/kit
+          if (price > 1000) return 0.5;   // Standard item
+          return 0.2; // Small consumables
         }
       }
-      return 0.5;
+      return 0.5; // Final default
     } catch (error) {
+      logger.error(`Error fetching weight for product ${productId}:`, error);
       return 0.5;
     }
   }

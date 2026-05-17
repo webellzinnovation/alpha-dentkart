@@ -10,7 +10,7 @@ export const ChatSupport: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Load sessions
-    const loadSessions = () => {
+    const loadSessions = React.useCallback(() => {
         const allSessions = getChatSessions();
         setSessions(allSessions);
 
@@ -21,14 +21,14 @@ export const ChatSupport: React.FC = () => {
                 setSelectedSession(updated);
             }
         }
-    };
+    }, [selectedSession]);
 
     useEffect(() => {
         loadSessions();
         // Refresh every 3 seconds for near real-time updates
         const interval = setInterval(loadSessions, 3000);
         return () => clearInterval(interval);
-    }, []);
+    }, [loadSessions]);
 
     // Auto-scroll to bottom of messages
     useEffect(() => {

@@ -26,7 +26,6 @@ export const getAllHeroSlides = async (req: Request, res: Response) => {
 // Create new hero slide
 export const createHeroSlide = async (req: Request, res: Response) => {
     try {
-        console.log('Received raw hero slide payload. Body type:', typeof req.body, 'Keys:', Object.keys(req.body));
         const { title, subtitle, image, link, order, isActive, badge, bgClass, gradientClass } = req.body;
 
         const newSlide = {
@@ -50,7 +49,6 @@ export const createHeroSlide = async (req: Request, res: Response) => {
         const docRef = await db.collection('hero_slides').add(cleanSlide);
         res.status(201).json({ id: docRef.id, ...cleanSlide });
     } catch (error) {
-        console.error('CRITICAL BACKEND ERROR IN CREATE SLIDE:', error);
         logger.error('Error creating hero slide:', error);
         res.status(500).json({ error: 'Failed to create hero slide', details: error instanceof Error ? error.message : String(error) });
     }

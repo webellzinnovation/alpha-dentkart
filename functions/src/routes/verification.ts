@@ -2,6 +2,7 @@ import express from 'express';
 import {
   submitVerification,
   getUserVerifications,
+  getVerificationsByUserId,
   getVerificationById,
   getAllVerifications,
   updateVerificationStatus,
@@ -24,6 +25,7 @@ router.delete('/:id', authenticateToken, deleteVerification);
 
 // Admin routes
 router.get('/', authenticateToken, getAllVerifications);
+router.get('/user/:userId', authenticateToken, getVerificationsByUserId);
 router.put('/:id/status', authenticateToken, updateVerificationStatus);
 router.get('/admin/stats', authenticateToken, getVerificationStats);
 router.get('/admin/audit-logs', authenticateToken, getAllVerificationAuditLogs);

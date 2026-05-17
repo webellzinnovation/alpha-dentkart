@@ -29,6 +29,10 @@ import adminStatsRoutes from './routes/adminStats';
 import settingsRoutes from './routes/settings';
 import userRoutes from './routes/users';
 import whatsappRoutes from './routes/whatsapp';
+import seoRoutes from './routes/seo';
+import syncRoutes from './routes/sync';
+import wishlistRoutes from './routes/wishlist';
+import cartRoutes from './routes/cart';
 // import { authLimiter } from '../middleware/rateLimiter'; // specific one
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
@@ -149,6 +153,9 @@ errorTracker.init();
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter);
 
+// SEO Routes (Sitemap, Robots.txt)
+app.use('/', seoRoutes);
+
 // Root route
 app.get('/', (req, res) => {
     res.json({
@@ -174,32 +181,46 @@ app.get(['/health', '/api/health', '/api/v1/health'], (req, res) => {
 app.use('/api', auditLogger);
 
 // API v1 Routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/products', productRoutes);
-app.use('/api/v1/categories', categoryRoutes);
-app.use('/api/v1/brands', brandRoutes);
-app.use('/api/v1/notifications', notificationRoutes);
-app.use('/api/v1/custom-notifications', customNotificationRoutes);
-app.use('/api/v1/chat-sessions', chatSessionRoutes);
-app.use('/api/v1/orders', orderRoutes);
-app.use('/api/v1/ai', aiRoutes);
-app.use('/api/v1/hero-slides', heroSlideRoutes);
-app.use('/api/v1/promotional-tiles', promotionalTileRoutes);
-app.use('/api/v1/reviews', reviewRoutes);
-app.use('/api/v1/shipping', shippingRoutes);
-app.use('/api/v1/shiprocket', shiprocketRoutes);
-app.use('/api/v1/guest', guestCheckoutRoutes);
-app.use('/api/v1/coupons', couponRoutes);
-app.use('/api/v1/order-cancellation', orderCancellationRoutes);
-app.use('/api/v1/verification', verificationRoutes);
-app.use('/api/v1/saved-payments', savedPaymentRoutes);
-app.use('/api/v1/quick-reorder', quickReorderRoutes);
-app.use('/api/v1/delivery-estimation', deliveryEstimationRoutes);
-app.use('/api/v1/returns', returnRoutes);
-app.use('/api/v1/admin/stats', adminStatsRoutes);
-app.use('/api/v1/settings', settingsRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/whatsapp', whatsappRoutes);
+const v1Router = express.Router();
+
+// Explicit CSRF token endpoint (sendCsrfToken middleware sets the cookie)
+v1Router.get('/csrf-token', (req, res) => {
+    res.json({ status: 'success', message: 'CSRF token set in cookie' });
+});
+
+v1Router.use('/auth', authRoutes);
+v1Router.use('/products', productRoutes);
+v1Router.use('/categories', categoryRoutes);
+v1Router.use('/brands', brandRoutes);
+v1Router.use('/notifications', notificationRoutes);
+v1Router.use('/custom-notifications', customNotificationRoutes);
+v1Router.use('/chat-sessions', chatSessionRoutes);
+v1Router.use('/orders', orderRoutes);
+v1Router.use('/ai', aiRoutes);
+v1Router.use('/hero-slides', heroSlideRoutes);
+v1Router.use('/promotional-tiles', promotionalTileRoutes);
+v1Router.use('/reviews', reviewRoutes);
+v1Router.use('/shipping', shippingRoutes);
+v1Router.use('/shiprocket', shiprocketRoutes);
+v1Router.use('/guest', guestCheckoutRoutes);
+v1Router.use('/coupons', couponRoutes);
+v1Router.use('/order-cancellation', orderCancellationRoutes);
+v1Router.use('/verification', verificationRoutes);
+v1Router.use('/saved-payments', savedPaymentRoutes);
+v1Router.use('/quick-reorder', quickReorderRoutes);
+v1Router.use('/delivery-estimation', deliveryEstimationRoutes);
+v1Router.use('/returns', returnRoutes);
+v1Router.use('/admin/stats', adminStatsRoutes);
+v1Router.use('/settings', settingsRoutes);
+v1Router.use('/users', userRoutes);
+v1Router.use('/whatsapp', whatsappRoutes);
+v1Router.use('/sync', syncRoutes);
+v1Router.use('/wishlist', wishlistRoutes);
+v1Router.use('/cart', cartRoutes);
+
+// Mount the v1 router
+app.use('/api/v1', v1Router);
+app.use('/v1', v1Router);
 
 // Backward-compatible redirect: /api/* → /api/v1/*
 // This ensures existing frontend code continues to work

@@ -43,9 +43,13 @@ export async function getAllProducts(req: Request, res: Response) {
 
         // Apply ordering + pagination
         const offset = (page - 1) * limit;
-        productsRef = productsRef.orderBy('createdAt', 'desc').offset(offset).limit(limit);
+        if (limit < 1000) {
+            productsRef = productsRef.orderBy('createdAt', 'desc');
+        }
+        productsRef = productsRef.offset(offset).limit(limit);
 
-        const snapshot = await withTimeout(productsRef.get());
+        // Fetch products with a generous 4-minute timeout for large catalogs
+        const snapshot = await withTimeout(productsRef.get(), 240000);
 
         // Map products — use denormalized categoryName/brandName fields
         const products = snapshot.docs.map((doc) => {

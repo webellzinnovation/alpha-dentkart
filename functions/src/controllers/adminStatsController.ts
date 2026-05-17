@@ -13,8 +13,6 @@ export async function getAdminStats(req: Request, res: Response) {
             return res.json(cached);
         }
 
-        console.log('Fetching real admin stats from Firestore...');
-
         // Parallel queries for performance
         const [productsSnapshot, ordersSnapshot, usersSnapshot] = await Promise.all([
             db.collection('products').count().get(),
@@ -35,7 +33,7 @@ export async function getAdminStats(req: Request, res: Response) {
             const allOrders = await db.collection('orders').select('total').get();
             totalRevenue = allOrders.docs.reduce((acc, doc) => acc + (doc.data().total || 0), 0);
         } catch (e) {
-            console.warn("Failed to aggregate revenue", e);
+            logger.warn("Failed to aggregate revenue", { error: e });
         }
 
         const stats = {

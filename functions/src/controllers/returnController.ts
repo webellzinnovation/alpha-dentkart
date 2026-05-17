@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { db } from '../config/firebase'; // Firestore
+import { db, admin } from '../config/firebase'; // Firestore
 import { z } from 'zod';
 import logger from '../utils/logger';
 
@@ -12,20 +12,26 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Validation schemas (Updated for String IDs)
+const returnItemSchema = z.object({
+    productId: z.string().or(z.number().transform(String)),
+    name: z.string(),
+    quantity: z.number(),
+    price: z.number()
+});
+
 const createReturnRequestSchema = z.object({
     orderId: z.string(),
-    orderItemId: z.string().or(z.number().transform(String)), // Item ID might vary
-    reason: z.enum(['damaged', 'wrong-item', 'not-as-described', 'expired', 'size-issue', 'other']),
-    condition: z.enum(['new', 'used', 'damaged']),
-    description: z.string().min(10).max(500),
+    items: z.array(returnItemSchema),
+    reason: z.string(), // Flexible reason string
+    condition: z.enum(['new', 'used', 'damaged']).default('new'),
+    description: z.string().min(3).max(1000),
     images: z.array(z.string()).optional(),
-    refundType: z.enum(['refund', 'replacement', 'exchange']),
+    refundType: z.enum(['refund', 'replacement', 'exchange']).default('refund'),
     refundAmount: z.number().optional(),
     trackingId: z.string().optional()
 });
 
 const updateReturnRequestSchema = z.object({
-    // Same as before...
     status: z.enum(['pending', 'approved', 'rejected', 'completed']).optional()
 });
 
@@ -38,7 +44,7 @@ const createRefundSchema = z.object({
     failureReason: z.string().optional()
 });
 
-// Create return request
+// Create return request (Handles multiple items)
 export async function createReturnRequest(req: AuthenticatedRequest, res: Response) {
     try {
         const userId = req.user?.id;
@@ -60,7 +66,7 @@ export async function createReturnRequest(req: AuthenticatedRequest, res: Respon
         }
 
         // Check return window
-        const deliveryDate = new Date(order.createdAt); // Simplified: Using createdAt as proxy if delivery date missing
+        const deliveryDate = new Date(order.createdAt);
         const now = new Date();
         const daysSinceDelivery = Math.floor((now.getTime() - deliveryDate.getTime()) / (1000 * 60 * 60 * 24));
         const maxReturnDays = req.user?.userType === 'dental-doctor' ? 30 : 15;
@@ -72,30 +78,53 @@ export async function createReturnRequest(req: AuthenticatedRequest, res: Respon
             });
         }
 
-        // Check if item already returned
-        const existingSnapshot = await db.collection('return_requests')
-            .where('orderId', '==', validatedData.orderId)
-            .where('orderItemId', '==', validatedData.orderItemId)
-            .get();
+        const results = [];
+        const batch = db.batch();
 
-        // Convert existing docs to array to check status
-        const existingReturns = existingSnapshot.docs.map(d => d.data());
-        if (existingReturns.some((r: any) => r.status !== 'rejected')) {
-            return res.status(400).json({ error: 'Return request already exists for this item' });
+        for (const item of validatedData.items) {
+            // Check if item already returned
+            const existingSnapshot = await db.collection('return_requests')
+                .where('orderId', '==', validatedData.orderId)
+                .where('productId', '==', String(item.productId))
+                .get();
+
+            const existingReturns = existingSnapshot.docs.map(d => d.data());
+            if (existingReturns.some((r: any) => r.status !== 'rejected')) {
+                continue; // Skip already returned items
+            }
+
+            const returnRef = db.collection('return_requests').doc();
+            const returnItemData = {
+                orderId: validatedData.orderId,
+                productId: String(item.productId),
+                productName: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                reason: validatedData.reason,
+                condition: validatedData.condition,
+                description: validatedData.description,
+                refundType: validatedData.refundType,
+                refundAmount: validatedData.refundAmount || (item.price * item.quantity),
+                userId,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+
+            batch.set(returnRef, returnItemData);
+            results.push({ id: returnRef.id, ...returnItemData });
         }
 
-        // Create return request
-        const returnData = {
-            ...validatedData,
-            userId,
-            status: 'pending',
-            createdAt: new Date().toISOString()
-        };
+        if (results.length === 0) {
+            return res.status(400).json({ error: 'All selected items have already been requested for return or none were selected.' });
+        }
 
-        const docRef = await db.collection('return_requests').add(returnData);
-        res.status(201).json({ returnRequest: { id: docRef.id, ...returnData } });
+        await batch.commit();
+        res.status(201).json({ success: true, returnRequests: results });
 
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.issues });
+        }
         logger.error('Error creating return request:', error);
         res.status(500).json({ error: 'Failed to create return request' });
     }
@@ -250,7 +279,14 @@ export async function approveReturnRequest(req: AuthenticatedRequest, res: Respo
                     createdAt: new Date().toISOString()
                 });
 
-                await db.collection('orders').doc(String(returnData.orderId)).update({ status: 'return-approved' });
+                await db.collection('orders').doc(String(returnData.orderId)).update({ 
+                    status: 'Return Approved',
+                    statusHistory: admin.firestore.FieldValue.arrayUnion({
+                        status: 'Return Approved',
+                        timestamp: new Date().toISOString(),
+                        note: 'Return request has been approved by admin.'
+                    })
+                });
             }
         }
 
@@ -324,7 +360,14 @@ export async function processRefund(req: AuthenticatedRequest, res: Response) {
 
         // Update Order
         if (!refund.error) {
-            await db.collection('orders').doc(returnData.orderId).update({ status: 'return-completed' });
+            await db.collection('orders').doc(returnData.orderId).update({ 
+                status: 'Return Completed',
+                statusHistory: admin.firestore.FieldValue.arrayUnion({
+                    status: 'Return Completed',
+                    timestamp: new Date().toISOString(),
+                    note: 'Refund processed and return completed.'
+                })
+            });
         }
 
         res.json({

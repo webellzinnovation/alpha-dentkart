@@ -6,12 +6,16 @@ import logger from '../utils/logger';
 export interface VerificationSubmissionData {
   userId: string;
   documentType: 'license' | 'certificate' | 'id_proof' | 'clinic_proof';
-  file: {
+  file?: {
     buffer: Buffer;
     originalName: string;
     mimeType: string;
     size: number;
   };
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
   additionalData?: {
     licenseId?: string;
     licenseState?: string;
@@ -95,46 +99,50 @@ export class VerificationService {
 
   async submitVerification(data: VerificationSubmissionData): Promise<VerificationResponse> {
     try {
-      // Validate file
-      if (!this.validateFileType(data.file.mimeType)) {
-        return {
-          success: false,
-          error: `Invalid file type: ${data.file.mimeType}. Allowed types: ${this.allowedFileTypes.join(', ')}`
-        };
+      // Save file or use provided URL
+      let fileName = data.fileName || '';
+      let fileUrl = data.fileUrl || '';
+      let fileSize = data.fileSize || 0;
+      let mimeType = data.mimeType || '';
+
+      if (data.file) {
+        // Validate file if provided as buffer
+        if (!this.validateFileType(data.file.mimeType)) {
+          return {
+            success: false,
+            error: `Invalid file type: ${data.file.mimeType}. Allowed types: ${this.allowedFileTypes.join(', ')}`
+          };
+        }
+
+        if (!this.validateFileSize(data.file.size)) {
+          return {
+            success: false,
+            error: `File size exceeds maximum limit of 10MB: ${data.file.originalName}`
+          };
+        }
+
+        const savedFile = await this.saveFile(data.file);
+        fileName = savedFile.fileName;
+        fileUrl = savedFile.fileUrl;
+        fileSize = data.file.size;
+        mimeType = data.file.mimeType;
       }
 
-      if (!this.validateFileSize(data.file.size)) {
+      if (!fileUrl) {
         return {
           success: false,
-          error: `File size exceeds maximum limit of 10MB: ${data.file.originalName}`
+          error: 'No file or file URL provided'
         };
       }
-
-      // Check for pending verification
-      const existingSnapshot = await db.collection('verification_documents')
-        .where('userId', '==', data.userId)
-        .where('documentType', '==', data.documentType)
-        .where('status', '==', 'pending')
-        .get();
-
-      if (!existingSnapshot.empty) {
-        return {
-          success: false,
-          error: `You already have a ${data.documentType.replace('_', ' ')} verification under review. Please wait for the current verification to be completed.`
-        };
-      }
-
-      // Save file
-      const savedFile = await this.saveFile(data.file);
 
       // Create doc
       const verificationData = {
         userId: data.userId,
         documentType: data.documentType,
-        fileName: savedFile.fileName,
-        fileUrl: savedFile.fileUrl,
-        fileSize: data.file.size,
-        mimeType: data.file.mimeType,
+        fileName,
+        fileUrl,
+        fileSize,
+        mimeType,
         status: 'pending',
         createdAt: new Date().toISOString()
       };

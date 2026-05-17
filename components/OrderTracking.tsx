@@ -6,14 +6,14 @@ interface OrderTrackingProps {
   onClose?: () => void;
 }
 
-interface TrackingCheckpoint {
+export interface TrackingCheckpoint {
   date: string;
   time: string;
   location: string;
   status: string;
 }
 
-interface TrackingData {
+export interface TrackingData {
   orderId: string;
   awbNumber: string;
   courierName: string;

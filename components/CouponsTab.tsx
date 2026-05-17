@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { couponsAPI } from '../utils/api';
 import { Coupon } from '../types';
+import { toast } from 'sonner';
 
-export const CouponsTab: React.FC = () => {
+interface CouponsTabProps {
+    onDeleteCoupon?: (id: string) => Promise<void>;
+}
+
+export const CouponsTab: React.FC<CouponsTabProps> = ({ onDeleteCoupon }) => {
     const [coupons, setCoupons] = useState<Coupon[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -11,7 +16,7 @@ export const CouponsTab: React.FC = () => {
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
-    const [formData, setFormData] = useState<Partial<Coupon>>({
+    const [formData, setFormData] = useState<Partial<Coupon>>(() => ({
         code: '',
         type: 'percentage',
         value: 10,
@@ -20,7 +25,7 @@ export const CouponsTab: React.FC = () => {
         usageLimit: 100,
         startsAt: new Date().toISOString().split('T')[0],
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    });
+    }));
 
     const [error, setError] = useState<string | null>(null);
 
@@ -84,13 +89,20 @@ export const CouponsTab: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!window.confirm('Are you sure you want to delete this coupon?')) return;
+        if (onDeleteCoupon) {
+            await onDeleteCoupon(id);
+            fetchCoupons();
+            return;
+        }
+
+        // Fallback if prop not provided (though we should always provide it in Admin)
         try {
             await couponsAPI.delete(id);
+            toast.success('Coupon deleted successfully');
             fetchCoupons();
         } catch (err) {
             console.error('Failed to delete coupon', err);
-            alert('Failed to delete coupon');
+            toast.error('Failed to delete coupon');
         }
     };
 

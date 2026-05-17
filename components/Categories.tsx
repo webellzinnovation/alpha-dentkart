@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Category } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
 
 interface CategoriesProps {
   onCategoryClick: (categoryName: string) => void;
@@ -24,7 +24,7 @@ export const Categories: React.FC<CategoriesProps> = ({ onCategoryClick, categor
            >
               <div className="w-24 h-24 mb-6 flex items-center justify-center bg-primary/5 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300 overflow-hidden">
                 {cat.image ? (
-                  <img src={cat.image} alt={cat.name} className="w-20 h-20 object-contain group-hover:scale-110 transition-transform duration-300" />
+                  <OptimizedImageMemo src={cat.image} alt={cat.name} className="w-20 h-20 object-contain group-hover:scale-110 transition-transform duration-300" width={80} height={80} />
                 ) : (
                   <i className={`${cat.iconClass || 'fas fa-tooth'} text-4xl text-primary group-hover:text-white transition-colors`}></i>
                 )}

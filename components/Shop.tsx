@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ProductCard } from './ProductCard';
 import { Product, Category, BrandProfile } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
 import { CustomDropdown } from './CustomDropdown';
 import { productsAPI } from '../utils/api';
 
@@ -228,7 +229,7 @@ export const Shop: React.FC<ShopProps> = ({
       {activeBrandProfile && (
         <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-8 flex flex-col md:flex-row items-center md:items-start gap-4 sm:gap-8 animate-fade-in shadow-sm">
           <div className="w-20 h-20 sm:w-32 sm:h-32 flex-shrink-0 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center p-4">
-            <img src={activeBrandProfile.logo} alt={activeBrandProfile.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+            <OptimizedImageMemo src={activeBrandProfile.logo} alt={activeBrandProfile.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" width={150} height={150} />
           </div>
           <div className="text-center md:text-left">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{activeBrandProfile.name}</h1>

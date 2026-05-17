@@ -6,6 +6,7 @@ const rateLimitOptions = {
     windowMs: 15 * 60 * 1000,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { ip: false },
 };
 
 // General API rate limiter — tight in production, relaxed in dev

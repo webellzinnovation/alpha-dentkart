@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { CartItem, User } from '../types';
+import { CartItem, User, Coupon } from '../types';
+import { couponsAPI } from '../utils/api';
+import OptimizedImageMemo from './OptimizedImage';
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -12,6 +14,8 @@ interface CartSidebarProps {
   onCheckout?: () => void; // New prop for navigation
   onGuestCheckout?: () => void; // Guest checkout
   onLogin?: () => void;
+  appliedCoupon?: Coupon | null;
+  onApplyCoupon?: (coupon: Coupon | null) => void;
 }
 
 export const CartSidebar: React.FC<CartSidebarProps> = ({
@@ -24,9 +28,48 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   user,
   onCheckout,
   onGuestCheckout,
-  onLogin
+  onLogin,
+  appliedCoupon,
+  onApplyCoupon
 }) => {
+  const [couponCode, setCouponCode] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  let discount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percentage') {
+      discount = (subtotal * appliedCoupon.value) / 100;
+      if (appliedCoupon.maxDiscount) {
+        discount = Math.min(discount, appliedCoupon.maxDiscount);
+      }
+    } else {
+      discount = appliedCoupon.value;
+    }
+  }
+
+  const finalTotal = Math.max(0, subtotal - discount);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setIsApplying(true);
+    setCouponError('');
+    try {
+      const coupon = await couponsAPI.validate(couponCode, subtotal);
+      if (onApplyCoupon) onApplyCoupon(coupon);
+      setCouponCode('');
+    } catch (err: any) {
+      setCouponError(err.response?.data?.error || 'Invalid coupon code');
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    if (onApplyCoupon) onApplyCoupon(null);
+  };
 
   const handleCheckout = () => {
     if (!user) {
@@ -90,7 +133,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
             cartItems.map((item) => (
               <div key={item.cartItemId} className="flex gap-4 p-3 bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-700 rounded-xl hover:shadow-md transition-shadow group">
                 <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-lg flex-shrink-0 overflow-hidden p-2">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal hover:scale-110 transition-transform duration-300" />
+                  <OptimizedImageMemo src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal hover:scale-110 transition-transform duration-300" width={80} height={80} />
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                   <div>
@@ -134,12 +177,62 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
         {/* Footer */}
         {cartItems.length > 0 && (
-          <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+          <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 space-y-4">
+            
+            {/* Coupon Section */}
+            {!appliedCoupon ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Coupon Code"
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:border-primary outline-none"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={isApplying || !couponCode}
+                    className="px-4 py-2 bg-gray-800 dark:bg-gray-700 text-white rounded-lg text-sm font-bold hover:bg-gray-900 disabled:opacity-50 transition-colors"
+                  >
+                    {isApplying ? <i className="fas fa-spinner fa-spin"></i> : 'Apply'}
+                  </button>
+                </div>
+                {couponError && <p className="text-[10px] text-red-500 font-medium ml-1">{couponError}</p>}
+              </div>
+            ) : (
+              <div className="flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-2 rounded-lg border border-green-100 dark:border-green-800/50">
+                <div className="flex items-center gap-2">
+                  <i className="fas fa-tag text-green-600 text-xs"></i>
+                  <span className="text-xs font-bold text-green-700 dark:text-green-400">{appliedCoupon.code} Applied</span>
+                </div>
+                <button onClick={handleRemoveCoupon} className="text-green-700 dark:text-green-400 hover:text-red-500 transition-colors">
+                  <i className="fas fa-times-circle"></i>
+                </button>
+              </div>
+            )}
+
+            <div className="space-y-2 pt-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-500">Subtotal</span>
+                <span className="font-medium text-gray-900 dark:text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+              </div>
+              
+              {appliedCoupon && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-green-600 font-medium">Discount ({appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : 'Fixed'})</span>
+                  <span className="font-bold text-green-600">-₹{discount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                <span className="text-gray-800 dark:text-white font-bold">Total</span>
+                <span className="text-xl font-bold text-primary">₹{finalTotal.toLocaleString('en-IN')}</span>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mb-4 text-center">Shipping and taxes calculated at checkout.</p>
+
+            <p className="text-[10px] text-gray-500 text-center">Shipping and taxes calculated at checkout.</p>
+            
             <button
               onClick={handleCheckout}
               className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-pink-700 transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2"

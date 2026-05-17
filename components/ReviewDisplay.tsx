@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Review } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faUser, faCheckCircle, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 
@@ -88,10 +89,12 @@ const ReviewDisplay: React.FC<ReviewDisplayProps> = ({
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                 {review.user.avatar ? (
-                  <img 
+                  <OptimizedImageMemo 
                     src={review.user.avatar} 
                     alt={review.user.name}
                     className="w-full h-full object-cover"
+                    width={40}
+                    height={40}
                   />
                 ) : (
                   <FontAwesomeIcon icon={faUser} className="w-5 h-5 text-gray-500" />
@@ -102,8 +105,20 @@ const ReviewDisplay: React.FC<ReviewDisplayProps> = ({
                   <p className="font-medium text-gray-900">{review.user.name}</p>
                   {review.user.userType === 'dental-doctor' && (
                     <div className="flex items-center gap-1">
-                      <FontAwesomeIcon icon={faCheckCircle} className="w-4 h-4 text-blue-500" />
-                      <span className="text-xs text-blue-600 font-medium">Verified Professional</span>
+                      <FontAwesomeIcon icon={faCheckCircle} className="w-3 h-3 text-blue-500" />
+                      <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tight">Verified Doctor</span>
+                    </div>
+                  )}
+                  {review.user.userType === 'dental-student' && (
+                    <div className="flex items-center gap-1">
+                      <FontAwesomeIcon icon={faCheckCircle} className="w-3 h-3 text-indigo-500" />
+                      <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">Dental Student</span>
+                    </div>
+                  )}
+                  {review.user.userType === 'dental-business' && (
+                    <div className="flex items-center gap-1">
+                      <FontAwesomeIcon icon={faCheckCircle} className="w-3 h-3 text-teal-500" />
+                      <span className="text-[10px] text-teal-600 font-bold uppercase tracking-tight">Dental Business</span>
                     </div>
                   )}
                   {review.isVerified && (
@@ -168,11 +183,13 @@ const ReviewDisplay: React.FC<ReviewDisplayProps> = ({
           <div className="mb-3">
             <div className="flex gap-2 overflow-x-auto">
               {review.images.map((image, index) => (
-                <img
+                <OptimizedImageMemo
                   key={index}
                   src={image}
                   alt={`Review image ${index + 1}`}
                   className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                  width={80}
+                  height={80}
                 />
               ))}
             </div>

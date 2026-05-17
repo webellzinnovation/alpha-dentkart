@@ -1,5 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
-import { randomUUID } from 'crypto';
 import { db, admin } from '../config/firebase'; // Firestore
 import { z } from 'zod';
 import logger from '../utils/logger';
@@ -43,7 +43,7 @@ const guestOrderSchema = z.object({
 export const createGuestSession = async (req: Request, res: Response) => {
     try {
         const { email, phone } = guestSessionSchema.parse(req.body);
-        const sessionId = randomUUID();
+        const sessionId = uuidv4();
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
 
         // Store in Database

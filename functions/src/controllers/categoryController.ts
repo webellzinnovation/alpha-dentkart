@@ -6,8 +6,8 @@ import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
 
 // WooCommerce API configuration
 const WP_URL = process.env.WP_URL || "https://alphadentkart.com";
-const WP_CONSUMER_KEY = process.env.WP_CONSUMER_KEY || "ck_b41b9f56dc6245691a0d563b4e40a92e81f7b031";
-const WP_CONSUMER_SECRET = process.env.WP_CONSUMER_SECRET || "cs_49ea401b7c76be3bd64c4edf0a2f73afe5ca08b1";
+const WP_CONSUMER_KEY = process.env.WP_CONSUMER_KEY;
+const WP_CONSUMER_SECRET = process.env.WP_CONSUMER_SECRET;
 
 const wooApi = new WooCommerceRestApi({
     url: WP_URL,

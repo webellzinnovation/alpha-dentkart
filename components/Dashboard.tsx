@@ -10,13 +10,63 @@ import { ReturnRequestModal } from './ReturnRequestModal';
 import { QuickReorder } from './QuickReorder';
 import { SavedPaymentMethods } from './SavedPaymentMethods';
 
+const OrderTracker = ({ status }: { status: string }) => {
+    const steps = ['Placed', 'Processing', 'Shipped', 'Delivered'];
+    const stepIndex = steps.indexOf(status);
+    const currentStep = stepIndex >= 0 ? stepIndex : 0;
+    const isUnknown = stepIndex < 0;
+
+    if (isUnknown) {
+        return (
+            <div className="py-4">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                    status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                    status === 'Failed' ? 'bg-orange-100 text-orange-700' :
+                    'bg-gray-100 text-gray-700'
+                }`}>
+                    {status}
+                </span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-full py-6">
+            <div className="relative flex items-center justify-between w-full">
+                {/* Line Background */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 dark:bg-gray-700 -z-10"></div>
+                {/* Active Line */}
+                <div
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-green-500 transition-all duration-500 -z-10"
+                    style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+                ></div>
+
+                {steps.map((step, idx) => {
+                    const isCompleted = idx <= currentStep;
+                    const isActive = idx === currentStep;
+
+                    return (
+                        <div key={idx} className="flex flex-col items-center gap-2 bg-white dark:bg-surface-dark px-2">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${isCompleted ? 'bg-green-500 border-green-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'}`}>
+                                {isCompleted ? <i className="fas fa-check"></i> : idx + 1}
+                            </div>
+                            <span className={`text-xs font-medium ${isActive ? 'text-green-600 font-bold' : 'text-gray-500'}`}>{step}</span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
 interface DashboardProps {
     user: User;
     onLogout: () => void;
     onUpdateUser: (data: Partial<User>) => void;
+    refreshOrders?: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUser }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUser, refreshOrders }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'returns' | 'addresses' | 'profile'>('overview');
     const [selectedUserType, setSelectedUserType] = useState<User['userType']>(user.userType || 'regular');
 
@@ -61,6 +111,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
         message: '',
         onConfirm: () => { },
     });
+
+    // Profile Form State
+    const [profileFormData, setProfileFormData] = useState({
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        dentalDoctorInfo: { ...user.dentalDoctorInfo },
+        dentalStudentInfo: { ...user.dentalStudentInfo },
+        dentalBusinessInfo: { ...user.dentalBusinessInfo }
+    });
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [profileUpdateMessage, setProfileUpdateMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [isEditingInline, setIsEditingInline] = useState(false);
+    const [inlineName, setInlineName] = useState(user.name);
+    const [inlinePhone, setInlinePhone] = useState(user.phone);
 
     const statusColors: Record<string, string> = {
         Processing: 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -138,54 +203,56 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
         setIsAddressModalOpen(false);
     };
 
-    const OrderTracker = ({ status }: { status: string }) => {
-        const steps = ['Placed', 'Processing', 'Shipped', 'Delivered'];
-        const stepIndex = steps.indexOf(status);
-        const currentStep = stepIndex >= 0 ? stepIndex : 0;
-        const isUnknown = stepIndex < 0;
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSavingProfile(true);
+        setProfileUpdateMessage(null);
 
-        if (isUnknown) {
-            return (
-                <div className="py-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                        status === 'Failed' ? 'bg-orange-100 text-orange-700' :
-                        'bg-gray-100 text-gray-700'
-                    }`}>
-                        {status}
-                    </span>
-                </div>
-            );
+        try {
+            const updateData: Partial<User> = {
+                name: profileFormData.name,
+                phone: profileFormData.phone,
+                userType: selectedUserType,
+            };
+
+            if (selectedUserType === 'dental-doctor') {
+                updateData.dentalDoctorInfo = profileFormData.dentalDoctorInfo as any;
+            } else if (selectedUserType === 'dental-student') {
+                updateData.dentalStudentInfo = profileFormData.dentalStudentInfo as any;
+            } else if (selectedUserType === 'dental-business') {
+                updateData.dentalBusinessInfo = profileFormData.dentalBusinessInfo as any;
+            }
+
+            await onUpdateUser(updateData);
+            setProfileUpdateMessage({ type: 'success', text: 'Profile updated successfully!' });
+        } catch (error) {
+            setProfileUpdateMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+        } finally {
+            setIsSavingProfile(false);
+            setTimeout(() => setProfileUpdateMessage(null), 5000);
         }
-
-        return (
-            <div className="w-full py-6">
-                <div className="relative flex items-center justify-between w-full">
-                    {/* Line Background */}
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 dark:bg-gray-700 -z-10"></div>
-                    {/* Active Line */}
-                    <div
-                        className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-green-500 transition-all duration-500 -z-10"
-                        style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-                    ></div>
-
-                    {steps.map((step, idx) => {
-                        const isCompleted = idx <= currentStep;
-                        const isActive = idx === currentStep;
-
-                        return (
-                            <div key={idx} className="flex flex-col items-center gap-2 bg-white dark:bg-surface-dark px-2">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${isCompleted ? 'bg-green-500 border-green-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'}`}>
-                                    {isCompleted ? <i className="fas fa-check"></i> : idx + 1}
-                                </div>
-                                <span className={`text-xs font-medium ${isActive ? 'text-green-600 font-bold' : 'text-gray-500'}`}>{step}</span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
     };
+
+    const handleInlineSave = async () => {
+        setIsSavingProfile(true);
+        try {
+            await onUpdateUser({
+                name: inlineName,
+                phone: inlinePhone
+            });
+            setProfileFormData(prev => ({
+                ...prev,
+                name: inlineName,
+                phone: inlinePhone
+            }));
+            setIsEditingInline(false);
+        } catch (error) {
+            console.error('Failed to save inline profile:', error);
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
+
 
     const latestOrder = user.orders?.[0];
 
@@ -200,8 +267,44 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                             <div className="w-24 h-24 rounded-full bg-white p-1 shadow-md mb-4 overflow-hidden">
                                 <img src={user.avatar} alt={user.name} className="w-full h-full object-cover rounded-full" />
                             </div>
-                            <h3 className="font-bold text-gray-900 dark:text-white text-xl">{user.name}</h3>
-                            <p className="text-gray-500 text-sm">{user.email}</p>
+                            {isEditingInline ? (
+                                <div className="space-y-2 w-full">
+                                    <input
+                                        type="text"
+                                        value={inlineName}
+                                        onChange={(e) => setInlineName(e.target.value)}
+                                        className="w-full text-center font-bold text-gray-900 dark:text-white bg-transparent border-b border-primary focus:outline-none text-lg"
+                                        placeholder="Name"
+                                        autoFocus
+                                    />
+                                    <input
+                                        type="text"
+                                        value={inlinePhone}
+                                        onChange={(e) => setInlinePhone(e.target.value)}
+                                        className="w-full text-center text-gray-500 text-sm bg-transparent border-b border-gray-300 focus:outline-none"
+                                        placeholder="Phone"
+                                    />
+                                    <div className="flex justify-center gap-2 mt-2">
+                                        <button onClick={handleInlineSave} disabled={isSavingProfile} className="text-green-500 text-xs font-bold uppercase tracking-wider hover:underline">
+                                            {isSavingProfile ? '...' : 'Save'}
+                                        </button>
+                                        <button onClick={() => { setIsEditingInline(false); setInlineName(user.name); setInlinePhone(user.phone); }} className="text-gray-400 text-xs font-bold uppercase tracking-wider hover:underline">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-gray-900 dark:text-white text-xl">{user.name}</h3>
+                                        <button onClick={() => setIsEditingInline(true)} className="text-primary hover:text-pink-600 transition-colors">
+                                            <i className="fas fa-edit text-xs"></i>
+                                        </button>
+                                    </div>
+                                    <p className="text-gray-500 text-sm">{user.email}</p>
+                                    {user.phone && <p className="text-gray-400 text-xs mt-1">{user.phone}</p>}
+                                </>
+                            )}
                         </div>
                         <nav className="p-3">
                             {menuItems.map(item => (
@@ -236,7 +339,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                     <i className="fas fa-tooth text-[12rem] absolute -right-10 -top-10 transform rotate-12"></i>
                                 </div>
                                 <div className="relative z-10">
-                                    <h2 className="text-3xl font-bold mb-2">Welcome back, {user.name?.split(' ')[0] || 'User'}!</h2>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <h2 className="text-3xl font-bold">Welcome back, {user.name?.split(' ')[0] || 'User'}!</h2>
+                                        {!isEditingInline && (
+                                            <button onClick={() => setIsEditingInline(true)} className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors">
+                                                <i className="fas fa-pencil-alt text-xs"></i>
+                                            </button>
+                                        )}
+                                    </div>
                                     <p className="text-indigo-100 max-w-md">Track your orders, manage addresses, and check out new arrivals tailored for your clinic.</p>
                                 </div>
                             </div>
@@ -325,7 +435,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                                             {order.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">₹{order.total.toLocaleString('en-IN')}</td>
+                                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">₹{(order.total ?? 0).toLocaleString('en-IN')}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -350,7 +460,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                                 </div>
                                                 <div>
                                                     <p className="text-gray-500 mb-1 text-xs uppercase tracking-wide">Total</p>
-                                                    <p className="font-bold text-gray-900 dark:text-white">₹{order.total.toLocaleString('en-IN')}</p>
+                                                    <p className="font-bold text-gray-900 dark:text-white">₹{(order.total ?? 0).toLocaleString('en-IN')}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-gray-500 mb-1 text-xs uppercase tracking-wide">Order ID</p>
@@ -486,246 +596,317 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Profile Settings</h2>
                             <div className="bg-white dark:bg-surface-dark p-8 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-3xl">
                                 <div className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-                                            <input type="text" defaultValue={user.name} className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                                            <input type="text" defaultValue={user.phone} className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-                                            <input type="email" defaultValue={user.email} className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
-                                        </div>
-                                    </div>
-
-                                    {/* User Type & Verification Status */}
-                                    <div className="pt-8 border-t border-gray-100 dark:border-gray-700">
-                                        <h3 className="font-bold text-gray-800 dark:text-white mb-6 text-lg">Account Information</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User Type</label>
-                                                <select
-                                                    value={selectedUserType}
-                                                    onChange={(e) => setSelectedUserType(e.target.value as User['userType'])}
-                                                    className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5"
-                                                >
-                                                    <option value="regular">Regular Customer</option>
-                                                    <option value="dental-doctor">Dental Doctor</option>
-                                                    <option value="student">Student</option>
-                                                    <option value="supplier">Supplier</option>
-                                                </select>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Select your account type for personalized experience</p>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verification Status</label>
-                                                <div className="flex items-center h-[42px]">
-                                                    {user.verificationStatus === 'approved' && (
-                                                        <span className="inline-flex items-center px-4 py-2 rounded-xl bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 font-semibold text-sm">
-                                                            <i className="fas fa-check-circle mr-2"></i>
-                                                            Verified
-                                                        </span>
-                                                    )}
-                                                    {user.verificationStatus === 'pending' && (
-                                                        <span className="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 font-semibold text-sm">
-                                                            <i className="fas fa-clock mr-2"></i>
-                                                            Pending Verification
-                                                        </span>
-                                                    )}
-                                                    {user.verificationStatus === 'rejected' && (
-                                                        <span className="inline-flex items-center px-4 py-2 rounded-xl bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 font-semibold text-sm">
-                                                            <i className="fas fa-times-circle mr-2"></i>
-                                                            Not Verified
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Contact admin for verification updates</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Professional Information */}
-                                    {selectedUserType && selectedUserType !== 'regular' && (
-                                        <div className="pt-8 border-t border-gray-100 dark:border-gray-700">
-                                            <div className="flex items-center justify-between mb-6">
-                                                <h3 className="font-bold text-gray-800 dark:text-white text-lg">
-                                                    {selectedUserType === 'dental-doctor' && 'Dental Doctor Information'}
-                                                    {selectedUserType === 'student' && 'Student Information'}
-                                                    {selectedUserType === 'supplier' && 'Supplier Information'}
-                                                </h3>
-                                                {user.verificationStatus === 'approved' && (
-                                                    <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-bold">
-                                                        <i className="fas fa-lock mr-1"></i>
-                                                        Verified & Locked
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {user.verificationStatus === 'approved' && (
-                                                <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3">
-                                                    <div className="flex gap-2 text-sm text-blue-800 dark:text-blue-300">
-                                                        <i className="fas fa-info-circle mt-0.5"></i>
-                                                        <p>Your professional information is locked after verification. Contact admin to make changes.</p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Dental Doctor Fields */}
-                                            {selectedUserType === 'dental-doctor' && (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">License ID</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter your license ID"
-                                                            defaultValue={user.dentalDoctorInfo?.licenseId || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">License State</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter license state"
-                                                            defaultValue={user.dentalDoctorInfo?.licenseState || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialization</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter your specialization"
-                                                            defaultValue={user.dentalDoctorInfo?.specialization || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Clinic Name</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter clinic name"
-                                                            defaultValue={user.dentalDoctorInfo?.clinicName || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Student Fields */}
-                                            {selectedUserType === 'student' && (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student ID</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter your student ID"
-                                                            defaultValue={user.studentInfo?.studentId || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institution</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter institution name"
-                                                            defaultValue={user.studentInfo?.institution || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Course</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter course name"
-                                                            defaultValue={user.studentInfo?.course || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year of Study</label>
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Enter year"
-                                                            defaultValue={user.studentInfo?.yearOfStudy || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Supplier Fields */}
-                                            {selectedUserType === 'supplier' && (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">GST Number</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter GST number"
-                                                            defaultValue={user.supplierInfo?.gstNumber || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Name</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter business name"
-                                                            defaultValue={user.supplierInfo?.businessName || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Type</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Enter business type"
-                                                            defaultValue={user.supplierInfo?.businessType || ''}
-                                                            disabled={user.verificationStatus === 'approved'}
-                                                            className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
+                                    {profileUpdateMessage && (
+                                        <div className={`p-4 rounded-xl mb-6 flex items-center gap-3 ${profileUpdateMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                            <i className={`fas ${profileUpdateMessage.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+                                            <p className="text-sm font-medium">{profileUpdateMessage.text}</p>
                                         </div>
                                     )}
 
+                                    <form onSubmit={handleSaveProfile} className="space-y-8">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={profileFormData.name}
+                                                    onChange={(e) => setProfileFormData({ ...profileFormData, name: e.target.value })}
+                                                    className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                                                <input
+                                                    type="text"
+                                                    value={profileFormData.phone}
+                                                    onChange={(e) => setProfileFormData({ ...profileFormData, phone: e.target.value })}
+                                                    className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                                                <input
+                                                    type="email"
+                                                    value={profileFormData.email}
+                                                    disabled
+                                                    className="w-full rounded-xl border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed py-2.5"
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">Email cannot be changed. Contact support for assistance.</p>
+                                            </div>
+                                        </div>
 
-                                    <div className="pt-8 border-t border-gray-100 dark:border-gray-700">
+                                        {/* User Type & Verification Status */}
+                                        <div className="pt-8 border-t border-gray-100 dark:border-gray-700">
+                                            <h3 className="font-bold text-gray-800 dark:text-white mb-6 text-lg">Account Information</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User Type</label>
+                                                    <select
+                                                        value={selectedUserType}
+                                                        onChange={(e) => setSelectedUserType(e.target.value as User['userType'])}
+                                                        className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5"
+                                                    >
+                                                        <option value="regular">Regular Customer</option>
+                                                        <option value="dental-doctor">Dental Doctor</option>
+                                                        <option value="dental-student">Student</option>
+                                                        <option value="dental-business">Business/Supplier</option>
+                                                    </select>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Select your account type for personalized experience</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verification Status</label>
+                                                    <div className="flex items-center h-[42px]">
+                                                        {user.verificationStatus === 'approved' && (
+                                                            <span className="inline-flex items-center px-4 py-2 rounded-xl bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 font-semibold text-sm">
+                                                                <i className="fas fa-check-circle mr-2"></i>
+                                                                Verified
+                                                            </span>
+                                                        )}
+                                                        {user.verificationStatus === 'pending' && (
+                                                            <span className="inline-flex items-center px-4 py-2 rounded-xl bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 font-semibold text-sm">
+                                                                <i className="fas fa-clock mr-2"></i>
+                                                                Pending Verification
+                                                            </span>
+                                                        )}
+                                                        {user.verificationStatus === 'rejected' && (
+                                                            <span className="inline-flex items-center px-4 py-2 rounded-xl bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 font-semibold text-sm">
+                                                                <i className="fas fa-times-circle mr-2"></i>
+                                                                Not Verified
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Contact admin for verification updates</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Professional Information */}
+                                        {selectedUserType && selectedUserType !== 'regular' && (
+                                            <div className="pt-8 border-t border-gray-100 dark:border-gray-700">
+                                                <div className="flex items-center justify-between mb-6">
+                                                    <h3 className="font-bold text-gray-800 dark:text-white text-lg">
+                                                        {selectedUserType === 'dental-doctor' && 'Dental Doctor Information'}
+                                                        {selectedUserType === 'dental-student' && 'Student Information'}
+                                                        {selectedUserType === 'dental-business' && 'Business Information'}
+                                                    </h3>
+                                                    {user.verificationStatus === 'approved' && (
+                                                        <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-bold">
+                                                            <i className="fas fa-lock mr-1"></i>
+                                                            Verified & Locked
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Dental Doctor Fields */}
+                                                {selectedUserType === 'dental-doctor' && (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">License ID</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter your license ID"
+                                                                value={profileFormData.dentalDoctorInfo?.licenseId || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalDoctorInfo: { ...profileFormData.dentalDoctorInfo, licenseId: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">License State</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter license state"
+                                                                value={profileFormData.dentalDoctorInfo?.licenseState || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalDoctorInfo: { ...profileFormData.dentalDoctorInfo, licenseState: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialization</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter your specialization"
+                                                                value={profileFormData.dentalDoctorInfo?.specialization || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalDoctorInfo: { ...profileFormData.dentalDoctorInfo, specialization: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Clinic Name</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter clinic name"
+                                                                value={profileFormData.dentalDoctorInfo?.clinicName || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalDoctorInfo: { ...profileFormData.dentalDoctorInfo, clinicName: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Student Fields */}
+                                                {selectedUserType === 'dental-student' && (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student ID</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter your student ID"
+                                                                value={profileFormData.dentalStudentInfo?.studentId || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalStudentInfo: { ...profileFormData.dentalStudentInfo, studentId: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institution</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter institution name"
+                                                                value={profileFormData.dentalStudentInfo?.institution || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalStudentInfo: { ...profileFormData.dentalStudentInfo, institution: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Course</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter course name"
+                                                                value={profileFormData.dentalStudentInfo?.course || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalStudentInfo: { ...profileFormData.dentalStudentInfo, course: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year of Study</label>
+                                                            <input
+                                                                type="number"
+                                                                placeholder="Enter year"
+                                                                value={profileFormData.dentalStudentInfo?.yearOfStudy || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalStudentInfo: { ...profileFormData.dentalStudentInfo, yearOfStudy: parseInt(e.target.value) }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Business Fields */}
+                                                {selectedUserType === 'dental-business' && (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">GST Number</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter GST number"
+                                                                value={profileFormData.dentalBusinessInfo?.gstNumber || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalBusinessInfo: { ...profileFormData.dentalBusinessInfo, gstNumber: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Name</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter business name"
+                                                                value={profileFormData.dentalBusinessInfo?.businessName || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalBusinessInfo: { ...profileFormData.dentalBusinessInfo, businessName: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Type</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Enter business type"
+                                                                value={profileFormData.dentalBusinessInfo?.businessType || ''}
+                                                                onChange={(e) => setProfileFormData({
+                                                                    ...profileFormData,
+                                                                    dentalBusinessInfo: { ...profileFormData.dentalBusinessInfo, businessType: e.target.value }
+                                                                })}
+                                                                disabled={user.verificationStatus === 'approved'}
+                                                                className={`w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5 ${user.verificationStatus === 'approved' ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''}`}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-end pt-4">
+                                            <button
+                                                type="submit"
+                                                disabled={isSavingProfile}
+                                                className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-pink-700 transition-colors shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            >
+                                                {isSavingProfile ? (
+                                                    <><i className="fas fa-spinner fa-spin"></i> Saving...</>
+                                                ) : (
+                                                    'Save Changes'
+                                                )}
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <div className="pt-8 border-t border-gray-100 dark:border-gray-700 mt-8">
                                         <h3 className="font-bold text-gray-800 dark:text-white mb-6 text-lg">Change Password</h3>
                                         <div className="space-y-4 max-w-xl">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
-                                                <input type="password" className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
+                                                <input type="password" placeholder="••••••••" className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
-                                                    <input type="password" className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
+                                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
-                                                    <input type="password" className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
+                                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary py-2.5" />
                                                 </div>
                                             </div>
+                                            <div className="pt-2">
+                                                <button className="text-primary font-bold hover:underline text-sm">Update Password</button>
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div className="flex justify-end pt-4">
-                                        <button className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-pink-700 transition-colors shadow-lg shadow-primary/25">
-                                            Save Changes
-                                        </button>
                                     </div>
 
                                     {/* Verification Manager Integration */}
@@ -1046,6 +1227,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                     onClose={() => setCancelOrder(null)}
                     onSuccess={() => {
                         setCancelOrder(null);
+                        if (refreshOrders) refreshOrders();
                         alert('Order cancelled successfully. Refund will be processed within 5-7 business days.');
                     }}
                 />
@@ -1059,6 +1241,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                     onClose={() => setReturnOrder(null)}
                     onSuccess={() => {
                         setReturnOrder(null);
+                        if (refreshOrders) refreshOrders();
                         alert('Return request submitted successfully. You will receive a confirmation email.');
                     }}
                 />

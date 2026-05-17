@@ -1,5 +1,22 @@
 import React, { useState } from 'react';
 import { ProductBadge, HomepageSettings, Category, BrandProfile, HeroSlide, PromotionalTile } from '../types';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { SortableItem } from './SortableItem';
 
 interface HomepageTabProps {
     homepageSettings: HomepageSettings;
@@ -18,7 +35,10 @@ interface HomepageTabProps {
     // Featured Brands Props
     onToggleBrandFeatured: (brandId: number, isFeatured: boolean) => void;
     onReorderFeaturedBrands: (brands: BrandProfile[]) => void;
+    // Save Settings
+    onSaveSettings?: (settings: HomepageSettings) => Promise<void>;
 }
+
 
 export const HomepageTab: React.FC<HomepageTabProps> = ({
     homepageSettings,
@@ -33,8 +53,22 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
     promotionalTiles,
     onUpdatePromotionalTile,
     onToggleBrandFeatured,
-    onReorderFeaturedBrands
+    onReorderFeaturedBrands,
+    onSaveSettings
 }) => {
+    const [isSaving, setIsSaving] = useState(false);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
     const [activeSection, setActiveSection] = useState<'hero' | 'promotions' | 'brands' | 'badges' | 'categories'>('hero');
 
     // --- Hero Slide State ---
@@ -92,6 +126,24 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
         }
     };
 
+    const handleDragEndHero = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = heroSlides.findIndex((s) => s.id === active.id);
+            const newIndex = heroSlides.findIndex((s) => s.id === over.id);
+            onReorderHeroSlides(arrayMove(heroSlides, oldIndex, newIndex));
+        }
+    };
+
+    const handleDragEndBrands = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = featuredBrands.findIndex((b) => b.id === active.id);
+            const newIndex = featuredBrands.findIndex((b) => b.id === over.id);
+            onReorderFeaturedBrands(arrayMove(featuredBrands, oldIndex, newIndex));
+        }
+    };
+
     // --- Promotional Tile Handlers ---
     const handleTileImageUpload = (id: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -133,6 +185,29 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                 : [...prev.showcaseCategories, categoryName]
         }));
     };
+
+    const handleDragEndCategories = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = homepageSettings.showcaseCategories.indexOf(active.id as string);
+            const newIndex = homepageSettings.showcaseCategories.indexOf(over.id as string);
+            setHomepageSettings(prev => ({
+                ...prev,
+                showcaseCategories: arrayMove(prev.showcaseCategories, oldIndex, newIndex)
+            }));
+        }
+    };
+
+    const handleSave = async () => {
+        if (!onSaveSettings) return;
+        setIsSaving(true);
+        try {
+            await onSaveSettings(homepageSettings);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
 
     // --- Featured Brand Management ---
     // Filter brands to show only featured ones for the "Selected" list
@@ -208,29 +283,46 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                             <i className="fas fa-plus"></i> Add Slide
                         </button>
                     </div>
-                    <div className="grid gap-6">
-                        {heroSlides.map((slide, index) => (
-                            <div key={slide.id} className="bg-white dark:bg-surface-dark rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 group">
-                                <div className="p-4 flex flex-col md:flex-row gap-6 items-center">
-                                    <div className="w-full md:w-48 h-32 rounded-lg bg-gray-100 overflow-hidden relative">
-                                        <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">{slide.badge}</span>
-                                            {slide.isActive ? <span className="text-green-500 text-xs font-bold"><i className="fas fa-check-circle"></i> Active</span> : <span className="text-gray-400 text-xs font-bold">Inactive</span>}
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEndHero}
+                        modifiers={[restrictToVerticalAxis]}
+                    >
+                        <SortableContext
+                            items={heroSlides.map(s => s.id)}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            <div className="grid gap-6">
+                                {heroSlides.map((slide, index) => (
+                                    <SortableItem key={slide.id} id={slide.id} className="bg-white dark:bg-surface-dark rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 group">
+                                        <div className="p-4 flex flex-col md:flex-row gap-6 items-center">
+                                            <div className="flex items-center gap-4 flex-1">
+                                                <div className="cursor-grab active:cursor-grabbing text-gray-400 p-2">
+                                                    <i className="fas fa-grip-vertical"></i>
+                                                </div>
+                                                <div className="w-full md:w-48 h-32 rounded-lg bg-gray-100 overflow-hidden relative">
+                                                    <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">{slide.badge}</span>
+                                                        {slide.isActive ? <span className="text-green-500 text-xs font-bold"><i className="fas fa-check-circle"></i> Active</span> : <span className="text-gray-400 text-xs font-bold">Inactive</span>}
+                                                    </div>
+                                                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-1">{slide.title}</h4>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">{slide.subtitle}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => handleEditSlide(slide)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i className="fas fa-edit"></i></button>
+                                                <button onClick={() => onDeleteHeroSlide(slide.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><i className="fas fa-trash"></i></button>
+                                            </div>
                                         </div>
-                                        <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-1">{slide.title}</h4>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">{slide.subtitle}</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => handleEditSlide(slide)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i className="fas fa-edit"></i></button>
-                                        <button onClick={() => onDeleteHeroSlide(slide.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><i className="fas fa-trash"></i></button>
-                                    </div>
-                                </div>
+                                    </SortableItem>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </SortableContext>
+                    </DndContext>
 
                     {/* Editor Modal */}
                     {isHeroModalOpen && (
@@ -353,14 +445,33 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                                     <i className="fas fa-certificate text-4xl mb-2 opacity-50"></i>
                                     <p>No brands selected</p>
                                 </div>
-                            ) : featuredBrands.map((brand, index) => (
-                                <div key={brand.id} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
-                                    <span className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded text-xs font-bold text-gray-500">#{index + 1}</span>
-                                    <img src={brand.logo} className="w-10 h-10 object-contain p-1 border rounded" />
-                                    <p className="font-bold text-sm flex-1">{brand.name}</p>
-                                    <button onClick={() => onToggleBrandFeatured(brand.id, false)} className="text-red-500 hover:bg-red-50 p-2 rounded"><i className="fas fa-times"></i></button>
-                                </div>
-                            ))}
+                            ) : (
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEndBrands}
+                                    modifiers={[restrictToVerticalAxis]}
+                                >
+                                    <SortableContext
+                                        items={featuredBrands.map(b => b.id)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        <div className="space-y-2">
+                                            {featuredBrands.map((brand, index) => (
+                                                <SortableItem key={brand.id} id={brand.id} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm group">
+                                                    <div className="cursor-grab active:cursor-grabbing text-gray-300 group-hover:text-gray-500">
+                                                        <i className="fas fa-grip-vertical"></i>
+                                                    </div>
+                                                    <span className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded text-xs font-bold text-gray-500">#{index + 1}</span>
+                                                    <img src={brand.logo} className="w-10 h-10 object-contain p-1 border rounded" />
+                                                    <p className="font-bold text-sm flex-1">{brand.name}</p>
+                                                    <button onClick={() => onToggleBrandFeatured(brand.id, false)} className="text-red-500 hover:bg-red-50 p-2 rounded"><i className="fas fa-times"></i></button>
+                                                </SortableItem>
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -386,12 +497,100 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
             )}
 
             {activeSection === 'categories' && (
-                <div className="p-8 text-center text-gray-500">
-                    <i className="fas fa-tools text-4xl mb-4 text-gray-300"></i>
-                    <p>Category selection logic remains the same (using homepageSettings.showcaseCategories)</p>
-                    <p className="text-xs mt-2 text-gray-400">Can be refactored similar to Brands if needed.</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Available Categories */}
+                    <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px]">
+                        <div className="p-4 border-b bg-gray-50 font-bold">Available Categories ({categories.length})</div>
+                        <div className="overflow-y-auto p-4 space-y-2 flex-1">
+                            {categories.map(cat => (
+                                <div key={cat.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-all">
+                                    <input
+                                        type="checkbox"
+                                        checked={homepageSettings.showcaseCategories.includes(cat.name)}
+                                        onChange={() => toggleCategory(cat.name)}
+                                        className="w-5 h-5 rounded text-primary focus:ring-primary cursor-pointer"
+                                    />
+                                    {cat.image ? (
+                                        <img src={cat.image} className="w-10 h-10 object-cover rounded bg-gray-100" />
+                                    ) : (
+                                        <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400">
+                                            <i className="fas fa-th-large text-sm"></i>
+                                        </div>
+                                    )}
+                                    <div className="flex-1">
+                                        <p className="font-bold text-sm">{cat.name}</p>
+                                        <p className="text-xs text-gray-500">{cat.slug}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Selected Showcase Categories */}
+                    <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px]">
+                        <div className="p-4 border-b bg-primary/5 font-bold text-primary">Showcase Order ({homepageSettings.showcaseCategories.length})</div>
+                        <div className="overflow-y-auto p-4 space-y-2 flex-1">
+                            {homepageSettings.showcaseCategories.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                                    <i className="fas fa-th-large text-4xl mb-2 opacity-50"></i>
+                                    <p>No categories selected</p>
+                                </div>
+                            ) : (
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEndCategories}
+                                    modifiers={[restrictToVerticalAxis]}
+                                >
+                                    <SortableContext
+                                        items={homepageSettings.showcaseCategories}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        <div className="space-y-2">
+                                            {homepageSettings.showcaseCategories.map((catName, index) => {
+                                                const cat = categories.find(c => c.name === catName);
+                                                return (
+                                                    <SortableItem key={catName} id={catName} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm group">
+                                                        <div className="cursor-grab active:cursor-grabbing text-gray-300 group-hover:text-gray-500">
+                                                            <i className="fas fa-grip-vertical"></i>
+                                                        </div>
+                                                        <span className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded text-xs font-bold text-gray-500">#{index + 1}</span>
+                                                        <div className="flex-1 font-bold text-sm">{catName}</div>
+                                                        <button onClick={() => toggleCategory(catName)} className="text-red-500 hover:bg-red-50 p-2 rounded"><i className="fas fa-times"></i></button>
+                                                    </SortableItem>
+                                                );
+                                            })}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
+
+            {/* Sticky Save Bar */}
+            <div className="fixed bottom-6 right-6 z-50">
+                <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className={`flex items-center gap-2 px-8 py-4 rounded-2xl font-bold shadow-2xl transition-all transform hover:scale-105 active:scale-95 ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary text-white hover:bg-pink-700'
+                        }`}
+                >
+                    {isSaving ? (
+                        <>
+                            <i className="fas fa-spinner fa-spin"></i>
+                            Saving...
+                        </>
+                    ) : (
+                        <>
+                            <i className="fas fa-save"></i>
+                            Save All Homepage Changes
+                        </>
+                    )}
+                </button>
+            </div>
+
         </div>
     );
 };

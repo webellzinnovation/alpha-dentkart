@@ -1,13 +1,17 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { sendPasswordResetEmail } from '../utils/emailService';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Product, Order, Category, BrandProfile, ProductVariation, User, HeroSlide } from '../types';
+import { Product, Order, Category, BrandProfile, ProductVariation, User, HeroSlide, HomepageSettings, Review } from '../types';
+import { toast } from 'sonner';
 import { ThemesTab } from './ThemesTab';
 import { HomepageTab } from './HomepageTab';
 import { CustomerManagement } from './CustomerManagement';
 import { AISettings } from './AISettings';
 import { ChatSupport } from './ChatSupport';
-import OrderTracking from './OrderTracking';
+import OrderTracking, { TrackingData } from './OrderTracking';
+import OrderStatusTimeline from './OrderStatusTimeline';
+
 import {
     getAllAdminNotifications,
     getUnreadCount,
@@ -19,8 +23,17 @@ import {
     notifyNewOrder,
     notifyOrderStatusChange,
     notifyLowStock,
-    notifyOutOfStock
+    notifyOutOfStock,
+    notifyVerificationPending
 } from '../utils/adminNotificationService';
+import { verificationAPI } from '../utils/api';
+import { CouponsTab } from './CouponsTab';
+import { VerificationManager } from './VerificationManager';
+import { InventoryTab } from './admin/InventoryTab';
+import { ProductsTab } from './admin/ProductsTab';
+import { productSchema, categorySchema, brandSchema } from '../utils/schemas';
+import { z } from 'zod';
+
 
 
 interface AdminDashboardProps {
@@ -28,8 +41,8 @@ interface AdminDashboardProps {
     setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
     orders: Order[];
     setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
-    reviews: any[];
-    setReviews: React.Dispatch<React.SetStateAction<any[]>>;
+    reviews: Review[];
+    setReviews: React.Dispatch<React.SetStateAction<Review[]>>;
     categories: Category[];
     setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
     brands: BrandProfile[];
@@ -45,6 +58,8 @@ interface AdminDashboardProps {
     onUpdateHeroSlide: (slide: HeroSlide) => void;
     onDeleteHeroSlide: (id: number) => void;
     onReorderHeroSlides: (slides: HeroSlide[]) => void;
+    chatSessions: import('../types').ChatSession[];
+    setChatSessions: React.Dispatch<React.SetStateAction<import('../types').ChatSession[]>>;
     apiKey?: string; // For AI features
     modelName?: string; // For AI features
     // Promotional Tiles
@@ -59,53 +74,10 @@ interface AdminDashboardProps {
     usersPage?: number;
     totalUsersCount?: number;
     totalUsersPages?: number;
-    onUsersPageChange?: (page: number, pageToken?: string) => Promise<any>;
+    onUsersPageChange?: (page: number, pageToken?: string) => Promise<{ users: User[], total: number, nextPageToken?: string | null }>;
     isLoadingUsersPage?: boolean;
+    isLoadingProducts?: boolean;
 }
-
-const MOCK_CUSTOMERS = [
-    {
-        id: 1,
-        name: 'Dr. Anjali Sharma',
-        email: 'anjali.sharma@example.com',
-        phone: '+91 98765 43210',
-        orders: 12,
-        spent: 156000,
-        status: 'Active',
-        joined: 'Jan 15, 2023',
-        avatar: 'https://placehold.co/100x100/DD3B5F/white?text=AS',
-        addresses: [
-            { id: 101, type: 'Clinic', name: 'Smile Care Clinic', street: '123 Health Ave, Sector 15', city: 'Mumbai', state: 'Maharashtra', zip: '400001', phone: '+91 98765 43210', isDefault: true },
-            { id: 102, type: 'Home', name: 'Anjali Sharma', street: 'B-402, Green Valley Apts', city: 'Mumbai', state: 'Maharashtra', zip: '400050', phone: '+91 99887 76655', isDefault: false }
-        ]
-    },
-    {
-        id: 2,
-        name: 'Dr. Rahul Verma',
-        email: 'rahul.verma@dentalcare.com',
-        phone: '+91 99887 77665',
-        orders: 5,
-        spent: 45000,
-        status: 'Active',
-        joined: 'Mar 22, 2023',
-        avatar: 'https://placehold.co/100x100/3b82f6/white?text=RV',
-        addresses: [
-            { id: 201, type: 'Clinic', name: 'Verma Dental Care', street: 'Shop 5, City Plaza', city: 'Delhi', state: 'Delhi', zip: '110001', phone: '+91 99887 77665', isDefault: true }
-        ]
-    },
-    {
-        id: 3,
-        name: 'Dr. Priya Singh',
-        email: 'priya.singh@clinic.com',
-        phone: '+91 88776 66554',
-        orders: 0,
-        spent: 0,
-        status: 'Inactive',
-        joined: 'Nov 01, 2023',
-        avatar: 'https://placehold.co/100x100/10b981/white?text=PS',
-        addresses: []
-    },
-];
 
 // --- Animated Graph Component ---
 const AnimatedGraph = ({ data, labels, colorHex }: { data: number[], labels: string[], colorHex: string }) => {
@@ -190,7 +162,7 @@ const AnimatedGraph = ({ data, labels, colorHex }: { data: number[], labels: str
                         style={{ left: `${(hoveredIndex / (data.length - 1)) * 100}%` }}
                     >
                         <div className="bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-gray-700 relative">
-                            {data[hoveredIndex].toLocaleString('en-IN')}
+                            {(data[hoveredIndex] ?? 0).toLocaleString('en-IN')}
                             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45 border-b border-r border-gray-700"></div>
                         </div>
                     </div>
@@ -317,9 +289,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     totalUsersCount,
     totalUsersPages,
     onUsersPageChange,
-    isLoadingUsersPage
+    isLoadingUsersPage,
+    isLoadingProducts
 }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'homepage' | 'appearance' | 'themes' | 'chat-support'>(() => {
+    const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'homepage' | 'appearance' | 'themes' | 'chat-support' | 'coupons'>(() => {
         const savedTab = localStorage.getItem('alpha_admin_tab');
         return (savedTab as any) || 'overview';
     });
@@ -341,32 +314,147 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     // Admin Notifications State
     const [notifications, setNotifications] = useState(getAllAdminNotifications());
     const [unreadCount, setUnreadCount] = useState(getUnreadCount());
+    const notifiedUserEmails = useRef<Set<string>>(new Set());
 
-    // Homepage Settings State - initialized from backend settings
-    const [homepageSettings, setHomepageSettings] = useState({
+    // Default settings for homepage if none are provided
+    const DEFAULT_HOMEPAGE_SETTINGS = useMemo(() => ({
         badges: [
             { id: 'clinic-essential' as const, name: 'CLINIC ESSENTIAL', color: '#0369a1', bgColor: '#e0f2fe', enabled: true },
             { id: 'bundle-deal' as const, name: 'BUNDLE DEAL', color: '#15803d', bgColor: '#dcfce7', enabled: true },
             { id: 'new-arrival' as const, name: 'NEW ARRIVAL', color: '#be123c', bgColor: '#ffe4e6', enabled: true }
         ],
-        showcaseCategories: (settings?.showcaseCategories || []) as string[],
+        showcaseCategories: [],
         showcaseBrands: [],
-        featuredCategorySections: (settings?.featuredCategorySections || []) as string[],
-        featuredBrandSections: (settings?.featuredBrandSections || []) as string[]
-    });
+        featuredCategorySections: [],
+        featuredBrandSections: []
+    }), []);
 
-    // Sync all homepage settings from backend when they load
-    useEffect(() => {
-        if (settings) {
-            setHomepageSettings(prev => ({
-                ...prev,
-                showcaseCategories: settings.showcaseCategories || prev.showcaseCategories,
-                featuredCategorySections: settings.featuredCategorySections || prev.featuredCategorySections,
-                featuredBrandSections: settings.featuredBrandSections || prev.featuredBrandSections,
-                badges: settings.badges || prev.badges
-            }));
+    // State for homepage configuration draft
+    const [homepageDraft, setHomepageDraft] = useState<HomepageSettings | null>(null);
+
+    // Derived state for the current homepage configuration (draft || saved || default)
+    const currentHomepageSettings = useMemo(() => {
+        return homepageDraft || settings || DEFAULT_HOMEPAGE_SETTINGS;
+    }, [homepageDraft, settings]);
+
+    // Helper to handle functional updates from child components
+    const handleSetHomepageSettings = (update: HomepageSettings | ((prev: HomepageSettings) => HomepageSettings)) => {
+        if (typeof update === 'function') {
+            setHomepageDraft((prev) => {
+                const base = prev || settings || DEFAULT_HOMEPAGE_SETTINGS;
+                return update(base);
+            });
+        } else {
+            setHomepageDraft(update);
         }
-    }, [settings]);
+    };
+
+    // Wrapper for saving settings that clears the local draft on success
+    const handleSaveHomepageSettings = async (newSettings: HomepageSettings) => {
+        if (onSaveSettings) {
+            await onSaveSettings(newSettings);
+            setHomepageDraft(null); // Clear draft after successful save
+        }
+    };
+
+    const handleSyncProducts = async () => {
+        setIsLoading(true);
+        try {
+            const { productsAPI } = await import('../utils/api');
+            
+            // Trigger actual sync first
+            try {
+                await productsAPI.sync();
+            } catch (syncErr) {
+                console.warn("⚠️ Sync trigger warning (continuing to fetch):", syncErr);
+            }
+            
+            const response = await productsAPI.getAll({ limit: 5000 });
+            
+            let freshProducts: Product[] = [];
+            if (response && response.products) {
+                freshProducts = response.products;
+            } else if (response && Array.isArray(response)) {
+                freshProducts = response;
+            }
+
+            if (freshProducts.length > 0) {
+                const transformed: Product[] = freshProducts.map((p: Product) => ({
+                    id: p.id,
+                    name: p.name || 'Unknown Product',
+                    category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
+                    price: p.price || 0,
+                    originalPrice: p.originalPrice || p.price,
+                    rating: p.rating || 0,
+                    reviews: p.reviews || 0,
+                    image: p.image || p.images?.[0] || '/placeholder.png',
+                    badge: p.badge,
+                    badgeColor: p.badgeColor,
+                    badgeId: p.badgeId,
+                    timer: p.timer,
+                    brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+                    description: p.description,
+                    features: p.features || [],
+                    specs: p.specs || {},
+                    images: p.images || [p.image],
+                    attributes: p.attributes || [],
+                    variations: p.variations || [],
+                    shortDescription: p.shortDescription,
+                    weight: p.weight,
+                    seoTitle: p.seoTitle,
+                    seoDescription: p.seoDescription,
+                    seoKeywords: p.seoKeywords,
+                    stock: p.stock ?? 10,
+                    slug: p.slug,
+                    type: p.type,
+                    sku: p.sku,
+                }));
+                setProducts(transformed);
+            }
+        } catch (err) {
+            console.error("❌ Failed to sync products:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Check for pending verifications and low stock
+    useEffect(() => {
+        users.forEach(user => {
+            if (user.verificationStatus === 'pending' && !notifiedUserEmails.current.has(user.email)) {
+                const existingNotifs = getAllAdminNotifications();
+                const isAlreadyNotified = existingNotifs.some(n => n.data?.email === user.email && n.category === 'verification-pending');
+
+                if (!isAlreadyNotified) {
+                    notifyVerificationPending(user.name, user.email);
+                    setNotifications(getAllAdminNotifications());
+                    setUnreadCount(getUnreadCount());
+                }
+                notifiedUserEmails.current.add(user.email);
+            }
+        });
+
+        // Check for low stock products
+        const notifiedProductIds = new Set<string>();
+        products.forEach(product => {
+            if (product.stock <= 5 && !notifiedProductIds.has(product.id)) {
+                const existingNotifs = getAllAdminNotifications();
+                const category = product.stock === 0 ? 'out-of-stock' : 'low-stock';
+                const isAlreadyNotified = existingNotifs.some(n => n.data?.productId === product.id && n.category === category);
+
+                if (!isAlreadyNotified) {
+                    if (product.stock === 0) {
+                        notifyOutOfStock(product);
+                    } else {
+                        notifyLowStock(product);
+                    }
+                    setNotifications(getAllAdminNotifications());
+                    setUnreadCount(getUnreadCount());
+                }
+                notifiedProductIds.add(product.id);
+            }
+        });
+    }, [orders, users, products]);
 
     // Dashboard Chart State
     const [chartView, setChartView] = useState<'weekly' | 'monthly'>('weekly');
@@ -453,39 +541,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
 
     // Search States
-    const [productSearchTerm, setProductSearchTerm] = useState('');
-    const [productBrandFilter, setProductBrandFilter] = useState('');
-    const [productCategoryFilter, setProductCategoryFilter] = useState('');
-    const [customerSearchTerm, setCustomerSearchTerm] = useState('');
-    const [customerUserTypeFilter, setCustomerUserTypeFilter] = useState<'all' | 'dental-doctor' | 'student' | 'supplier' | 'regular'>('all');
-    const [orderSearchTerm, setOrderSearchTerm] = useState('');
-    const [orderStatusFilter, setOrderStatusFilter] = useState<'All' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'>('All');
+    // Search States with Persistence
+    const [orderSearchTerm, setOrderSearchTerm] = useState(() => localStorage.getItem('admin_order_search') || '');
+    const [orderStatusFilter, setOrderStatusFilter] = useState<'All' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected'>(() => (localStorage.getItem('admin_order_status_filter') as any) || 'All');
+    const [orderFilterMonth, setOrderFilterMonth] = useState<string>(() => localStorage.getItem('admin_order_month_filter') || 'all'); 
     const [categorySearchTerm, setCategorySearchTerm] = useState('');
+    const [categoryPage, setCategoryPage] = useState(1);
     const [brandSearchTerm, setBrandSearchTerm] = useState('');
-    const [inventorySearchTerm, setInventorySearchTerm] = useState('');
-    const [inventoryCategoryFilter, setInventoryCategoryFilter] = useState<string>('all');
-    const [inventoryBrandFilter, setInventoryBrandFilter] = useState<string>('all');
+    const [brandPage, setBrandPage] = useState(1);
+    const itemsPerPage = 8;
+    const [customerSearchTerm, setCustomerSearchTerm] = useState(() => localStorage.getItem('admin_customer_search') || '');
+    const [customerTypeFilter, setCustomerTypeFilter] = useState<'all' | 'dental-doctor' | 'dental-student' | 'dental-business' | 'regular'>(() => (localStorage.getItem('admin_customer_type_filter') as any) || 'all');
 
+    // Persistence Effects for Search/Filters
+    useEffect(() => { localStorage.setItem('admin_order_search', orderSearchTerm); }, [orderSearchTerm]);
+    useEffect(() => { localStorage.setItem('admin_order_status_filter', orderStatusFilter); }, [orderStatusFilter]);
+    useEffect(() => { localStorage.setItem('admin_order_month_filter', orderFilterMonth); }, [orderFilterMonth]);
+    useEffect(() => { localStorage.setItem('admin_cat_search', categorySearchTerm); }, [categorySearchTerm]);
+    useEffect(() => { localStorage.setItem('admin_brand_search', brandSearchTerm); }, [brandSearchTerm]);
+    useEffect(() => { localStorage.setItem('admin_customer_search', customerSearchTerm); }, [customerSearchTerm]);
+    useEffect(() => { localStorage.setItem('admin_customer_type_filter', customerTypeFilter); }, [customerTypeFilter]);
 
     // Pagination States
-    const [productPage, setProductPage] = useState(1);
     const [orderPage, setOrderPage] = useState(1);
-    const [customerPage, setCustomerPage] = useState(1);
-    const [inventoryPage, setInventoryPage] = useState(1);
 
-    const itemsPerPage = 8;
+    // Reset order page when filters change
+    useEffect(() => {
+        setOrderPage(1);
+    }, [orderSearchTerm, orderStatusFilter, orderFilterMonth]);
 
     // Order Detail State
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-    const [orderTrackingData, setOrderTrackingData] = useState<any>(null);
+    const [orderTrackingData, setOrderTrackingData] = useState<TrackingData | null>(null);
     const [showOrderTracking, setShowOrderTracking] = useState(false);
-    const [orderFilterMonth, setOrderFilterMonth] = useState<string>('all'); // Format: 'YYYY-MM' or 'all'
 
     // Password Reset State
     const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [resetPasswordMethod, setResetPasswordMethod] = useState<'manual' | 'email'>('manual');
+
+    // Bulk Actions State
+    const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+    const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
     // Filtered orders based on month filter
     const monthFilteredOrders = useMemo(() => {
@@ -534,73 +632,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [isViewCustomerMode, setIsViewCustomerMode] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<User | null>(null);
     const [customerFormData, setCustomerFormData] = useState<User | null>(null);
+    const [customerDetailModal, setCustomerDetailModal] = useState<User | null>(null);
+    const [editCustomerData, setEditCustomerData] = useState<User | null>(null);
 
     // Fetch a specific user by email (to update local state after save)
     const fetchUserByEmail = async (email: string) => {
         try {
-            const response = await fetch(`/api/users/all?limit=100&email=${encodeURIComponent(email)}`, {
-                credentials: 'include'
-            });
-            if (response.ok) {
-                const data = await response.json();
-                // Find the user in the response
-                const user = data.users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
-                return user;
-            }
-        } catch (error) {
-            console.log('Could not fetch user:', error);
+            const { usersAPI } = await import('../utils/api');
+            const data = await usersAPI.getByEmail(email);
+            const user = data.users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+            return user;
+        } catch (e) {
+            console.error('Error fetching user by email:', e);
+            return null;
         }
-        return null;
     };
-
-    // Customer Detail Modal State (for viewing all customer orders)
-    const [customerDetailModal, setCustomerDetailModal] = useState<{
-        id: string;
-        name: string;
-        email: string;
-        phone: string;
-        orderCount: number;
-        spent: number;
-        status: string;
-        joined: string;
-        avatar: string;
-        ordersList: Order[];
-        userType?: 'dental-doctor' | 'student' | 'supplier' | 'regular';
-        verificationStatus?: 'pending' | 'approved' | 'rejected';
-        disabled?: boolean;
-        dentalDoctorInfo?: {
-            licenseId: string;
-            licenseState: string;
-            specialization?: string;
-            clinicName?: string;
-        };
-    } | null>(null);
-
-    // Edit state for customer details
-    const [editCustomerData, setEditCustomerData] = useState<{
-        userType: 'dental-doctor' | 'student' | 'supplier' | 'regular';
-        verificationStatus: 'pending' | 'approved' | 'rejected';
-        disabled: boolean;
-        dentalDoctorInfo: {
-            licenseId: string;
-            licenseState: string;
-            specialization?: string;
-            clinicName?: string;
-        };
-    } | null>(null);
-
-    // Cache for updated users (to persist changes across modal reopens)
-    const [updatedUsersCache, setUpdatedUsersCache] = useState<Record<string, {
-        userType: 'dental-doctor' | 'student' | 'supplier' | 'regular';
-        verificationStatus: 'pending' | 'approved' | 'rejected';
-        disabled: boolean;
-        dentalDoctorInfo: {
-            licenseId: string;
-            licenseState: string;
-            specialization?: string;
-            clinicName?: string;
-        };
-    }>>({});
 
     // Settings Tab State
     const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'payment' | 'shipping' | 'email' | 'notifications'>('general');
@@ -618,18 +664,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     });
     const [productSearchQuery, setProductSearchQuery] = useState('');
 
-    // Delete Confirmation State
+    // Deletion/Action Confirmation State
     const [deleteConfirmation, setDeleteConfirmation] = useState<{
         isOpen: boolean;
         title: string;
         message: string;
+        confirmText: string;
+        variant: 'danger' | 'primary' | 'success';
         onConfirm: () => void;
     }>({
         isOpen: false,
         title: '',
         message: '',
-        onConfirm: () => { },
+        confirmText: '',
+        variant: 'danger',
+        onConfirm: () => { }
+    });
 
+    const [rejectionModal, setRejectionModal] = useState<{
+        isOpen: boolean;
+        docId: number | string | null;
+        reason: string;
+    }>({
+        isOpen: false,
+        docId: null,
+        reason: ''
     });
 
     // Product State
@@ -639,7 +698,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [isGeneratingSEO, setIsGeneratingSEO] = useState(false); // SEO Generation state
     const [reviewsFilter, setReviewsFilter] = useState('all');
     const [reviewsSearch, setReviewsSearch] = useState('');
-    const [selectedReview, setSelectedReview] = useState<any>(null);
+    const [selectedReview, setSelectedReview] = useState<Review | null>(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
     const filteredReviews = useMemo(() => {
@@ -698,136 +757,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [editingBrand, setEditingBrand] = useState<BrandProfile | null>(null);
     const [brandFormData, setBrandFormData] = useState<BrandProfile>({ id: 0, name: '', logo: '', description: '', productCount: 0 });
 
+    // Verification and Cache States
+    const [isVerificationsLoading, setIsVerificationsLoading] = useState(false);
+    const [customerVerifications, setCustomerVerifications] = useState<User[]>([]);
+    const [updatedUsersCache, setUpdatedUsersCache] = useState<Record<string, Partial<User>>>({});
+
+
 
     // --- Filtering & Pagination Logic ---
-    const filteredProducts = useMemo(() => {
-        return products.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-                p.category.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
-                (p.brand && p.brand.toLowerCase().includes(productSearchTerm.toLowerCase()));
-
-            const matchesBrand = productBrandFilter ? p.brand === productBrandFilter : true;
-            const matchesCategory = productCategoryFilter ? p.category === productCategoryFilter : true;
-
-            return matchesSearch && matchesBrand && matchesCategory;
-        });
-    }, [products, productSearchTerm, productBrandFilter, productCategoryFilter]);
-
-    const filteredInventory = useMemo(() => {
-        return products.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
-                p.category.toLowerCase().includes(inventorySearchTerm.toLowerCase()) ||
-                (p.brand && p.brand.toLowerCase().includes(inventorySearchTerm.toLowerCase()));
-            const matchesCategory = inventoryCategoryFilter === 'all' || p.category === inventoryCategoryFilter;
-            const matchesBrand = inventoryBrandFilter === 'all' || p.brand === inventoryBrandFilter;
-            return matchesSearch && matchesCategory && matchesBrand;
-        });
-    }, [products, inventorySearchTerm, inventoryCategoryFilter, inventoryBrandFilter]);
-
-    const currentInventory = filteredInventory.slice(
-        (inventoryPage - 1) * itemsPerPage,
-        inventoryPage * itemsPerPage
-    );
-
-    const currentProducts = filteredProducts.slice(
-        (productPage - 1) * itemsPerPage,
-        productPage * itemsPerPage
-    );
-
-    // Derive customers from orders (shows all customers who have placed orders)
-    const filteredCustomers = useMemo(() => {
-        // Create a map of unique customers from orders
-        const customerMap = new Map<string, {
-            id: string;
-            name: string;
-            email: string;
-            phone: string;
-            orders: number;
-            spent: number;
-            status: string;
-            joined: string;
-            avatar: string;
-            userType?: 'dental-doctor' | 'student' | 'supplier' | 'regular';
-            verificationStatus?: string;
-            dentalDoctorInfo?: {
-                licenseId: string;
-                licenseState: string;
-                specialization?: string;
-                clinicName?: string;
-            };
-        }>();
-
-        // Create lookup map for Firebase users by email
-        const userByEmail = new Map<string, User>();
-        users.forEach(user => {
-            if (user.email) {
-                userByEmail.set(user.email.toLowerCase(), user);
-            }
-        });
-
-        orders.forEach(order => {
-            const email = (order.customerEmail || order.email || '').toLowerCase().trim();
-            const name = (order.customerName || 'Unknown').trim();
-            
-            // Skip if no email
-            if (!email) return;
-
-            // Skip "Unknown" names
-            if (name.toLowerCase() === 'unknown') return;
-
-            // Get Firebase user data if available
-            const firebaseUser = userByEmail.get(email);
-
-            if (customerMap.has(email)) {
-                // Update existing customer
-                const existing = customerMap.get(email)!;
-                existing.orders++;
-                existing.spent += order.total || 0;
-            } else {
-                // Create new customer
-                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-                const colors = ['DD3B5F', '3b82f6', '10b981', 'f59e0b', '8b5cf6', 'ec4899'];
-                const colorIndex = customerMap.size % colors.length;
-                
-                customerMap.set(email, {
-                    id: email,
-                    name: name,
-                    email: email,
-                    phone: order.shippingAddress?.phone || '',
-                    orders: 1,
-                    spent: order.total || 0,
-                    status: 'Active',
-                    joined: order.date || 'N/A',
-                    avatar: `https://placehold.co/100x100/${colors[colorIndex]}/white?text=${initials}`,
-                    userType: firebaseUser?.userType,
-                    verificationStatus: firebaseUser?.verificationStatus || 'pending',
-                    dentalDoctorInfo: firebaseUser?.dentalDoctorInfo
-                });
-            }
-        });
-
-        // Convert to array and filter by search term
-        let result = Array.from(customerMap.values());
-        
-        // Filter by search term
-        if (customerSearchTerm) {
-            const search = customerSearchTerm.toLowerCase();
-            result = result.filter(c =>
-                c.name.toLowerCase().includes(search) ||
-                c.email.toLowerCase().includes(search)
-            );
-        }
-
-        // Sort by spent (highest first)
-        result.sort((a, b) => b.spent - a.spent);
-
-        return result;
-    }, [orders, customerSearchTerm, users]);
-
-    const currentCustomers = filteredCustomers.slice(
-        (customerPage - 1) * itemsPerPage,
-        customerPage * itemsPerPage
-    );
 
     const filteredOrders = useMemo(() => {
         return orders.filter(o => {
@@ -856,24 +793,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         orderPage * itemsPerPage
     );
 
-    const filteredCategories = useMemo(() => {
-        return categories.filter(c => c.name.toLowerCase().includes(categorySearchTerm.toLowerCase()));
-    }, [categories, categorySearchTerm]);
+    const filteredCategories = categories.filter(c => 
+        c.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+    );
 
-    const filteredBrands = useMemo(() => {
-        return brands.filter(b => b.name.toLowerCase().includes(brandSearchTerm.toLowerCase()));
-    }, [brands, brandSearchTerm]);
+    const currentCategories = filteredCategories.slice(
+        (categoryPage - 1) * itemsPerPage,
+        categoryPage * itemsPerPage
+    );
+
+    const filteredBrands = brands.filter(b => 
+        b.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
+    );
+
+    const currentBrands = filteredBrands.slice(
+        (brandPage - 1) * itemsPerPage,
+        brandPage * itemsPerPage
+    );
 
 
     // --- SEO Generation Logic ---
     const generateSEO = async () => {
         if (!apiKey) {
-            alert("Please configure Gemini API Key in Settings > AI Chatbot first.");
+            toast.warning("Please configure Gemini API Key in Settings > AI Chatbot first.");
             return;
         }
 
         if (!productFormData.name || !productFormData.description) {
-            alert("Please enter Product Name and Description first.");
+            toast.warning("Please enter Product Name and Description first.");
             return;
         }
 
@@ -916,57 +863,155 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         } catch (error) {
             console.error("SEO Generation Failed:", error);
-            alert("Failed to generate SEO. Please try again.");
+            toast.error("Failed to generate SEO. Please try again.");
         } finally {
             setIsGeneratingSEO(false);
         }
     };
 
     // --- Handlers ---
-    const confirmDelete = (title: string, message: string, action: () => void) => {
+    const confirmDelete = (
+        title: string,
+        message: string,
+        onConfirm: () => void,
+        confirmText: string = 'Delete',
+        variant: 'danger' | 'primary' | 'success' = 'danger'
+    ) => {
         setDeleteConfirmation({
             isOpen: true,
             title,
             message,
+            confirmText,
+            variant,
             onConfirm: () => {
-                action();
+                onConfirm();
                 setDeleteConfirmation(prev => ({ ...prev, isOpen: false }));
             }
         });
     };
 
-    const handleDeleteProduct = (id: number) => {
+    const handleRejectVerification = async () => {
+        if (!rejectionModal.docId || !rejectionModal.reason.trim()) {
+            toast.error('Please provide a rejection reason');
+            return;
+        }
+
+        try {
+            const { verificationAPI } = await import('../utils/api');
+            const res = await verificationAPI.updateStatus(rejectionModal.docId, {
+                status: 'rejected',
+                rejectionReason: rejectionModal.reason
+            });
+            
+            if (res.success) {
+                setCustomerVerifications(prev => prev.map(d => 
+                    d.id === rejectionModal.docId ? { ...d, status: 'rejected', rejectionReason: rejectionModal.reason } : d
+                ));
+                toast.success('Document rejected');
+                setRejectionModal({ isOpen: false, docId: null, reason: '' });
+            }
+        } catch (error) {
+            console.error('Failed to reject:', error);
+            toast.error('Failed to reject document');
+        }
+    };
+
+    const handleDeleteProduct = async (id: number | string) => {
         confirmDelete(
             'Delete Product',
             'Are you sure you want to delete this product? This action cannot be undone.',
-            () => setProducts(products.filter(p => p.id !== id))
+            async () => {
+                try {
+                    const { productsAPI } = await import('../utils/api');
+                    await productsAPI.delete(id);
+                    setProducts(products.filter(p => p.id !== id));
+                    toast.success('Product deleted successfully');
+                } catch (error) {
+                    console.error('Failed to delete product:', error);
+                    toast.error('Failed to delete product from database.');
+                }
+            }
+        );
+    };
+
+    const handleDeleteCoupon = async (id: string) => {
+        confirmDelete(
+            'Delete Coupon',
+            'Are you sure you want to delete this coupon? This action cannot be undone.',
+            async () => {
+                try {
+                    const { couponsAPI } = await import('../utils/api');
+                    await couponsAPI.delete(id);
+                    toast.success('Coupon deleted successfully');
+                    // Note: Refresh is handled by FetchCoupons in CouponsTab which re-renders on onDeleteCoupon call
+                } catch (error) {
+                    console.error('Failed to delete coupon:', error);
+                    toast.error('Failed to delete coupon');
+                }
+            }
         );
     };
 
     const handleDeleteReview = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this review?')) return;
-        try {
-            const { reviewsAPI } = await import('../utils/api');
-            await reviewsAPI.delete(id);
-            setReviews(reviews.filter(r => r.id !== id));
-            alert('Review deleted successfully');
-        } catch (error) {
-            console.error('Error deleting review:', error);
-            alert('Failed to delete review');
-        }
+        confirmDelete(
+            'Delete Review',
+            'Are you sure you want to delete this review? This action cannot be undone.',
+            async () => {
+                try {
+                    const { reviewsAPI } = await import('../utils/api');
+                    await reviewsAPI.delete(id);
+                    setReviews(reviews.filter(r => r.id !== id));
+                    toast.success('Review deleted successfully');
+                } catch (error) {
+                    console.error('Error deleting review:', error);
+                    toast.error('Failed to delete review');
+                }
+            }
+        );
+    };
+
+    const handleSendResetEmail = async (email: string) => {
+        confirmDelete(
+            'Reset Password',
+            `Are you sure you want to send a password reset email to ${email}?`,
+            async () => {
+                try {
+                    if (!settings?.email) {
+                        toast.error('SMTP settings not configured. Please configure email settings in Admin > Settings > Email tab.');
+                        return;
+                    }
+
+                    const user = users.find(u => u.email === email);
+                    const result = await sendPasswordResetEmail(
+                        email,
+                        user?.name || 'Customer',
+                        settings.email
+                    );
+
+                    if (result.success) {
+                        toast.success(result.message);
+                    } else {
+                        toast.error('Failed to send password reset email: ' + result.message);
+                    }
+                } catch (error: any) {
+                    console.error('Error in handleSendResetEmail:', error);
+                    toast.error(`Error: ${error.message || 'Failed to send password reset email'}`);
+                }
+            },
+            'Send Email',
+            'primary'
+        );
     };
 
     const handleModerateReview = async (id: string, isApproved: boolean) => {
         try {
             const { reviewsAPI } = await import('../utils/api');
-            console.log(`Moderating review ${id} to ${isApproved}`);
             const result = await reviewsAPI.moderate(id, isApproved);
-            console.log('Moderation result:', result);
             setReviews(reviews.map(r => r.id === id ? { ...r, isApproved } : r));
-            alert(`Review ${isApproved ? 'approved' : 'rejected'} successfully`);
+            toast.success(`Review ${isApproved ? 'approved' : 'rejected'} successfully`);
         } catch (error: any) {
             console.error('Error moderating review:', error);
-            alert(`Failed to moderate review: ${error?.response?.data?.error || error.message}`);
+            toast.error(`Failed to moderate review: ${error?.response?.data?.error || error.message}`);
         }
     };
 
@@ -985,7 +1030,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             brand: product.brand || brands[0]?.name || '',
             image: product.image,
             images: product.images || [],
-            attributes: product.attributes ? product.attributes.map(a => ({ name: a.name, optionsStr: a.options.join(', ') })) : [],
+            attributes: product.attributes ? product.attributes.map(a => ({ name: a.name, optionsStr: Array.isArray(a.options) ? a.options.join(', ') : '' })) : [],
             variations: product.variations || [],
             seoTitle: product.seoTitle || '',
             seoDescription: product.seoDescription || '',
@@ -1114,82 +1159,65 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }));
     };
 
-    const handleSaveProduct = (e: React.FormEvent) => {
+    const handleSaveProduct = async (e: React.FormEvent) => {
         e.preventDefault();
-        const finalAttributes = productFormData.attributes.map(a => ({
-            name: a.name,
-            options: a.optionsStr.split(',').map(s => s.trim()).filter(s => s)
-        })).filter(a => a.name && a.options.length > 0);
+        setIsLoading(true);
+        try {
+            const finalAttributes = productFormData.attributes.map(a => ({
+                name: a.name,
+                options: a.optionsStr.split(',').map(s => s.trim()).filter(s => s)
+            })).filter(a => a.name && a.options.length > 0);
 
-        const newProduct: Product = {
-            id: editingProduct ? editingProduct.id : productFormData.id,
-            name: productFormData.name,
-            price: parseFloat(productFormData.price) || 0,
-            originalPrice: parseFloat(productFormData.originalPrice) || 0,
-            category: productFormData.category,
-            brand: productFormData.brand,
-            image: productFormData.image,
-            images: productFormData.images,
-            description: productFormData.description,
-            shortDescription: productFormData.shortDescription,
-            weight: productFormData.weight,
-            rating: editingProduct ? editingProduct.rating : 0,
-            reviews: editingProduct ? editingProduct.reviews : 0,
-            attributes: finalAttributes,
-            variations: productFormData.variations,
-            seoTitle: productFormData.seoTitle,
-            seoDescription: productFormData.seoDescription,
-            seoKeywords: productFormData.seoKeywords,
-            stock: parseInt(productFormData.stock) || 0
-        };
+            const productData: any = {
+                name: productFormData.name,
+                price: parseFloat(productFormData.price) || 0,
+                originalPrice: parseFloat(productFormData.originalPrice) || 0,
+                category: productFormData.category,
+                brand: productFormData.brand,
+                image: productFormData.image,
+                images: productFormData.images,
+                description: productFormData.description,
+                shortDescription: productFormData.shortDescription,
+                weight: productFormData.weight,
+                attributes: finalAttributes,
+                variations: productFormData.variations,
+                seoTitle: productFormData.seoTitle,
+                seoDescription: productFormData.seoDescription,
+                seoKeywords: productFormData.seoKeywords,
+                stock: parseInt(productFormData.stock) || 0,
+                badgeId: productFormData.badgeId
+            };
 
-        if (editingProduct) {
-            setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...newProduct } : p));
-        } else {
-            setProducts([...products, newProduct]);
-        }
-        setIsProductModalOpen(false);
-    };
-
-    const handleUpdateStock = (productId: number, newStock: number) => {
-        setProducts(products.map(p =>
-            p.id === productId ? { ...p, stock: newStock } : p
-        ));
-    };
-
-
-    const handleOrderStatusChange = async (orderId: string, newStatus: Order['status']) => {
-        // Find the order
-        const order = orders.find(o => o.id === orderId);
-        if (!order) return;
-
-        // Update order status
-        setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-        if (selectedOrder && selectedOrder.id === orderId) {
-            setSelectedOrder({ ...selectedOrder, status: newStatus });
-        }
-
-        // Send email notification via backend API
-        if (settings?.email?.host && order.customerName) {
-            const customer = users.find(u => u.name === order.customerName);
-            const customerEmail = customer?.email || '';
-
-            if (customerEmail) {
-                fetch('/api/v1/notifications/order-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: customerEmail,
-                        orderId: order.id,
-                        customerName: order.customerName,
-                        orderStatus: newStatus,
-                        orderTotal: order.total,
-                        orderDate: order.date,
-                        trackingNumber: order.trackingNumber,
-                        courierName: order.courierName
-                    })
-                }).catch(err => console.error('Error sending email:', err));
+            // Validate product data
+            const validation = productSchema.safeParse(productData);
+            if (!validation.success) {
+                const errorMessage = validation.error.issues[0].message;
+                toast.error(errorMessage);
+                setIsLoading(false);
+                return;
             }
+
+
+            const { productsAPI } = await import('../utils/api');
+            let savedProduct: Product;
+
+            if (editingProduct) {
+                const response = await productsAPI.update(editingProduct.id, productData);
+                savedProduct = response.product || response;
+                setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...savedProduct } : p));
+            } else {
+                const response = await productsAPI.create(productData);
+                savedProduct = response.product || response;
+                setProducts([...products, savedProduct]);
+            }
+            
+            setIsProductModalOpen(false);
+            toast.success(editingProduct ? 'Product updated successfully' : 'Product created successfully');
+        } catch (error) {
+            console.error('Failed to save product:', error);
+            toast.error('Failed to save product to database.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -1198,34 +1226,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         const order = orders.find(o => o.id === orderId);
         if (!order) return;
 
-        const updatedOrder = { ...order, status: newStatus };
+        const newHistoryEntry = {
+            status: newStatus,
+            timestamp: new Date().toISOString(),
+            updatedBy: 'Admin'
+        };
+        const updatedOrder = { 
+            ...order, 
+            status: newStatus,
+            statusHistory: [...(order.statusHistory || []), newHistoryEntry]
+        };
         
         setOrders(orders.map(o => o.id === orderId ? updatedOrder : o));
         if (selectedOrder && selectedOrder.id === orderId) {
             setSelectedOrder(updatedOrder);
         }
 
-        // Save to backend
-        fetch('/api/v1/orders/update-tracking', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                orderId,
-                status: newStatus,
+        // Save to backend using ordersAPI
+        import('../utils/api').then(({ ordersAPI, notificationsAPI }) => {
+            ordersAPI.updateStatus(orderId, newStatus, {
                 courierName: order.courierName,
                 trackingNumber: order.trackingNumber
-            })
-        }).catch(err => console.error('Error saving status:', err));
+            }).catch(err => console.error('Error saving status:', err));
 
-        // Send email notification via backend API
-        if (settings?.email?.host && order.customerName) {
-            const customer = users.find(u => u.name === order.customerName);
-            const customerEmail = customer?.email || '';
-            if (customerEmail) {
-                fetch('/api/v1/notifications/order-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+            // Send email notification via backend API using secure notificationsAPI
+            if (settings?.email?.host && order.customerName) {
+                const customer = users.find(u => u.name === order.customerName);
+                const customerEmail = customer?.email || '';
+                if (customerEmail) {
+                    notificationsAPI.sendOrderStatus({
                         to: customerEmail,
                         orderId: order.id,
                         customerName: order.customerName,
@@ -1234,10 +1263,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         orderDate: order.date,
                         trackingNumber: order.trackingNumber,
                         courierName: order.courierName
-                    })
-                }).catch(err => console.error('Error sending email:', err));
+                    }).catch(err => console.error('Error sending email:', err));
+                }
             }
-        }
+        });
     };
 
     // Order Handlers
@@ -1246,32 +1275,97 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setIsOrderModalOpen(true);
     };
 
+    const handleBulkStatusUpdate = async (newStatus: Order['status']) => {
+        if (selectedOrderIds.length === 0) return;
+        
+        confirmDelete(
+            'Update Orders',
+            `Are you sure you want to update ${selectedOrderIds.length} orders to "${newStatus}"?`,
+            async () => {
+                setIsBulkUpdating(true);
+                try {
+                    const { ordersAPI } = await import('../utils/api');
+                    
+                    // Sequential updates to avoid overloading or handling rate limits
+                    // In a real production app, this would be a single batch API call
+                    for (const id of selectedOrderIds) {
+                        await ordersAPI.updateStatus(id, newStatus);
+                    }
+
+                    // Refresh orders list
+                    const response = await ordersAPI.getAllAdmin({ limit: 500 });
+                    if (response.orders) {
+                        setOrders(response.orders);
+                    }
+
+                    setSelectedOrderIds([]);
+                    toast.success(`Successfully updated ${selectedOrderIds.length} orders.`);
+                } catch (err) {
+                    console.error('Failed bulk update:', err);
+                    toast.error('Some orders failed to update. Please refresh and try again.');
+                } finally {
+                    setIsBulkUpdating(false);
+                }
+            },
+            'Update',
+            'primary'
+        );
+    };
+
     // Customer Handlers
-    const handleUpdateUser = (userIndex: number, updates: Partial<User>) => {
-        const updatedUsers = [...users];
-        updatedUsers[userIndex] = { ...updatedUsers[userIndex], ...updates };
-        setUsers(updatedUsers); // Actually update the state
-        console.log('User updated:', updatedUsers[userIndex]);
-        // Note: In a real app, this would also call an API to persist the changes
+    const handleUpdateUser = async (userEmail: string, updates: Partial<User>) => {
+        setIsLoading(true);
+        try {
+            const { usersAPI } = await import('../utils/api');
+            const updatedUser = await usersAPI.update(userEmail, updates);
+            
+            setUsers(prev => prev.map(user => 
+                user.email === userEmail ? { ...user, ...updates, ...updatedUser } : user
+            ));
+            
+            toast.success('User updated successfully');
+        } catch (error) {
+            console.error('Failed to update user:', error);
+            toast.error('Failed to update user in database');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleSaveCustomer = (e: React.FormEvent) => {
         e.preventDefault();
-        // Note: Users data is read-only from migration
+        // Note: Full customer editing (creation/bulk) can be handled here if needed
         setIsCustomerModalOpen(false);
     };
 
     const handleDeleteUser = (userEmail: string) => {
-        const updatedUsers = users.filter(user => user.email !== userEmail);
-        setUsers(updatedUsers);
-        console.log(`User with email ${userEmail} deleted. Remaining users:`, updatedUsers.length);
-        // Note: In a real app, this would also call an API to delete the user from the database
+        confirmDelete(
+            'Delete User',
+            'Are you sure you want to delete this user? This action cannot be undone.',
+            async () => {
+                setIsLoading(true);
+                try {
+                    const { usersAPI } = await import('../utils/api');
+                    await usersAPI.delete(userEmail);
+                    
+                    setUsers(prev => prev.filter(user => user.email !== userEmail));
+                    
+                    toast.success('User deleted successfully');
+                } catch (error) {
+                    console.error('Failed to delete user:', error);
+                    toast.error('Failed to delete user from database');
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        );
     };
+
 
     // SMTP Test Handler
     const handleTestSMTPConnection = async () => {
         if (!settings.email.host || !settings.email.port || !settings.email.user || !settings.email.pass) {
-            alert('❌ Please fill in all SMTP settings before testing the connection.');
+            toast.warning('Please fill in all SMTP settings before testing the connection.');
             return;
         }
 
@@ -1317,11 +1411,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             message += 'Note: Full connection testing requires a backend server.\n';
             message += 'To test email sending, try the "Send Verification Email" feature in the Customers tab.';
 
-            alert(message);
+            toast.success('SMTP Settings Validated Successfully!');
 
         } catch (error: any) {
             console.error('SMTP test error:', error);
-            alert(`❌ Validation Failed\n\nError: ${error.message || 'Unknown error'}`);
+            toast.error(`Validation Failed: ${error.message || 'Unknown error'}`);
         } finally {
             setTestingSMTP(false);
         }
@@ -1340,22 +1434,57 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setIsCategoryModalOpen(true);
     };
 
-    const handleDeleteCategory = (categoryId: number) => {
+    const handleDeleteCategory = (categoryId: number | string) => {
         confirmDelete(
             'Delete Category',
             'Are you sure you want to delete this category? Products associated with this category might be affected.',
-            () => setCategories(categories.filter(c => c.id !== categoryId))
+            async () => {
+                try {
+                    const { categoriesAPI } = await import('../utils/api');
+                    await categoriesAPI.delete(categoryId);
+                    setCategories(categories.filter(c => c.id !== categoryId));
+                    toast.success('Category deleted successfully');
+                } catch (error) {
+                    console.error('Failed to delete category:', error);
+                    toast.error('Failed to delete category from database');
+                }
+            }
         );
     };
 
-    const handleSaveCategory = (e: React.FormEvent) => {
+    const handleSaveCategory = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (editingCategory) {
-            setCategories(categories.map(c => c.id === editingCategory.id ? categoryFormData : c));
-        } else {
-            setCategories([...categories, { ...categoryFormData, id: Date.now() }]);
+        setIsLoading(true);
+        try {
+            // Validate category data
+            const validation = categorySchema.safeParse(categoryFormData);
+            if (!validation.success) {
+                const errorMessage = validation.error.issues[0].message;
+                toast.error(errorMessage);
+                setIsLoading(false);
+                return;
+            }
+
+            const { categoriesAPI } = await import('../utils/api');
+
+            if (editingCategory) {
+                const updated = await categoriesAPI.update(editingCategory.id, categoryFormData);
+                const saved = updated.category || updated;
+                setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, ...saved } : c));
+                toast.success('Category updated successfully');
+            } else {
+                const created = await categoriesAPI.create(categoryFormData);
+                const saved = created.category || created;
+                setCategories([...categories, saved]);
+                toast.success('Category created successfully');
+            }
+            setIsCategoryModalOpen(false);
+        } catch (error) {
+            console.error('Failed to save category:', error);
+            toast.error('Failed to save category to database');
+        } finally {
+            setIsLoading(false);
         }
-        setIsCategoryModalOpen(false);
     };
 
     // Brand Handlers
@@ -1371,22 +1500,57 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setIsBrandModalOpen(true);
     };
 
-    const handleDeleteBrand = (brandId: number) => {
+    const handleDeleteBrand = (brandId: number | string) => {
         confirmDelete(
             'Delete Brand',
             'Are you sure you want to delete this brand?',
-            () => setBrands(brands.filter(b => b.id !== brandId))
+            async () => {
+                try {
+                    const { brandsAPI } = await import('../utils/api');
+                    await brandsAPI.delete(brandId);
+                    setBrands(brands.filter(b => b.id !== brandId));
+                    toast.success('Brand deleted successfully');
+                } catch (error) {
+                    console.error('Failed to delete brand:', error);
+                    toast.error('Failed to delete brand from database');
+                }
+            }
         );
     };
 
-    const handleSaveBrand = (e: React.FormEvent) => {
+    const handleSaveBrand = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (editingBrand) {
-            setBrands(brands.map(b => b.id === editingBrand.id ? brandFormData : b));
-        } else {
-            setBrands([...brands, { ...brandFormData, id: Date.now() }]);
+        setIsLoading(true);
+        try {
+            // Validate brand data
+            const validation = brandSchema.safeParse(brandFormData);
+            if (!validation.success) {
+                const errorMessage = validation.error.issues[0].message;
+                toast.error(errorMessage);
+                setIsLoading(false);
+                return;
+            }
+
+            const { brandsAPI } = await import('../utils/api');
+
+            if (editingBrand) {
+                const updated = await brandsAPI.update(editingBrand.id, brandFormData);
+                const saved = updated.brand || updated;
+                setBrands(brands.map(b => b.id === editingBrand.id ? { ...b, ...saved } : b));
+                toast.success('Brand updated successfully');
+            } else {
+                const created = await brandsAPI.create(brandFormData);
+                const saved = created.brand || created;
+                setBrands([...brands, saved]);
+                toast.success('Brand created successfully');
+            }
+            setIsBrandModalOpen(false);
+        } catch (error) {
+            console.error('Failed to save brand:', error);
+            toast.error('Failed to save brand to database');
+        } finally {
+            setIsLoading(false);
         }
-        setIsBrandModalOpen(false);
     };
 
     const handleBrandLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1424,14 +1588,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         if (resetPasswordMethod === 'manual') {
             if (newPassword.length < 6) {
-                alert('Password must be at least 6 characters long');
+                toast.warning('Password must be at least 6 characters long');
                 return;
             }
             // In a real application, this would call an API to update the password
-            alert(`Password for ${selectedCustomer?.name} has been updated successfully!`);
+            toast.success(`Password for ${selectedCustomer?.name} updated successfully!`);
         } else {
             // Send password reset email
-            alert(`Password reset link has been sent to ${selectedCustomer?.email}`);
+            toast.success(`Password reset link sent to ${selectedCustomer?.email}`);
         }
 
         setIsPasswordResetModalOpen(false);
@@ -1453,15 +1617,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
     };
 
-    const handleSaveSettings = () => {
-        alert("Settings saved successfully!");
+    const handleSaveSettings = async () => {
+        if (onSaveSettings) {
+            setIsLoading(true);
+            try {
+                await onSaveSettings(settings);
+                toast.success("Settings saved successfully!");
+            } catch (error) {
+                console.error('Failed to save settings:', error);
+                toast.error('Failed to save settings to database');
+            } finally {
+                setIsLoading(false);
+            }
+        } else {
+            // Fallback for local mode
+            toast.success("Settings saved locally!");
+        }
     };
 
     const statusBadgeColors: Record<Order['status'], string> = {
         Processing: 'bg-amber-100 text-amber-800 border-amber-200',
         Shipped: 'bg-blue-100 text-blue-800 border-blue-200',
         Delivered: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-        Cancelled: 'bg-red-100 text-red-800 border-red-200'
+        Cancelled: 'bg-red-100 text-red-800 border-red-200',
+        'Return Initiated': 'bg-purple-100 text-purple-800 border-purple-200',
+        'Return Approved': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+        'Return Completed': 'bg-cyan-100 text-cyan-800 border-cyan-200',
+        'Return Rejected': 'bg-rose-100 text-rose-800 border-rose-200'
     };
 
     const StatCard = ({ title, value, icon, colorClass, trend, trendUp, onClick }: { title: string, value: string, icon: string, colorClass: string, trend?: string, trendUp?: boolean, onClick?: () => void }) => (
@@ -1576,9 +1758,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {[
                             { id: 'overview', icon: 'fas fa-th-large', label: 'Dashboard' },
                             { id: 'orders', icon: 'fas fa-shopping-bag', label: 'Orders', badge: newOrdersCount > 0 ? newOrdersCount : undefined },
-                            { id: 'inventory', icon: 'fas fa-warehouse', label: 'Inventory' },
+                            { id: 'inventory', icon: 'fas fa-warehouse', label: 'Inventory', badge: products.filter(p => p.stock <= 5).length || undefined },
                             { id: 'products', icon: 'fas fa-box', label: 'Products' },
-                            { id: 'customers', icon: 'fas fa-users', label: 'Customers' },
+                            { id: 'customers', icon: 'fas fa-users', label: 'Customers', badge: users.filter(u => u.verificationStatus === 'pending').length || undefined },
                             { id: 'chat-support', icon: 'fas fa-comments', label: 'Chat Support' },
                             { id: 'reviews', icon: 'fas fa-star', label: 'Reviews' },
                             { id: 'categories', icon: 'fas fa-layer-group', label: 'Categories' },
@@ -1634,7 +1816,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <div className="relative">
                                 <button onClick={() => { setShowNotifications(!showNotifications); setShowProfileMenu(false); }} className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-500 hover:text-primary transition-colors shadow-sm relative">
                                     <i className="fas fa-bell"></i>
-                                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 animate-pulse"></span>
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-2 right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center animate-pulse">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
+                                    )}
                                 </button>
                                 {showNotifications && (
                                     <>
@@ -1700,6 +1886,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <button onClick={() => { setShowProfileMenu(!showProfileMenu); setShowNotifications(false); }} className="w-10 h-10 rounded-full bg-indigo-100 border border-indigo-200 overflow-hidden hover:ring-2 hover:ring-indigo-100 transition-all focus:outline-none">
                                     <img src="https://ui-avatars.com/api/?name=Admin+User&background=DD3B5F&color=fff" alt="Admin" />
                                 </button>
+                                
+                                {showProfileMenu && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 animate-fade-in">
+                                        <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                                            <p className="text-sm font-bold text-gray-800 dark:text-white">Admin User</p>
+                                            <p className="text-xs text-gray-500">admin@alphadentkart.com</p>
+                                        </div>
+                                        <button onClick={() => { setActiveTab('settings'); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                            <i className="fas fa-cog mr-2"></i> Settings
+                                        </button>
+                                        <button onClick={() => { onVisitSite(); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                            <i className="fas fa-external-link-alt mr-2"></i> Visit Site
+                                        </button>
+                                        <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                        <button onClick={() => { onLogout(); setShowProfileMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium">
+                                            <i className="fas fa-sign-out-alt mr-2"></i> Logout
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </header>
@@ -1711,7 +1916,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <div className="animate-fade-in space-y-8">
                                 {/* Interactive Stat Cards - Click to Navigate */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <StatCard onClick={() => setActiveTab('orders')} title="Total Revenue" value={`₹${orders.reduce((acc, o) => acc + o.total, 0).toLocaleString('en-IN')}`} icon="fas fa-wallet" colorClass="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" trend="12.5%" trendUp={true} />
+                                    <StatCard onClick={() => setActiveTab('orders')} title="Total Revenue" value={`₹${orders.reduce((acc, o) => acc + (o.total || 0), 0).toLocaleString('en-IN')}`} icon="fas fa-wallet" colorClass="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" trend="12.5%" trendUp={true} />
                                     <StatCard onClick={() => setActiveTab('orders')} title="Total Orders" value={orders.length.toString()} icon="fas fa-shopping-cart" colorClass="bg-gradient-to-br from-blue-400 to-cyan-600" trend="8.2%" trendUp={true} />
                                     <StatCard onClick={() => setActiveTab('products')} title="Total Products" value={products.length.toString()} icon="fas fa-box-open" colorClass="bg-gradient-to-br from-emerald-400 to-teal-600" trend="2.1%" trendUp={true} />
                                     <StatCard onClick={() => setActiveTab('analytics')} title="Total Visitors" value="12,340" icon="fas fa-chart-line" colorClass="bg-gradient-to-br from-orange-400 to-red-500" trend="5.4%" trendUp={true} />
@@ -1749,6 +1954,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                                     {/* Recent Activity / Tiles */}
                                     <div className="space-y-6">
+
+                                        {/* Low Stock Alert Widget */}
+                                        <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-orange-200 dark:border-orange-900/30 overflow-hidden relative group transition-all hover:shadow-lg hover:shadow-orange-500/5">
+                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                                <i className="fas fa-exclamation-triangle text-4xl text-orange-600"></i>
+                                            </div>
+                                            <div className="flex justify-between items-center mb-4 relative z-10">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600">
+                                                        <i className="fas fa-warehouse text-sm"></i>
+                                                    </div>
+                                                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Low Stock Alerts</h3>
+                                                </div>
+                                                <button onClick={() => setActiveTab('products')} className="text-xs font-bold text-primary hover:underline">Manage</button>
+                                            </div>
+                                            <div className="space-y-4 relative z-10">
+                                                {products.filter(p => p.stock < 10).length === 0 ? (
+                                                    <div className="py-4 text-center">
+                                                        <i className="fas fa-check-circle text-emerald-500 text-2xl mb-2"></i>
+                                                        <p className="text-xs text-gray-500">All stock levels are healthy</p>
+                                                    </div>
+                                                ) : (
+                                                    products.filter(p => p.stock < 10).slice(0, 4).map(product => (
+                                                        <div key={product.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100/50 dark:border-orange-800/20">
+                                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                                <img src={product.images[0]} alt={product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                                                                <div className="overflow-hidden">
+                                                                    <p className="text-xs font-bold text-gray-800 dark:text-white truncate">{product.name}</p>
+                                                                    <p className="text-[10px] text-gray-500">{product.category}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-xs font-bold text-orange-600">{product.stock} left</span>
+                                                                <div className="w-16 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mt-1 overflow-hidden">
+                                                                    <div className="h-full bg-orange-500" style={{ width: `${(product.stock / 10) * 100}%` }}></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                                {products.filter(p => p.stock < 10).length > 4 && (
+                                                    <p className="text-center text-[10px] text-gray-400 font-medium">+ {products.filter(p => p.stock < 10).length - 4} more items low on stock</p>
+                                                )}
+                                            </div>
+                                        </div>
 
                                         {/* Recent Reviews Tile */}
                                         <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
@@ -1821,7 +2071,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{order.id}</td>
                                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{order.customerName || 'Guest'}</td>
                                                         <td className="px-6 py-4 text-gray-500">{order.date}</td>
-                                                        <td className="px-6 py-4 font-medium">₹{order.total.toLocaleString('en-IN')}</td>
+                                                        <td className="px-6 py-4 font-medium">₹{(order.total ?? 0).toLocaleString('en-IN')}</td>
                                                         <td className="px-6 py-4">
                                                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadgeColors[order.status] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
                                                                 {order.status}
@@ -1844,74 +2094,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                         {/* PRODUCTS TAB */}
                         {activeTab === 'products' && (
-                            <div className="animate-fade-in space-y-6">
-                                {/* ... (Previous Products Tab Logic) ... */}
-                                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-box text-primary"></i> Products List</h2>
-                                    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                                        <select
-                                            value={productCategoryFilter}
-                                            onChange={(e) => setProductCategoryFilter(e.target.value)}
-                                            className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                        >
-                                            <option value="">All Categories</option>
-                                            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                                        </select>
-
-                                        <select
-                                            value={productBrandFilter}
-                                            onChange={(e) => setProductBrandFilter(e.target.value)}
-                                            className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                        >
-                                            <option value="">All Brands</option>
-                                            {brands.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
-                                        </select>
-
-                                        <SearchInput value={productSearchTerm} onChange={setProductSearchTerm} placeholder="Search products..." />
-
-                                        <button onClick={handleAddNewProduct} className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-pink-700 shadow-lg shadow-primary/30 flex-shrink-0 transition-transform active:scale-95 whitespace-nowrap">
-                                            <i className="fas fa-plus mr-2"></i> Add Product
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left min-w-[800px]">
-                                            <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                <tr>
-                                                    <th className="px-6 py-4">Product</th>
-                                                    <th className="px-6 py-4">Category</th>
-                                                    <th className="px-6 py-4">Brand</th>
-                                                    <th className="px-6 py-4">Price</th>
-                                                    <th className="px-6 py-4 text-right">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                                {currentProducts.length > 0 ? currentProducts.map(product => (
-                                                    <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-4">
-                                                                <img src={product.image} className="w-12 h-12 object-contain rounded-lg border bg-white p-1" alt="" />
-                                                                <span className="font-bold text-gray-900 dark:text-white">{product.name}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{product.category}</td>
-                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{product.brand}</td>
-                                                        <td className="px-6 py-4 font-bold text-primary">₹{product.price.toLocaleString('en-IN')}</td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex gap-2 justify-end">
-                                                                <button onClick={() => handleEditProduct(product)} className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-primary hover:text-white hover:border-primary text-gray-500 flex items-center justify-center transition-all shadow-sm" title="Edit"><i className="fas fa-pen text-xs"></i></button>
-                                                                <button onClick={() => handleDeleteProduct(product.id)} className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-red-500 hover:text-white hover:border-red-500 text-gray-500 flex items-center justify-center transition-all shadow-sm" title="Delete"><i className="fas fa-trash text-xs"></i></button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )) : <TableEmptyState colSpan={5} message="No products found" />}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <Pagination currentPage={productPage} totalItems={filteredProducts.length} onPageChange={setProductPage} />
-                                </div>
-                            </div>
+                            <ProductsTab 
+                                products={products}
+                                setProducts={setProducts}
+                                categories={categories}
+                                brands={brands}
+                                onDeleteProduct={handleDeleteProduct}
+                            />
                         )}
 
                         {/* ORDERS TAB */}
@@ -1955,6 +2144,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             <option value="Shipped">Shipped</option>
                                             <option value="Delivered">Delivered</option>
                                             <option value="Cancelled">Cancelled</option>
+                                            <option value="Return Initiated">Return Initiated</option>
+                                            <option value="Return Approved">Return Approved</option>
+                                            <option value="Return Completed">Return Completed</option>
+                                            <option value="Return Rejected">Return Rejected</option>
                                         </select>
                                         <select
                                             value={orderFilterMonth}
@@ -1977,11 +2170,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         />
                                     </div>
                                 </div>
+
+                                {/* Bulk Actions Bar */}
+                                {selectedOrderIds.length > 0 && (
+                                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 animate-slide-up border border-white/10">
+                                        <div className="flex items-center gap-2 border-r border-gray-700 pr-6">
+                                            <span className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-white">
+                                                {selectedOrderIds.length}
+                                            </span>
+                                            <span className="text-sm font-medium">Orders Selected</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Update Status To:</span>
+                                            <div className="flex gap-2">
+                                                {['Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Approved', 'Return Completed', 'Return Rejected'].map(status => (
+                                                    <button
+                                                        key={status}
+                                                        onClick={() => handleBulkStatusUpdate(status as any)}
+                                                        disabled={isBulkUpdating}
+                                                        className="px-3 py-1.5 bg-gray-800 hover:bg-primary hover:text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50 whitespace-nowrap"
+                                                    >
+                                                        {status}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => setSelectedOrderIds([])}
+                                            className="ml-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                                        >
+                                            <i className="fas fa-times text-xs"></i>
+                                        </button>
+                                    </div>
+                                )}
                                 <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left min-w-[800px]">
                                             <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider">
                                                 <tr>
+                                                    <th className="px-6 py-4 w-10">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedOrderIds.length === currentOrders.length && currentOrders.length > 0}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedOrderIds(currentOrders.map(o => o.id));
+                                                                } else {
+                                                                    setSelectedOrderIds([]);
+                                                                }
+                                                            }}
+                                                            className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                                                        />
+                                                    </th>
                                                     <th className="px-6 py-4">Order ID</th>
                                                     <th className="px-6 py-4">Customer</th>
                                                     <th className="px-6 py-4">Date</th>
@@ -2001,7 +2241,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         </td>
                                                     </tr>
                                                 ) : currentOrders.length > 0 ? currentOrders.map(order => (
-                                                    <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                    <tr key={order.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-primary/5' : ''}`}>
+                                                        <td className="px-6 py-4">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedOrderIds.includes(order.id)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedOrderIds(prev => [...prev, order.id]);
+                                                                    } else {
+                                                                        setSelectedOrderIds(prev => prev.filter(id => id !== order.id));
+                                                                    }
+                                                                }}
+                                                                className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                                                            />
+                                                        </td>
                                                         <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
                                                             <div className="flex items-center gap-2">
                                                                 {order.id}
@@ -2014,7 +2268,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         </td>
                                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{order.customerName}</td>
                                                         <td className="px-6 py-4 text-gray-500">{order.date}</td>
-                                                        <td className="px-6 py-4 font-bold text-gray-800 dark:text-white">₹{order.total.toLocaleString('en-IN')}</td>
+                                                        <td className="px-6 py-4 font-bold text-gray-800 dark:text-white">₹{(order.total ?? 0).toLocaleString('en-IN')}</td>
                                                         <td className="px-6 py-4">
                                                             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${statusBadgeColors[order.status] || 'bg-gray-100'}`}>
                                                                 {order.status}
@@ -2049,94 +2303,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                         {/* INVENTORY TAB */}
                         {activeTab === 'inventory' && (
-                            <div className="animate-fade-in space-y-6">
-                                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                                        <i className="fas fa-warehouse text-primary"></i> Inventory Management
-                                    </h2>
-                                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                        <select
-                                            value={inventoryCategoryFilter}
-                                            onChange={(e) => setInventoryCategoryFilter(e.target.value)}
-                                            className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                        >
-                                            <option value="all">All Categories</option>
-                                            {categories.map(cat => (
-                                                <option key={cat.id} value={cat.name}>{cat.name}</option>
-                                            ))}
-                                        </select>
-                                        <select
-                                            value={inventoryBrandFilter}
-                                            onChange={(e) => setInventoryBrandFilter(e.target.value)}
-                                            className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                        >
-                                            <option value="all">All Brands</option>
-                                            {brands.map(brand => (
-                                                <option key={brand.id} value={brand.name}>{brand.name}</option>
-                                            ))}
-                                        </select>
-                                        <input
-                                            type="text"
-                                            value={inventorySearchTerm}
-                                            onChange={(e) => setInventorySearchTerm(e.target.value)}
-                                            placeholder="Search inventory..."
-                                            className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none w-full sm:w-64"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left min-w-[800px]">
-                                            <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                <tr>
-                                                    <th className="px-6 py-4">Product</th>
-                                                    <th className="px-6 py-4">Category</th>
-                                                    <th className="px-6 py-4">Brand</th>
-                                                    <th className="px-6 py-4">Price</th>
-                                                    <th className="px-6 py-4">Stock</th>
-                                                    <th className="px-6 py-4 text-right">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                                {currentInventory.length > 0 ? currentInventory.map(product => (
-                                                    <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-4">
-                                                                <img src={product.image} className="w-12 h-12 object-contain rounded-lg border bg-white p-1" alt="" />
-                                                                <span className="font-bold text-gray-900 dark:text-white">{product.name}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{product.category}</td>
-                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{product.brand}</td>
-                                                        <td className="px-6 py-4 font-bold text-primary">₹{product.price.toLocaleString('en-IN')}</td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <input
-                                                                    type="number"
-                                                                    value={product.stock}
-                                                                    onChange={(e) => handleUpdateStock(product.id, parseInt(e.target.value) || 0)}
-                                                                    className="w-20 px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-center bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                                                                />
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${product.stock > 10 ? 'bg-green-100 text-green-700' : product.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
-                                                                    {product.stock > 10 ? 'In Stock' : product.stock > 0 ? 'Low' : 'Out'}
-                                                                </span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex gap-2 justify-end">
-                                                                <button onClick={() => handleEditProduct(product)} className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-primary hover:text-white hover:border-primary text-gray-500 flex items-center justify-center transition-all shadow-sm" title="Edit">
-                                                                    <i className="fas fa-pen text-xs"></i>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )) : <TableEmptyState colSpan={6} message="No inventory items found" icon="fas fa-warehouse" />}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <Pagination currentPage={inventoryPage} totalItems={filteredInventory.length} onPageChange={setInventoryPage} />
-                                </div>
-                            </div>
+                            <InventoryTab 
+                                products={products}
+                                setProducts={setProducts}
+                                categories={categories}
+                                brands={brands}
+                                onEditProduct={(product) => {
+                                    setActiveTab('products');
+                                    // Note: Ideally we'd trigger the edit modal directly, 
+                                    // but since ProductsTab has its own internal state, 
+                                    // switching tabs is the simplest integration for now.
+                                    handleEditProduct(product);
+                                }}
+                                isLoading={isLoadingProducts}
+                            />
                         )}
 
 
@@ -2145,166 +2325,64 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {activeTab === 'customers' && (
                             <div className="animate-fade-in space-y-6">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <div className="flex items-center gap-3">
-                                        <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-users text-primary"></i> Customer Management</h2>
-                                        {filteredCustomers.length > 0 && (
-                                            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold">
-                                                {filteredCustomers.length} customers
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-4 w-full sm:w-auto">
-                                        <SearchInput value={customerSearchTerm} onChange={setCustomerSearchTerm} placeholder="Search customers..." />
-                                    </div>
-                                </div>
-                                
-                                {/* Customers Table */}
-                                <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
-                                            <thead className="bg-gray-50 dark:bg-gray-800 text-xs font-bold text-gray-500 uppercase">
-                                                <tr>
-                                                    <th className="px-6 py-4 text-left">Customer</th>
-                                                    <th className="px-6 py-4 text-left">Email</th>
-                                                    <th className="px-6 py-4 text-left">Phone</th>
-                                                    <th className="px-6 py-4 text-center">Orders</th>
-                                                    <th className="px-6 py-4 text-right">Total Spent</th>
-                                                    <th className="px-6 py-4 text-center">Status</th>
-                                                    <th className="px-6 py-4 text-center">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                                {currentCustomers.length > 0 ? currentCustomers.map(customer => (
-                                                    <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-3">
-                                                                <img src={customer.avatar} alt="" className="w-10 h-10 rounded-full" />
-                                                                <div>
-                                                                    <span className="font-bold text-gray-900 dark:text-white">{customer.name}</span>
-                                                                    {customer.userType === 'dental-doctor' && customer.dentalDoctorInfo?.licenseId && (
-                                                                        <span className="ml-2 px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full font-medium">
-                                                                            <i className="fas fa-certificate mr-1"></i>
-                                                                            Dr.
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{customer.email}</td>
-                                                        <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{customer.phone || '-'}</td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-bold">
-                                                                {customer.orders}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-right font-bold text-gray-900 dark:text-white">
-                                                            ₹{customer.spent.toLocaleString('en-IN')}
-                                                        </td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                                customer.status === 'Active' 
-                                                                    ? 'bg-green-100 text-green-700' 
-                                                                    : 'bg-gray-100 text-gray-600'
-                                                            }`}>
-                                                                {customer.status}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex gap-2 justify-center">
-                                                                <button 
-                                                                    onClick={() => {
-                                                                        const customerOrders = orders.filter(o => 
-                                                                            (o.customerEmail || '').toLowerCase() === customer.email.toLowerCase()
-                                                                        );
-                                                                        const { orders: orderCountVal, ...rest } = customer;
-                                                                        const modalData = { 
-                                                                            ...rest, 
-                                                                            orderCount: orderCountVal, 
-                                                                            ordersList: customerOrders 
-                                                                        };
-                                                                        setCustomerDetailModal(modalData);
-                                                                        
-                                                                        const customerEmail = customer.email.toLowerCase();
-                                                                        
-                                                                        // Check cache first (updated users), then Firebase users
-                                                                        const cachedUser = updatedUsersCache[customerEmail];
-                                                                        const firebaseUser = users.find(u => 
-                                                                            u.email?.toLowerCase() === customerEmail
-                                                                        );
-                                                                        
-                                                                        // Use cached data if available, otherwise Firebase data, otherwise defaults
-                                                                        setEditCustomerData({
-                                                                            userType: cachedUser?.userType || firebaseUser?.userType || modalData.userType || 'regular',
-                                                                            verificationStatus: cachedUser?.verificationStatus || firebaseUser?.verificationStatus || modalData.verificationStatus || 'pending',
-                                                                            disabled: cachedUser?.disabled ?? firebaseUser?.disabled ?? false,
-                                                                            dentalDoctorInfo: cachedUser?.dentalDoctorInfo || firebaseUser?.dentalDoctorInfo || modalData.dentalDoctorInfo || {
-                                                                                licenseId: '',
-                                                                                licenseState: '',
-                                                                                specialization: '',
-                                                                                clinicName: ''
-                                                                            }
-                                                                        });
-                                                                    }}
-                                                                    className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-500 hover:text-white hover:border-blue-500 text-gray-500 flex items-center justify-center transition-all"
-                                                                    title="View Details"
-                                                                >
-                                                                    <i className="fas fa-eye text-xs"></i>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )) : (
-                                                    <tr>
-                                                        <td colSpan={7} className="px-6 py-12 text-center">
-                                                            <div className="flex flex-col items-center justify-center">
-                                                                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                                                                    <i className="fas fa-users text-gray-400 text-2xl"></i>
-                                                                </div>
-                                                                <p className="text-gray-500 font-medium">No customers found</p>
-                                                                <p className="text-gray-400 text-sm">Customers will appear here when they place orders</p>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                
-                                {/* Pagination */}
-                                {filteredCustomers.length > itemsPerPage && (
-                                    <div className="flex justify-between items-center px-6 py-4 bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700">
-                                        <span className="text-sm text-gray-500">
-                                            Showing {((customerPage - 1) * itemsPerPage) + 1} to {Math.min(customerPage * itemsPerPage, filteredCustomers.length)} of {filteredCustomers.length} customers
+                                    <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                                        <i className="fas fa-users text-primary"></i> Customers List
+                                        <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary text-sm font-semibold rounded-full">
+                                            {users.length}
                                         </span>
-                                        <div className="flex gap-2">
-                                            <button 
-                                                disabled={customerPage === 1} 
-                                                onClick={() => setCustomerPage(p => Math.max(1, p - 1))}
-                                                className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-sm"
-                                            >
-                                                <i className="fas fa-chevron-left"></i>
-                                            </button>
-                                            <span className="px-4 py-2 bg-primary text-white rounded-lg font-bold">
-                                                {customerPage}
-                                            </span>
-                                            <button 
-                                                disabled={customerPage * itemsPerPage >= filteredCustomers.length} 
-                                                onClick={() => setCustomerPage(p => p + 1)}
-                                                className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 text-sm"
-                                            >
-                                                <i className="fas fa-chevron-right"></i>
-                                            </button>
+                                    </h2>
+                                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                        <select
+                                            value={customerTypeFilter}
+                                            onChange={(e) => setCustomerTypeFilter(e.target.value as any)}
+                                            className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                                        >
+                                            <option value="all">All Types</option>
+                                            <option value="dental-doctor">Doctors</option>
+                                            <option value="dental-student">Students</option>
+                                            <option value="dental-business">Business/Clinics</option>
+                                            <option value="regular">Regular</option>
+                                        </select>
+                                        <div className="relative w-full sm:w-64">
+                                            <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                            <input
+                                                type="text"
+                                                value={customerSearchTerm}
+                                                onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                                                placeholder="Search name, email, phone..."
+                                                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
+                                            />
                                         </div>
                                     </div>
-                                )}
+                                </div>
+                                <CustomerManagement 
+                                    users={users}
+                                    onUpdateUser={handleUpdateUser}
+                                    onDeleteUser={handleDeleteUser}
+                                    onResetPassword={handleSendResetEmail}
+                                    searchTerm={customerSearchTerm}
+                                    userTypeFilter={customerTypeFilter}
+                                    onViewOrder={(order) => {
+                                        setSelectedOrder(order);
+                                        setIsOrderModalOpen(true);
+                                    }}
+                                    settings={settings}
+                                    itemsPerPage={10}
+                                    externalCurrentPage={usersPage}
+                                    externalTotalItems={totalUsersCount}
+                                    onPageChange={onUsersPageChange}
+                                    isLoading={isLoadingUsersPage}
+                                />
                             </div>
                         )}
 
                         {/* CHAT SUPPORT TAB */}
                         {activeTab === 'chat-support' && (
                             <div className="animate-fade-in p-4">
-                                <ChatSupport />
+                                <ChatSupport 
+                                    sessions={chatSessions} 
+                                    setSessions={setChatSessions} 
+                                />
                             </div>
                         )}
 
@@ -2332,7 +2410,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                                {filteredCategories.length > 0 ? filteredCategories.map(cat => (
+                                                {currentCategories.length > 0 ? currentCategories.map(cat => (
                                                     <tr key={cat.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                                         <td className="px-6 py-4 text-gray-500">#{cat.id}</td>
                                                         <td className="px-6 py-4">
@@ -2360,6 +2438,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         </table>
                                     </div>
                                 </div>
+                                <Pagination 
+                                    currentPage={categoryPage} 
+                                    totalItems={filteredCategories.length} 
+                                    onPageChange={setCategoryPage} 
+                                />
                             </div>
                         )}
 
@@ -2385,7 +2468,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
-                                                {filteredBrands.length > 0 ? filteredBrands.map(brand => (
+                                                {currentBrands.length > 0 ? currentBrands.map(brand => (
                                                     <tr key={brand.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                                         <td className="px-6 py-4">
                                                             <div className="w-16 h-16 border rounded-lg bg-white flex items-center justify-center p-2">
@@ -2413,6 +2496,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         </table>
                                     </div>
                                 </div>
+                                <Pagination 
+                                    currentPage={brandPage} 
+                                    totalItems={filteredBrands.length} 
+                                    onPageChange={setBrandPage} 
+                                />
                             </div>
                         )}
 
@@ -2511,10 +2599,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                     </button>
                                                                 )}
                                                                 <button 
-                                                                    onClick={() => handleDeleteReview(review.id)} 
+                                                                    onClick={() => handleDeleteReview(review.id)}
                                                                     className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50"
                                                                 >
-                                                                    <i className="fas fa-trash"></i>
+                                                                    <i className="fas fa-trash mr-1"></i>Delete
                                                                 </button>
                                                             </div>
                                                         </td>
@@ -2524,6 +2612,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         </table>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* COUPONS TAB */}
+                        {activeTab === 'coupons' && (
+                            <div className="animate-fade-in space-y-6">
+                                <CouponsTab onDeleteCoupon={handleDeleteCoupon} />
                             </div>
                         )}
 
@@ -3193,8 +3288,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {activeTab === 'homepage' && (
                         <div className="animate-fade-in">
                             <HomepageTab
-                                homepageSettings={homepageSettings}
-                                setHomepageSettings={setHomepageSettings}
+                                homepageSettings={currentHomepageSettings}
+                                setHomepageSettings={handleSetHomepageSettings}
                                 categories={categories}
                                 brands={brands}
                                 heroSlides={heroSlides}
@@ -3206,7 +3301,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 onUpdatePromotionalTile={onUpdatePromotionalTile}
                                 onToggleBrandFeatured={onToggleBrandFeatured}
                                 onReorderFeaturedBrands={onReorderFeaturedBrands}
-                                onSaveSettings={onSaveSettings}
+                                onSaveSettings={handleSaveHomepageSettings}
                             />
                         </div>
                     )}
@@ -3214,34 +3309,82 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div >
 
             {/* Confirmation Modal */}
-            {
-                deleteConfirmation.isOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}></div>
-                        <div className="bg-white dark:bg-surface-dark rounded-2xl w-full max-w-md relative z-10 shadow-2xl p-6 text-center transform transition-all scale-100">
-                            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i className="fas fa-exclamation-triangle text-2xl"></i>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{deleteConfirmation.title}</h3>
-                            <p className="text-gray-500 dark:text-gray-400 mb-8">{deleteConfirmation.message}</p>
-                            <div className="flex gap-3 justify-center">
-                                <button
-                                    onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
-                                    className="px-6 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={deleteConfirmation.onConfirm}
-                                    className="px-6 py-2.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-500/30 transition-colors"
-                                >
-                                    Delete
-                                </button>
-                            </div>
+            {deleteConfirmation.isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div 
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+                        onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+                    ></div>
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md p-8 shadow-2xl relative border border-gray-100 dark:border-gray-800 transform transition-all animate-in fade-in zoom-in duration-300">
+                        <div className={`w-16 h-16 ${deleteConfirmation.variant === 'danger' ? 'bg-red-100 dark:bg-red-900/30' : deleteConfirmation.variant === 'success' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-primary/10 dark:bg-primary/20'} rounded-2xl flex items-center justify-center mb-6 mx-auto`}>
+                            <i className={`fas ${deleteConfirmation.variant === 'danger' ? 'fa-trash-alt text-red-600 dark:text-red-400' : deleteConfirmation.variant === 'success' ? 'fa-check-circle text-green-600 dark:text-green-400' : 'fa-info-circle text-primary'} text-2xl`}></i>
+                        </div>
+                        
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">{deleteConfirmation.title}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-8">
+                            {deleteConfirmation.message}
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={deleteConfirmation.onConfirm}
+                                className={`w-full py-4 ${deleteConfirmation.variant === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' : deleteConfirmation.variant === 'success' ? 'bg-green-600 hover:bg-green-700 shadow-green-500/20' : 'bg-primary hover:bg-primary/90 shadow-primary/20'} text-white rounded-2xl text-sm font-bold shadow-lg transition-all`}
+                            >
+                                {deleteConfirmation.confirmText}
+                            </button>
+                            <button
+                                onClick={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+                                className="w-full py-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-sm font-bold transition-all"
+                            >
+                                Cancel
+                            </button>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
+
+            {/* Rejection Modal */}
+            {rejectionModal.isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div 
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+                        onClick={() => setRejectionModal({ ...rejectionModal, isOpen: false })}
+                    ></div>
+                    <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md p-8 shadow-2xl relative border border-gray-100 dark:border-gray-800 transform transition-all">
+                        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                            <i className="fas fa-exclamation-circle text-red-600 dark:text-red-400 text-2xl"></i>
+                        </div>
+                        
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">Reject Document</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6">
+                            Please provide a reason for rejecting this document. This will be visible to the customer.
+                        </p>
+
+                        <textarea
+                            value={rejectionModal.reason}
+                            onChange={(e) => setRejectionModal({ ...rejectionModal, reason: e.target.value })}
+                            placeholder="Reason for rejection..."
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all mb-6 min-h-[100px] resize-none"
+                            autoFocus
+                        />
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={handleRejectVerification}
+                                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-sm font-bold shadow-lg shadow-red-500/20 transition-all"
+                            >
+                                Confirm Rejection
+                            </button>
+                            <button
+                                onClick={() => setRejectionModal({ ...rejectionModal, isOpen: false })}
+                                className="w-full py-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-sm font-bold transition-all"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modals for Product, Category, Customer, Brand Edit */}
             {
@@ -3255,7 +3398,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </div>
 
                             <div className="flex border-b border-gray-100 dark:border-gray-700 px-6">
-                                {['basic', 'data', 'images', 'variations', 'seo'].map((tab: any) => (
+                                {['basic', 'data', 'images', 'variations', 'seo'].map((tab: string) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveProductTab(tab)}
@@ -3297,7 +3440,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
                                                 >
                                                     <option value="">None</option>
-                                                    {homepageSettings.badges.filter(b => b.enabled).map(badge => (
+                                                    {currentHomepageSettings?.badges?.filter(b => b.enabled).map(badge => (
                                                         <option key={badge.id} value={badge.id}>{badge.name}</option>
                                                     ))}
                                                 </select>
@@ -3622,7 +3765,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                 ))}
                                                             </div>
                                                             <div className="flex justify-between items-center mt-2">
-                                                                <p className="font-bold text-primary text-sm">Total: \u20b9{order.total.toLocaleString('en-IN')}</p>
+                                                                <p className="font-bold text-primary text-sm">Total: ₹{(order.total ?? 0).toLocaleString('en-IN')}</p>
                                                                 <button
                                                                     onClick={() => {
                                                                         setSelectedOrder(order);
@@ -3713,13 +3856,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <h4 className="font-bold text-gray-800 dark:text-white mb-2 text-sm uppercase">Order Status</h4>
                                     <select
                                         value={selectedOrder.status}
-                                        onChange={(e) => handleStatusChangeWithTracking(selectedOrder.id, e.target.value as any)}
+                                        onChange={(e) => handleStatusChangeWithTracking(selectedOrder.id, e.target.value as Order['status'])}
                                         className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm mb-2"
                                     >
                                         <option value="Processing">Processing</option>
                                         <option value="Shipped">Shipped</option>
                                         <option value="Delivered">Delivered</option>
                                         <option value="Cancelled">Cancelled</option>
+                                        <option value="Return Initiated">Return Initiated</option>
+                                        <option value="Return Approved">Return Approved</option>
+                                        <option value="Return Completed">Return Completed</option>
+                                        <option value="Return Rejected">Return Rejected</option>
                                     </select>
                                     
                                     {(selectedOrder.status === 'Shipped' || selectedOrder.status === 'Delivered') && (
@@ -3769,10 +3916,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                 setOrderTrackingData(response.data.tracking);
                                                                 setShowOrderTracking(true);
                                                             } else {
-                                                                alert('Tracking information not available yet.');
+                                                                toast.info('Tracking information not available yet.');
                                                             }
                                                         } catch (err) {
-                                                            alert('Failed to fetch tracking. Make sure the order has been shipped via Shiprocket.');
+                                                            toast.error('Failed to fetch tracking. Ensure the order is shipped via Shiprocket.');
                                                         }
                                                     }}
                                                     className="w-full mt-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 flex items-center justify-center gap-1"
@@ -3836,6 +3983,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 );
                             })()}
 
+                            {/* Order Status Timeline */}
+                            <div className="mb-6">
+                                <h4 className="font-bold text-gray-800 dark:text-white mb-4 text-sm uppercase flex items-center">
+                                    <i className="fas fa-history text-primary mr-2"></i>
+                                    Order Timeline
+                                </h4>
+                                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                    <OrderStatusTimeline history={selectedOrder.statusHistory || []} currentStatus={selectedOrder.status} />
+                                </div>
+                            </div>
+
                             <div className="mb-6">
                                 <h4 className="font-bold text-gray-800 dark:text-white mb-4 text-sm uppercase">Order Items</h4>
                                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
@@ -3853,15 +4011,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 <tr key={idx}>
                                                     <td className="px-4 py-3 text-gray-800 dark:text-white font-medium">{item.name}</td>
                                                     <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{item.quantity}</td>
-                                                    <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">₹{item.price.toLocaleString('en-IN')}</td>
-                                                    <td className="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">₹{(item.price * item.quantity).toLocaleString('en-IN')}</td>
+                                                    <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">₹{(item.price ?? 0).toLocaleString('en-IN')}</td>
+                                                    <td className="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">₹{((item.price ?? 0) * (item.quantity ?? 0)).toLocaleString('en-IN')}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                         <tfoot className="bg-gray-50 dark:bg-gray-800 font-bold">
                                             <tr>
                                                 <td colSpan={3} className="px-4 py-3 text-right text-gray-800 dark:text-white">Grand Total</td>
-                                                <td className="px-4 py-3 text-right text-primary">₹{selectedOrder.total.toLocaleString('en-IN')}</td>
+                                                <td className="px-4 py-3 text-right text-primary">₹{(selectedOrder.total ?? 0).toLocaleString('en-IN')}</td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -3950,15 +4108,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <select
                                             value={editCustomerData?.userType || 'regular'}
                                             onChange={(e) => {
-                                                const newData = { ...editCustomerData!, userType: e.target.value as any };
+                                                const newData = { ...editCustomerData!, userType: e.target.value as User['userType'] };
                                                 setEditCustomerData(newData);
                                             }}
                                             className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary"
                                         >
                                             <option value="regular">Regular Customer</option>
                                             <option value="dental-doctor">Dental Doctor</option>
-                                            <option value="student">Student</option>
-                                            <option value="supplier">Supplier</option>
+                                            <option value="dental-student">Dental Student</option>
+                                            <option value="dental-business">Dental Business</option>
                                         </select>
                                     </div>
                                     <div>
@@ -3966,7 +4124,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <select
                                             value={editCustomerData?.verificationStatus || 'pending'}
                                             onChange={(e) => {
-                                                const newData = { ...editCustomerData!, verificationStatus: e.target.value as any };
+                                                const newData = { ...editCustomerData!, verificationStatus: e.target.value as User['verificationStatus'] };
                                                 setEditCustomerData(newData);
                                             }}
                                             className={`w-full rounded-lg border focus:ring-primary focus:border-primary ${
@@ -4061,6 +4219,242 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     </div>
                                 </div>
                             )}
+ 
+                             {/* Student Information */}
+                             {(editCustomerData?.userType === 'dental-student' || customerDetailModal?.dentalStudentInfo?.studentId) && (
+                                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                                     <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                         <i className="fas fa-user-graduate text-blue-600"></i> Dental Student Information
+                                     </h4>
+                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                         <div>
+                                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Student ID *</label>
+                                             <input
+                                                 type="text"
+                                                 value={editCustomerData?.dentalStudentInfo?.studentId || ''}
+                                                 onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                     ...prev, 
+                                                     dentalStudentInfo: { ...prev.dentalStudentInfo!, studentId: e.target.value }
+                                                 } : null)}
+                                                 placeholder="Enter student ID"
+                                                 className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-600 dark:bg-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                             />
+                                         </div>
+                                         <div>
+                                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Institution *</label>
+                                             <input
+                                                 type="text"
+                                                 value={editCustomerData?.dentalStudentInfo?.institution || ''}
+                                                 onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                     ...prev, 
+                                                     dentalStudentInfo: { ...prev.dentalStudentInfo!, institution: e.target.value }
+                                                 } : null)}
+                                                 placeholder="Enter college/university"
+                                                 className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-600 dark:bg-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                             />
+                                         </div>
+                                         <div>
+                                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Course</label>
+                                             <input
+                                                 type="text"
+                                                 value={editCustomerData?.dentalStudentInfo?.course || ''}
+                                                 onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                     ...prev, 
+                                                     dentalStudentInfo: { ...prev.dentalStudentInfo!, course: e.target.value }
+                                                 } : null)}
+                                                 placeholder="e.g., BDS, MDS"
+                                                 className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-600 dark:bg-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                             />
+                                         </div>
+                                         <div>
+                                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Year of Study</label>
+                                             <select
+                                                 value={editCustomerData?.dentalStudentInfo?.yearOfStudy || 1}
+                                                 onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                     ...prev, 
+                                                     dentalStudentInfo: { ...prev.dentalStudentInfo!, yearOfStudy: parseInt(e.target.value) }
+                                                 } : null)}
+                                                 className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-600 dark:bg-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+                                             >
+                                                 {[1, 2, 3, 4, 5].map(year => (
+                                                     <option key={year} value={year}>Year {year}</option>
+                                                 ))}
+                                             </select>
+                                         </div>
+                                     </div>
+                                 </div>
+                             )}
+ 
+                             {/* Business Information */}
+                             {(editCustomerData?.userType === 'dental-business' || customerDetailModal?.dentalBusinessInfo?.gstNumber) && (
+                                 <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">
+                                     <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                         <i className="fas fa-briefcase text-emerald-600"></i> Dental Business Information
+                                     </h4>
+                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                         <div>
+                                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Business Name *</label>
+                                             <input
+                                                 type="text"
+                                                 value={editCustomerData?.dentalBusinessInfo?.businessName || ''}
+                                                 onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                     ...prev, 
+                                                     dentalBusinessInfo: { ...prev.dentalBusinessInfo!, businessName: e.target.value }
+                                                 } : null)}
+                                                 placeholder="Enter business name"
+                                                 className="w-full px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-600 dark:bg-gray-800 dark:text-white focus:ring-emerald-500 focus:border-emerald-500"
+                                             />
+                                         </div>
+                                         <div>
+                                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">GST Number *</label>
+                                             <input
+                                                 type="text"
+                                                 value={editCustomerData?.dentalBusinessInfo?.gstNumber || ''}
+                                                 onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                     ...prev, 
+                                                     dentalBusinessInfo: { ...prev.dentalBusinessInfo!, gstNumber: e.target.value }
+                                                 } : null)}
+                                                 placeholder="Enter GST number"
+                                                 className="w-full px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-600 dark:bg-gray-800 dark:text-white focus:ring-emerald-500 focus:border-emerald-500"
+                                             />
+                                         </div>
+                                         <div>
+                                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">PAN Number</label>
+                                             <input
+                                                 type="text"
+                                                 value={editCustomerData?.dentalBusinessInfo?.panNumber || ''}
+                                                 onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                     ...prev, 
+                                                     dentalBusinessInfo: { ...prev.dentalBusinessInfo!, panNumber: e.target.value }
+                                                 } : null)}
+                                                 placeholder="Enter PAN number"
+                                                 className="w-full px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-600 dark:bg-gray-800 dark:text-white focus:ring-emerald-500 focus:border-emerald-500"
+                                             />
+                                         </div>
+                                         <div>
+                                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Business Type</label>
+                                             <select
+                                                 value={editCustomerData?.dentalBusinessInfo?.businessType || 'Clinic'}
+                                                 onChange={(e) => setEditCustomerData(prev => prev ? { 
+                                                     ...prev, 
+                                                     dentalBusinessInfo: { ...prev.dentalBusinessInfo!, businessType: e.target.value }
+                                                 } : null)}
+                                                 className="w-full px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-600 dark:bg-gray-800 dark:text-white focus:ring-emerald-500 focus:border-emerald-500"
+                                             >
+                                                 {['Clinic', 'Hospital', 'Laboratory', 'Dealer', 'Other'].map(type => (
+                                                     <option key={type} value={type}>{type}</option>
+                                                 ))}
+                                             </select>
+                                         </div>
+                                     </div>
+                                 </div>
+                             )}
+
+                            {/* Verification Documents */}
+                            <div className="border-t border-gray-100 dark:border-gray-700 pt-6">
+                                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <i className="fas fa-file-alt text-primary"></i> Verification Documents
+                                </h4>
+                                
+                                {isVerificationsLoading ? (
+                                    <div className="flex justify-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                    </div>
+                                ) : customerVerifications.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {customerVerifications.map((doc) => (
+                                            <div key={doc.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-800/50">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div>
+                                                        <div className="font-bold text-gray-900 dark:text-white capitalize text-sm">
+                                                            {doc.documentType.replace('_', ' ')}
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-500 mt-0.5">
+                                                            Uploaded: {new Date(doc.createdAt).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                                        doc.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                                        doc.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                        'bg-yellow-100 text-yellow-700'
+                                                    }`}>
+                                                        {doc.status}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <div className="w-10 h-10 bg-white dark:bg-gray-700 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-600">
+                                                        <i className={`fas ${
+                                                            doc.mimeType?.includes('pdf') ? 'fa-file-pdf text-red-500' : 
+                                                            doc.mimeType?.includes('image') ? 'fa-file-image text-blue-500' : 'fa-file text-gray-400'
+                                                        }`}></i>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                                                            {doc.fileName || 'document_file'}
+                                                        </div>
+                                                        <div className="text-[10px] text-gray-500">
+                                                            {(doc.fileSize / (1024 * 1024)).toFixed(2)} MB
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex gap-2">
+                                                    <a 
+                                                        href={doc.fileUrl} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="flex-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-1.5 rounded-lg text-[10px] font-bold hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-center"
+                                                    >
+                                                        <i className="fas fa-external-link-alt mr-1"></i> View File
+                                                    </a>
+                                                    {doc.status === 'pending' && (
+                                                        <>
+                                                            <button 
+                                                                onClick={async () => {
+                                                                    confirmDelete(
+                                                                        'Approve Document',
+                                                                        'Are you sure you want to approve this verification document?',
+                                                                        async () => {
+                                                                            const res = await verificationAPI.updateStatus(doc.id, { status: 'approved' });
+                                                                            if (res.success) {
+                                                                                setCustomerVerifications(prev => prev.map(d => d.id === doc.id ? { ...d, status: 'approved' } : d));
+                                                                                toast.success('Document approved');
+                                                                            }
+                                                                        },
+                                                                        'Approve',
+                                                                        'success'
+                                                                    );
+                                                                }}
+                                                                className="flex-1 bg-green-500 text-white py-1.5 rounded-lg text-[10px] font-bold hover:bg-green-600 transition-colors"
+                                                            >
+                                                                Approve
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setRejectionModal({
+                                                                        isOpen: true,
+                                                                        docId: doc.id,
+                                                                        reason: ''
+                                                                    });
+                                                                }}
+                                                                className="flex-1 bg-red-500 text-white py-1.5 rounded-lg text-[10px] font-bold hover:bg-red-600 transition-colors"
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                                        <i className="fas fa-folder-open text-gray-300 text-2xl mb-2"></i>
+                                        <p className="text-xs text-gray-500">No verification documents uploaded</p>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Order Statistics */}
                             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
@@ -4153,21 +4547,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     if (!customerDetailModal || !editCustomerData) return;
                                     
                                     try {
-                                        const response = await fetch('/api/users/by-email', {
-                                            method: 'PUT',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                email: customerDetailModal.email,
-                                                userType: editCustomerData.userType,
-                                                verificationStatus: editCustomerData.verificationStatus,
-                                                disabled: editCustomerData.disabled,
-                                                dentalDoctorInfo: editCustomerData.dentalDoctorInfo
-                                            })
+                                        const { usersAPI } = await import('../utils/api');
+                                        const data = await usersAPI.updateByEmail(customerDetailModal.email, {
+                                            userType: editCustomerData.userType,
+                                            verificationStatus: editCustomerData.verificationStatus,
+                                            disabled: editCustomerData.disabled,
+                                            dentalDoctorInfo: editCustomerData.dentalDoctorInfo,
+                                            dentalStudentInfo: editCustomerData.dentalStudentInfo,
+                                            dentalBusinessInfo: editCustomerData.dentalBusinessInfo
                                         });
 
-                                        const data = await response.json();
-
-                                        if (response.ok) {
+                                        if (data) {
                                             const searchEmail = customerDetailModal.email.toLowerCase();
                                             
                                             // Update local users state
@@ -4183,7 +4573,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         userType: editCustomerData.userType,
                                                         verificationStatus: editCustomerData.verificationStatus,
                                                         disabled: editCustomerData.disabled,
-                                                        dentalDoctorInfo: editCustomerData.dentalDoctorInfo
+                                                        dentalDoctorInfo: editCustomerData.dentalDoctorInfo,
+                                                        dentalStudentInfo: editCustomerData.dentalStudentInfo,
+                                                        dentalBusinessInfo: editCustomerData.dentalBusinessInfo
                                                     };
                                                     return newUsers;
                                                 }
@@ -4197,7 +4589,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     userType: editCustomerData.userType,
                                                     verificationStatus: editCustomerData.verificationStatus,
                                                     disabled: editCustomerData.disabled,
-                                                    dentalDoctorInfo: editCustomerData.dentalDoctorInfo
+                                                    dentalDoctorInfo: editCustomerData.dentalDoctorInfo,
+                                                    dentalStudentInfo: editCustomerData.dentalStudentInfo,
+                                                    dentalBusinessInfo: editCustomerData.dentalBusinessInfo
                                                 }
                                             }));
                                             
@@ -4207,7 +4601,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 userType: editCustomerData.userType,
                                                 verificationStatus: editCustomerData.verificationStatus,
                                                 disabled: editCustomerData.disabled,
-                                                dentalDoctorInfo: editCustomerData.dentalDoctorInfo
+                                                dentalDoctorInfo: editCustomerData.dentalDoctorInfo,
+                                                dentalStudentInfo: editCustomerData.dentalStudentInfo,
+                                                dentalBusinessInfo: editCustomerData.dentalBusinessInfo
                                             };
                                             
                                             // Update modal with saved data so form shows correct values
@@ -4217,15 +4613,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             // Show success message
                                             const statusText = editCustomerData.disabled ? 'Inactive' : 'Active';
                                             const userTypeText = editCustomerData.userType === 'dental-doctor' ? 'Dental Doctor' : 
-                                                                editCustomerData.userType === 'student' ? 'Student' :
-                                                                editCustomerData.userType === 'supplier' ? 'Supplier' : 'Regular Customer';
-                                            alert(`Customer updated successfully!\n\nUser Type: ${userTypeText}\nVerification: ${editCustomerData.verificationStatus}\nStatus: ${statusText}`);
+                                                                editCustomerData.userType === 'dental-student' ? 'Dental Student' :
+                                                                editCustomerData.userType === 'dental-business' ? 'Dental Business' : 'Regular Customer';
+                                            toast.success(`Customer updated successfully! (Type: ${userTypeText})`);
                                         } else {
-                                            alert('Failed to update: ' + (data.message || data.error));
+                                            toast.error('Failed to update: ' + (data.message || data.error));
                                         }
                                     } catch (error) {
                                         console.error('Error saving customer:', error);
-                                        alert('Error saving customer data');
+                                        toast.error('Error saving customer data');
                                     }
                                 }}
                                 className="px-6 py-2 text-sm font-bold rounded-lg bg-primary text-white hover:bg-pink-700 transition-colors shadow-lg shadow-primary/20"

@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { User, CartItem, Address } from '../types';
+import { User, CartItem, Address, Coupon } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
 import { initializeRazorpay, createRazorpayOrder, formatAmountForRazorpay, getRazorpayKey, RazorpayResponse } from '../utils/razorpayService';
+import { couponsAPI } from '../utils/api';
+import { addressSchema } from '../utils/schemas';
+import { z } from 'zod';
+import { toast } from 'sonner';
 
 interface CheckoutProps {
     cart: CartItem[];
@@ -9,6 +14,8 @@ interface CheckoutProps {
     onPlaceOrder: (paymentId: string, transactionId: string, signature?: string) => void;
     onNavigateBack: () => void;
     razorpayKey?: string;
+    appliedCoupon?: Coupon | null;
+    onApplyCoupon?: (coupon: Coupon | null) => void;
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({
@@ -17,8 +24,14 @@ export const Checkout: React.FC<CheckoutProps> = ({
     onUpdateUser,
     onPlaceOrder,
     onNavigateBack,
-    razorpayKey
+    razorpayKey,
+    appliedCoupon,
+    onApplyCoupon
 }) => {
+    const [couponCode, setCouponCode] = useState('');
+    const [isApplying, setIsApplying] = useState(false);
+    const [couponError, setCouponError] = useState('');
+
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
         user.addresses?.find(a => a.isDefault)?.id || (user.addresses?.length > 0 ? user.addresses[0].id : null)
     );
@@ -40,8 +53,40 @@ export const Checkout: React.FC<CheckoutProps> = ({
     });
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    let discount = 0;
+    if (appliedCoupon) {
+        if (appliedCoupon.type === 'percentage') {
+            discount = (subtotal * appliedCoupon.value) / 100;
+            if (appliedCoupon.maxDiscount) {
+                discount = Math.min(discount, appliedCoupon.maxDiscount);
+            }
+        } else {
+            discount = appliedCoupon.value;
+        }
+    }
+
     const shipping = subtotal > 5000 ? 0 : 150; // Mock shipping logic
-    const total = subtotal + shipping;
+    const total = Math.max(0, subtotal - discount + shipping);
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode) return;
+        setIsApplying(true);
+        setCouponError('');
+        try {
+            const coupon = await couponsAPI.validate(couponCode, subtotal);
+            if (onApplyCoupon) onApplyCoupon(coupon);
+            setCouponCode('');
+        } catch (err: any) {
+            setCouponError(err.response?.data?.error || 'Invalid coupon code');
+        } finally {
+            setIsApplying(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        if (onApplyCoupon) onApplyCoupon(null);
+    };
 
     // Address Handlers
     const handleAddNewAddress = () => {
@@ -69,6 +114,15 @@ export const Checkout: React.FC<CheckoutProps> = ({
     const handleSaveAddress = (e: React.FormEvent) => {
         e.preventDefault();
 
+        try {
+            addressSchema.parse(addressFormData);
+        } catch (err) {
+            if (err instanceof z.ZodError) {
+                toast.error(err.issues[0].message);
+                return;
+            }
+        }
+
         let newAddresses = [...user.addresses];
 
         // If setting default, unset others
@@ -90,6 +144,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
 
         onUpdateUser({ addresses: newAddresses });
         setIsAddressModalOpen(false);
+        toast.success('Address saved successfully');
     };
 
     const handlePayment = async () => {
@@ -244,7 +299,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
                             {cart.map(item => (
                                 <div key={item.cartItemId} className="flex gap-3">
                                     <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-lg flex-shrink-0 p-1">
-                                        <img src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                                        <OptimizedImageMemo src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" width={64} height={64} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-gray-800 dark:text-white truncate">{item.name}</p>
@@ -256,10 +311,51 @@ export const Checkout: React.FC<CheckoutProps> = ({
                         </div>
 
                         <div className="space-y-3 border-t border-gray-100 dark:border-gray-700 pt-4 mb-6">
+                            {/* Coupon Section */}
+                            {!appliedCoupon ? (
+                                <div className="space-y-2 mb-4">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={couponCode}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            placeholder="Coupon Code"
+                                            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:border-primary outline-none"
+                                        />
+                                        <button
+                                            onClick={handleApplyCoupon}
+                                            disabled={isApplying || !couponCode}
+                                            className="px-4 py-2 bg-gray-800 dark:bg-gray-700 text-white rounded-lg text-sm font-bold hover:bg-gray-900 disabled:opacity-50 transition-colors"
+                                        >
+                                            {isApplying ? <i className="fas fa-spinner fa-spin"></i> : 'Apply'}
+                                        </button>
+                                    </div>
+                                    {couponError && <p className="text-[10px] text-red-500 font-medium ml-1">{couponError}</p>}
+                                </div>
+                            ) : (
+                                <div className="flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-2 rounded-lg border border-green-100 dark:border-green-800/50 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <i className="fas fa-tag text-green-600 text-xs"></i>
+                                        <span className="text-xs font-bold text-green-700 dark:text-green-400">{appliedCoupon.code} Applied</span>
+                                    </div>
+                                    <button onClick={handleRemoveCoupon} className="text-green-700 dark:text-green-400 hover:text-red-500 transition-colors">
+                                        <i className="fas fa-times-circle"></i>
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Subtotal</span>
                                 <span className="font-medium text-gray-900 dark:text-white">₹{subtotal.toLocaleString('en-IN')}</span>
                             </div>
+
+                            {appliedCoupon && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-green-600 font-medium">Discount</span>
+                                    <span className="font-bold text-green-600">-₹{discount.toLocaleString('en-IN')}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Shipping</span>
                                 {shipping === 0 ? (

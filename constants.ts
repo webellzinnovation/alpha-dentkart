@@ -717,6 +717,7 @@ export const ALL_PRODUCTS: Product[] = [
 ];
 
 export const MOCK_USER: User = {
+  uid: "mock-user-123",
   name: "Dr. Anjali Sharma",
   email: "anjali.sharma@example.com",
   phone: "+91 98765 43210",
@@ -757,8 +758,8 @@ export const MOCK_USER: User = {
       total: 12500,
       customerName: "Dr. Anjali Sharma",
       items: [
-        { name: "3M Filtek Z250", quantity: 2, price: 3000 },
-        { name: "NSK Pana Max", quantity: 1, price: 6500 }
+        { productId: "3m-filtek-z250", name: "3M Filtek Z250", quantity: 2, price: 3000 },
+        { productId: "nsk-pana-max", name: "NSK Pana Max", quantity: 1, price: 6500 }
       ]
     },
     {
@@ -768,8 +769,8 @@ export const MOCK_USER: User = {
       total: 4500,
       customerName: "Dr. Anjali Sharma",
       items: [
-        { name: "Dentsply Protaper Gold", quantity: 1, price: 3800 },
-        { name: "K-Files Mani", quantity: 1, price: 700 }
+        { productId: "dentsply-protaper-gold", name: "Dentsply Protaper Gold", quantity: 1, price: 3800 },
+        { productId: "k-files-mani", name: "K-Files Mani", quantity: 1, price: 700 }
       ]
     },
     {
@@ -779,7 +780,7 @@ export const MOCK_USER: User = {
       total: 21000,
       customerName: "Dr. Anjali Sharma",
       items: [
-        { name: "Woodpecker Endo Motor", quantity: 1, price: 21000 }
+        { productId: "woodpecker-endo-motor", name: "Woodpecker Endo Motor", quantity: 1, price: 21000 }
       ]
     }
   ],

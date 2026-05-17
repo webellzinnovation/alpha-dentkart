@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BrandProfile } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
 
 interface BrandScrollProps {
   onBrandClick: (brandName: string) => void;
@@ -24,7 +25,11 @@ export const BrandScroll: React.FC<BrandScrollProps> = ({ onBrandClick, brands }
               className="flex-shrink-0 group flex items-center gap-3 opacity-60 hover:opacity-100 transition-all duration-300 cursor-pointer focus:outline-none grayscale hover:grayscale-0"
             >
               <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center p-1">
-                <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                <OptimizedImageMemo 
+                  src={brand.logo} 
+                  alt={brand.name} 
+                  className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
+                />
               </div>
               <span className="font-bold text-lg text-gray-500 dark:text-gray-400 group-hover:text-primary transition-colors tracking-tight whitespace-nowrap">{brand.name}</span>
             </button>
@@ -39,7 +44,11 @@ export const BrandScroll: React.FC<BrandScrollProps> = ({ onBrandClick, brands }
               className="flex-shrink-0 group flex items-center gap-3 opacity-60 hover:opacity-100 transition-all duration-300 cursor-pointer focus:outline-none grayscale hover:grayscale-0"
             >
               <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center p-1">
-                 <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                 <OptimizedImageMemo 
+                  src={brand.logo} 
+                  alt={brand.name} 
+                  className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" 
+                />
               </div>
               <span className="font-bold text-lg text-gray-500 dark:text-gray-400 group-hover:text-primary transition-colors tracking-tight whitespace-nowrap">{brand.name}</span>
             </button>

@@ -95,7 +95,7 @@ export const isFirebaseInitialized = () => firebaseInitialized;
  * 
  * Usage: const result = await withTimeout(db.collection('products').get());
  */
-export function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
+export function withTimeout<T>(promise: Promise<T>, ms = 120000): Promise<T> {
     const timeout = new Promise<T>((_, reject) =>
         setTimeout(() => reject(new Error(`Firebase operation timed out after ${ms}ms`)), ms)
     );

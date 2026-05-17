@@ -3,14 +3,15 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { db, withTimeout } from '../config/firebase'; // Firestore
 import { generateToken } from '../utils/jwt';
-import { registerSchema, loginSchema } from '../utils/validation';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../utils/validation';
 import logger from '../utils/logger';
+import { emailService } from '../services/EmailService';
 
 export async function register(req: Request, res: Response) {
     try {
         // Validate input
         const validatedData = registerSchema.parse(req.body);
-        const { email, password, name, phone } = validatedData;
+        const { email, password, name, phone, userType, ...extraFields } = validatedData;
 
         // Check if user already exists
         const usersRef = db.collection('users');
@@ -34,7 +35,9 @@ export async function register(req: Request, res: Response) {
             password: hashedPassword,
             name,
             phone,
+            userType,
             role,
+            ...extraFields,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             isVerified: role === 'admin' // Auto-verify admins
@@ -50,16 +53,27 @@ export async function register(req: Request, res: Response) {
             email: user.email,
         });
 
-        // Set HTTP-only cookie using __session to prevent Firebase Hosting from stripping it
+        // Set HTTP-only cookie
+        const isProd = process.env.NODE_ENV === 'production';
         res.cookie('__session', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            secure: isProd,
+            sameSite: isProd ? 'strict' : 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/'
         });
 
-        // Return user data (without password)
-        res.status(201).json({
+        // Trigger email verification and welcome email asynchronously
+        generateAndStoreVerificationToken(docRef.id, email, name).catch((err) => {
+            logger.error('Failed to generate verification token', { error: err, userId: docRef.id });
+        });
+
+        emailService.sendWelcomeEmail(email, name).catch((err) => {
+            logger.error('Failed to send welcome email', { error: err, userId: docRef.id });
+        });
+
+        // Return user data
+        return res.status(201).json({
             user: {
                 id: user.id,
                 email: user.email,
@@ -68,15 +82,10 @@ export async function register(req: Request, res: Response) {
             },
             message: 'Registration successful. Please check your email to verify your account.',
         });
-
-        // Trigger email verification asynchronously (don't block response)
-        generateAndStoreVerificationToken(docRef.id, email).catch((err) => {
-            logger.error('Failed to generate verification token after registration', { error: err, userId: docRef.id });
-        });
     } catch (error: any) {
         logger.error('Register error', { error, email: req.body?.email });
         const status = error.message?.includes('timed out') ? 504 : 500;
-        res.status(status).json({ error: error.message || 'Internal server error' });
+        return res.status(status).json({ error: error.message || 'Internal server error' });
     }
 }
 
@@ -120,15 +129,17 @@ export async function login(req: Request, res: Response) {
         });
 
         // Set HTTP-only cookie using __session to prevent Firebase Hosting from stripping it
+        const isProd = process.env.NODE_ENV === 'production';
         res.cookie('__session', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isProd,
+            sameSite: isProd ? 'strict' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/'
         });
 
         // Return user data
-        res.json({
+        return res.json({
             user: {
                 id: user.id,
                 email: user.email,
@@ -142,26 +153,53 @@ export async function login(req: Request, res: Response) {
     } catch (error: any) {
         logger.error('Login error', { error, email: req.body?.email });
         const status = error.message?.includes('timed out') ? 504 : 500;
-        res.status(status).json({ error: error.message || 'Internal server error' });
+        return res.status(status).json({ error: error.message || 'Internal server error' });
     }
 }
 
 export async function logout(req: Request, res: Response) {
     res.clearCookie('__session');
-    res.json({ message: 'Logged out successfully' });
+    return res.json({ message: 'Logged out successfully' });
+}
+
+export async function forgotPassword(req: Request, res: Response) {
+    try {
+        const validatedData = forgotPasswordSchema.parse(req.body);
+        const { email } = validatedData;
+
+        const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+        if (snapshot.empty) {
+            // For security reasons, don't reveal that the user doesn't exist
+            return res.json({ message: 'If an account exists with this email, you will receive reset instructions.' });
+        }
+
+        const userDoc = snapshot.docs[0];
+        const userData = userDoc.data();
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 3600000).toISOString(); // 1 hour
+
+        await db.collection('password_resets').doc(token).set({
+            userId: userDoc.id,
+            email,
+            token,
+            expiresAt,
+            used: false,
+            createdAt: new Date().toISOString(),
+        });
+
+        await emailService.sendPasswordResetEmail(email, token, userData.name);
+
+        return res.json({ message: 'If an account exists with this email, you will receive reset instructions.' });
+    } catch (error) {
+        logger.error('ForgotPassword error', { error, email: req.body?.email });
+        return res.status(500).json({ error: 'Internal server error' });
+    }
 }
 
 export async function resetPassword(req: Request, res: Response) {
     try {
-        const { userId, password } = req.body;
-
-        if (!userId || !password) {
-            return res.status(400).json({ error: 'User ID and new password are required' });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ error: 'Password must be at least 6 characters' });
-        }
+        const validatedData = resetPasswordSchema.parse(req.body);
+        const { userId, password } = validatedData;
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -173,10 +211,10 @@ export async function resetPassword(req: Request, res: Response) {
 
         logger.info('Password reset successfully', { userId });
 
-        res.json({ message: 'Password reset successfully' });
+        return res.json({ message: 'Password reset successfully' });
     } catch (error) {
         logger.error('Password reset error', { error });
-        res.status(500).json({ error: 'Failed to reset password' });
+        return res.status(500).json({ error: 'Failed to reset password' });
     }
 }
 
@@ -207,11 +245,44 @@ export async function me(req: any, res: Response) {
             isVerified: userData?.isVerified ?? false,
         };
 
-        res.json({ user });
+        return res.json({ user });
     } catch (error: any) {
         logger.error('Me endpoint error', { error, userId: req.user?.id });
         const status = error.message?.includes('timed out') ? 504 : 500;
-        res.status(status).json({ error: error.message || 'Internal server error' });
+        return res.status(status).json({ error: error.message || 'Internal server error' });
+    }
+}
+
+export async function updateProfile(req: any, res: Response) {
+    try {
+        const userId = req.user?.id;
+        const updates = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Restricted fields that should not be updated via this endpoint
+        const restrictedFields = ['email', 'password', 'role', 'isVerified', 'verifiedAt', 'createdAt'];
+        restrictedFields.forEach(field => delete updates[field]);
+
+        updates.updatedAt = new Date().toISOString();
+
+        await userRef.update(updates);
+
+        logger.info('User profile updated', { userId });
+
+        return res.json({ message: 'Profile updated successfully' });
+    } catch (error: any) {
+        logger.error('UpdateProfile error', { error, userId: req.user?.id });
+        return res.status(500).json({ error: 'Failed to update profile' });
     }
 }
 
@@ -219,7 +290,7 @@ export async function me(req: any, res: Response) {
 // Email Verification Functions
 // ==========================================
 
-async function generateAndStoreVerificationToken(userId: string, email: string): Promise<string> {
+async function generateAndStoreVerificationToken(userId: string, email: string, name: string): Promise<string> {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
 
@@ -232,10 +303,12 @@ async function generateAndStoreVerificationToken(userId: string, email: string):
         createdAt: new Date().toISOString(),
     });
 
-    // Log the verification link (replace with actual email sending in production)
-    const baseUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    const verificationLink = `${baseUrl}/verify-email?token=${token}`;
-    logger.info('Verification email generated', { userId, email, verificationLink });
+    // Send the email
+    try {
+        await emailService.sendVerificationEmail(email, token, name);
+    } catch (err) {
+        logger.error('Failed to send verification email', { userId, email, error: err });
+    }
 
     return token;
 }
@@ -282,10 +355,10 @@ export async function verifyEmail(req: Request, res: Response) {
 
         logger.info('Email verified successfully', { userId: verification.userId, email: verification.email });
 
-        res.json({ message: 'Email verified successfully! You can now access all features.' });
+        return res.json({ message: 'Email verified successfully! You can now access all features.' });
     } catch (error) {
         logger.error('Email verification error', { error });
-        res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -323,64 +396,15 @@ export async function resendVerification(req: any, res: Response) {
         await batch.commit();
 
         // Generate new token
-        await generateAndStoreVerificationToken(userId, userData.email);
+        await generateAndStoreVerificationToken(userId, userData.email, userData.name);
 
         logger.info('Verification email resent', { userId, email: userData.email });
 
-        res.json({ message: 'Verification email has been resent. Please check your inbox.' });
+        return res.json({ message: 'Verification email has been resent. Please check your inbox.' });
     } catch (error) {
         logger.error('Resend verification error', { error, userId: req.user?.id });
-        res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
-export async function getAllUsers(req: Request, res: Response) {
-    try {
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
-        const search = req.query.search as string;
-        const role = req.query.role as string;
-
-        let query: FirebaseFirestore.Query = db.collection('users');
-
-        const snapshot = await query.get();
-        let allUsers: any[] = snapshot.docs.map(doc => {
-            const data = doc.data();
-            const { password, ...userWithoutPassword } = data;
-            return {
-                id: doc.id,
-                ...userWithoutPassword,
-                orders: []
-            };
-        });
-
-        // Sort in memory to include users missing createdAt
-        allUsers.sort((a, b) => {
-            const dateA = new Date(a.createdAt || a.registrationDate || 0).getTime();
-            const dateB = new Date(b.createdAt || b.registrationDate || 0).getTime();
-            return dateB - dateA;
-        });
-
-        if (search) {
-            const s = search.toLowerCase();
-            allUsers = allUsers.filter(u =>
-                (u.name && u.name.toLowerCase().includes(s)) ||
-                (u.email && u.email.toLowerCase().includes(s)) ||
-                (u.phone && String(u.phone).includes(s))
-            );
-        }
-
-        const total = allUsers.length;
-        const startIndex = (page - 1) * limit;
-        const paginatedUsers = allUsers.slice(startIndex, startIndex + limit);
-
-        res.json({
-            users: paginatedUsers,
-            pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
-        });
-    } catch (error) {
-        logger.error('Error fetching users:', error);
-        res.status(500).json({ error: 'Internal server error while fetching users' });
-    }
-}
 

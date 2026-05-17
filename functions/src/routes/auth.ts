@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { register, login, logout, me, verifyEmail, resendVerification, getAllUsers, resetPassword, forgotPassword } from '../controllers/authController';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { register, login, logout, me, verifyEmail, resendVerification, resetPassword, forgotPassword, updateProfile } from '../controllers/authController';
+import { authenticateToken } from '../middleware/auth';
 import { authLimiter } from '../middleware/rateLimiter';
 import { sanitizeInput } from '../middleware/sanitize';
 import { db } from '../config/firebase';
@@ -42,7 +42,7 @@ router.post('/admin/login', authLimiter, sanitizeInput, adminLogin as any);
 router.post('/register', authLimiter, sanitizeInput, register);
 router.post('/login', authLimiter, sanitizeInput, login);
 router.post('/forgot-password', authLimiter, sanitizeInput, forgotPassword);
-router.post('/reset-password', sanitizeInput, resetPassword);
+router.post('/reset-password', authLimiter, sanitizeInput, resetPassword);
 
 // Email verification (public — token-based)
 router.get('/verify-email', verifyEmail);
@@ -50,9 +50,7 @@ router.get('/verify-email', verifyEmail);
 // Protected routes
 router.post('/logout', authenticateToken, logout);
 router.get('/me', authenticateToken, me);
-router.post('/resend-verification', authenticateToken, resendVerification);
-
-// Admin routes (protected)
-router.get('/users', authenticateToken, requireAdmin, getAllUsers);
+router.patch('/profile', authenticateToken, updateProfile);
+router.post('/resend-verification', authenticateToken, authLimiter, resendVerification);
 
 export default router;

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { db, admin, withTimeout } from '../config/firebase';
 import { createOrderSchema } from '../utils/validation';
 import logger from '../utils/logger';
+import { emailService } from '../services/EmailService';
 
 export async function createOrder(req: Request, res: Response) {
     try {
@@ -46,6 +47,11 @@ export async function createOrder(req: Request, res: Response) {
             razorpay_order_id: req.body.razorpay_order_id || null,
             paymentStatus: validatedData.paymentMethod === 'razorpay' ? 'paid' : 'pending',
             status: 'Processing',
+            statusHistory: [{
+                status: 'Processing',
+                timestamp: new Date().toISOString(),
+                note: 'Order placed and confirmed.'
+            }],
             couponId: validatedData.couponId || null,
             couponDiscount: validatedData.couponDiscount || 0,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -86,6 +92,13 @@ export async function createOrder(req: Request, res: Response) {
             );
         } catch (pushErr) {
             logger.error('Failed to send order push notification', { error: pushErr, orderId: orderRef.id });
+        }
+
+        // Send order confirmation email (non-blocking)
+        if (orderData.customerEmail) {
+            emailService.sendOrderConfirmationEmail(orderData.customerEmail, orderResponse).catch(emailErr => {
+                logger.error('Failed to send order confirmation email', { error: emailErr, orderId: orderRef.id });
+            });
         }
 
         res.status(201).json({ order: orderResponse });
@@ -240,9 +253,14 @@ export async function updateOrderStatus(req: Request, res: Response) {
             return res.status(400).json({ error: 'Order ID and status are required' });
         }
 
-        const validStatuses = ['Processing', 'Shipped', 'Delivered', 'Cancelled'];
+        const validStatuses = [
+            'Processing', 'Shipped', 'Delivered', 'Cancelled', 
+            'Return Initiated', 'Return Approved', 'Return Completed', 'Return Rejected'
+        ];
+        
         if (!validStatuses.includes(status)) {
-            return res.status(400).json({ error: 'Invalid order status' });
+            logger.warn('Invalid order status update attempt', { orderId, status });
+            return res.status(400).json({ error: `Invalid order status: ${status}. Valid: ${validStatuses.join(', ')}` });
         }
 
         const orderRef = db.collection('orders').doc(orderId);
@@ -252,12 +270,27 @@ export async function updateOrderStatus(req: Request, res: Response) {
             return res.status(404).json({ error: 'Order not found' });
         }
 
-        const updateData: any = { status, updatedAt: new Date().toISOString() };
+        const updateData: any = { 
+            status, 
+            updatedAt: new Date().toISOString(),
+            statusHistory: admin.firestore.FieldValue.arrayUnion({
+                status,
+                timestamp: new Date().toISOString(),
+                note: req.body.note || `Status updated to ${status} by admin`
+            })
+        };
 
-        if (trackingProvider && trackingNumber) {
-            updateData.trackingProvider = trackingProvider;
+        // Normalize tracking field names to match frontend and Order interface (courierName)
+        const finalCourierName = req.body.courierName || trackingProvider || req.body.trackingProvider;
+
+        if (finalCourierName && trackingNumber) {
+            updateData.courierName = finalCourierName;
             updateData.trackingNumber = trackingNumber;
             updateData.trackingUrl = trackingUrl || '';
+            
+            // For backward compatibility with any code using trackingProvider
+            updateData.trackingProvider = finalCourierName;
+
             if (status === 'Shipped' && !orderDoc.data()?.shippedDate) {
                 updateData.shippedDate = new Date().toISOString();
             }
@@ -265,7 +298,14 @@ export async function updateOrderStatus(req: Request, res: Response) {
 
         await orderRef.update(updateData);
         const updatedDoc = await orderRef.get();
-        const updatedOrder = { id: updatedDoc.id, ...updatedDoc.data() };
+        const updatedOrder = { id: updatedDoc.id, ...updatedDoc.data() } as any;
+
+        // Send shipment email if status changed to Shipped
+        if (status === 'Shipped' && updatedOrder.customerEmail) {
+            emailService.sendOrderShippedEmail(updatedOrder.customerEmail, updatedOrder).catch(err => {
+                logger.error('Failed to send order shipped email', { error: err, orderId });
+            });
+        }
 
         logger.info('Order status updated by admin', { orderId, status });
         res.json({ message: 'Order status updated successfully', order: updatedOrder });

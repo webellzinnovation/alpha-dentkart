@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { HeroSlide, Product } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
+
 
 interface HeroProps {
   onShopClick: () => void;
@@ -69,8 +71,9 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCateg
         className={`w-full ${currentSlide.bgClass} rounded-[2rem] overflow-hidden relative group h-[300px] md:h-[500px] transition-all duration-700 shadow-premium ${currentSlide.link ? 'cursor-pointer' : ''}`}
         onClick={currentSlide.link ? handleSlideClick : undefined}
       >
-        <div key={currentSlide.id} className="absolute inset-0 flex items-center p-6 md:p-16 z-20 animate-fade-in">
-          <div className="max-w-xl space-y-4 md:space-y-8">
+        <div key={currentSlide.id} className="absolute inset-0 flex flex-col md:flex-row items-center px-6 md:px-16 z-30 animate-fade-in">
+          {/* Text Content - Left Side */}
+          <div className="w-full md:w-1/2 flex flex-col justify-center space-y-4 md:space-y-8 pt-10 md:pt-0">
             <div className="flex flex-col gap-2 md:gap-4">
               <span className="bg-white/95 dark:bg-accent/20 backdrop-blur-md text-primary dark:text-accent text-[9px] md:text-sm font-black px-3 py-1 md:px-5 md:py-2 rounded-xl uppercase tracking-[0.2em] shadow-sm w-fit">
                 {currentSlide.badge}
@@ -80,7 +83,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCateg
               </h2>
             </div>
 
-            <p className="text-base md:text-2xl text-gray-600 dark:text-gray-300 font-medium max-w-sm md:max-w-md">
+            <p className="text-base md:text-2xl text-gray-600 dark:text-gray-300 font-medium max-w-xs md:max-w-md">
               Discover the future of professional dental care.
             </p>
 
@@ -94,22 +97,29 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCateg
               </button>
             </div>
           </div>
+
+          {/* Image Content - Right Side */}
+          <div className="w-full md:w-1/2 h-1/2 md:h-full flex items-center justify-center md:justify-end">
+            <div className="relative w-full h-full group-hover:scale-105 transition-transform duration-[3000ms]">
+              <OptimizedImageMemo
+                key={`img-${currentSlide.id}`}
+                alt={currentSlide.title}
+                className="w-full h-full object-contain object-right md:object-right-bottom p-4 md:p-12"
+                src={currentSlide.image}
+                priority={true}
+                width={1200}
+                height={500}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Image - Improved placement and blend */}
-        <img
-          key={`img-${currentSlide.id}`}
-          alt={currentSlide.title}
-          className="absolute right-[-15%] md:right-0 top-0 h-full w-full md:w-2/3 object-contain object-right opacity-100 group-hover:scale-105 transition-transform duration-[3000ms] z-15 p-4 md:p-12"
-          src={currentSlide.image}
-        />
-
         {/* Premium Gradients */}
-        <div className={`absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent dark:from-gray-950 dark:via-gray-950/80 dark:to-transparent pointer-events-none z-10`}></div>
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-white/40 via-transparent to-transparent z-10 lg:hidden"></div>
+        <div className={`absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent dark:from-gray-950 dark:via-gray-950/80 dark:to-transparent pointer-events-none z-20`}></div>
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-white/40 via-transparent to-transparent z-20 lg:hidden"></div>
 
         {/* Modern Dots */}
-        <div className="absolute bottom-6 left-10 flex gap-1.5 z-30">
+        <div className="absolute bottom-6 left-10 flex gap-1.5 z-50">
           {slides.map((_, index) => (
             <div
               key={index}

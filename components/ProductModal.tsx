@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
+import OptimizedImageMemo from './OptimizedImage';
 
 interface ProductModalProps {
   product: Product | null;
@@ -89,10 +90,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
         {/* Left: Images */}
         <div className="w-full md:w-1/2 bg-gray-50 dark:bg-gray-800 p-8 flex flex-col items-center justify-center gap-4">
           <div className="w-full h-64 flex items-center justify-center">
-             <img 
+             <OptimizedImageMemo 
                src={selectedImage} 
                alt={product.name} 
                className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal"
+               width={400}
+               height={400}
              />
           </div>
           <div className="flex gap-2 overflow-x-auto max-w-full pb-2 scrollbar-hide">
@@ -102,7 +105,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 onClick={() => setSelectedImage(img)}
                 className={`w-16 h-16 border rounded-lg p-1 bg-white dark:bg-gray-700 flex-shrink-0 ${selectedImage === img ? 'border-primary' : 'border-transparent'}`}
               >
-                <img src={img} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" alt="" />
+                <OptimizedImageMemo src={img} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" alt="" width={64} height={64} />
               </button>
             ))}
           </div>
@@ -123,9 +126,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
           </div>
 
           <div className="flex items-end gap-3 mb-6">
-            <span className="text-3xl font-bold text-primary">₹{currentPrice.toLocaleString('en-IN')}</span>
+            <span className="text-3xl font-bold text-primary">₹{(currentPrice ?? 0).toLocaleString('en-IN')}</span>
             {currentOriginalPrice && (
-              <span className="text-lg text-gray-400 line-through mb-1">₹{currentOriginalPrice.toLocaleString('en-IN')}</span>
+              <span className="text-lg text-gray-400 line-through mb-1">₹{(currentOriginalPrice ?? 0).toLocaleString('en-IN')}</span>
             )}
           </div>
 
