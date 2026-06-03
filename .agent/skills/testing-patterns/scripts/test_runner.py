@@ -88,8 +88,14 @@ def run_tests(cmd: list, cwd: Path) -> dict:
     }
     
     try:
+        import platform
+        resolved_cmd = list(cmd)
+        if platform.system() == "Windows" and resolved_cmd:
+            if resolved_cmd[0] in ["npm", "npx"]:
+                resolved_cmd[0] = f"{resolved_cmd[0]}.cmd"
+                
         proc = subprocess.run(
-            cmd,
+            resolved_cmd,
             cwd=str(cwd),
             capture_output=True,
             text=True,

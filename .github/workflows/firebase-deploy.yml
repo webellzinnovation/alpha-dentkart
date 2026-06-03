@@ -62,8 +62,15 @@ jobs:
       - name: Deploy to Firebase
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ALPHADENTKART_001 }}
         run: |
-          firebase deploy --only hosting --project alphadentkart-001 --token "$FIREBASE_TOKEN"
+          if [ -n "$GCP_SA_KEY" ]; then
+            echo "$GCP_SA_KEY" > sa.json
+            export GOOGLE_APPLICATION_CREDENTIALS="sa.json"
+            firebase deploy --only hosting --project alphadentkart-001
+          else
+            firebase deploy --only hosting --project alphadentkart-001 --token "$FIREBASE_TOKEN"
+          fi
 
   deploy-functions:
     runs-on: ubuntu-latest
@@ -89,5 +96,12 @@ jobs:
       - name: Deploy Functions
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ALPHADENTKART_001 }}
         run: |
-          firebase deploy --only functions --project alphadentkart-001 --token "$FIREBASE_TOKEN"
+          if [ -n "$GCP_SA_KEY" ]; then
+            echo "$GCP_SA_KEY" > sa.json
+            export GOOGLE_APPLICATION_CREDENTIALS="sa.json"
+            firebase deploy --only functions --project alphadentkart-001
+          else
+            firebase deploy --only functions --project alphadentkart-001 --token "$FIREBASE_TOKEN"
+          fi

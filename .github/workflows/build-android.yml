@@ -2,9 +2,6 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -23,9 +20,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: |
-          rm -rf node_modules package-lock.json
-          npm install --include=optional
+        run: npm ci
 
       - name: Build Web App
         run: npm run build
