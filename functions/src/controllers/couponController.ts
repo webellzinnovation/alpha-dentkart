@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { db, admin } from '../config/firebase'; // Firestore
 import logger from '../utils/logger';
 import { createCouponSchema, validateCouponSchema } from '../utils/validation';
+import { z } from 'zod';
 
 interface AuthenticatedRequest extends Request {
     user?: {

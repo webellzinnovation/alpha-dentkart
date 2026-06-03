@@ -36,46 +36,31 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Core React and vendor libraries
-            if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-                return 'vendor-react';
-              }
-              if (id.includes('@fortawesome')) {
-                return 'vendor-ui';
-              }
-              if (id.includes('google') || id.includes('firebase')) {
-                return 'vendor-cloud';
-              }
-              return 'vendor';
-            }
-
-            // Application code - group into larger blocks to avoid circularity
-            if (id.includes('/components/admin/') || id.includes('AdminDashboard')) {
-              return 'app-admin';
-            }
-            if (id.includes('/components/') && (id.includes('Checkout') || id.includes('Cart') || id.includes('Product'))) {
-              return 'app-commerce';
-            }
+          // Manual chunk splitting — keeps vendor code separate from app code
+          // so the browser can cache them independently
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-router': ['react-router-dom'],
+            'vendor-query': ['@tanstack/react-query'],
+            'vendor-ui': ['sonner'],
           }
         }
       },
-      chunkSizeWarningLimit: 1000,
-      target: 'esnext',
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: mode === 'production',
-          drop_debugger: mode === 'production'
-        }
-      }
+      // Increase warning threshold (large product catalog is expected)
+      chunkSizeWarningLimit: 1500,
+      target: 'es2015',
+      minify: 'esbuild',
+      // Enable CSS code splitting for faster first paint
+      cssCodeSplit: true,
+      // Produce source maps only in dev
+      sourcemap: false,
     },
     optimizeDeps: {
       include: [
         'react',
         'react-dom',
-        'react-router-dom'
+        'react-router-dom',
+        '@tanstack/react-query'
       ]
     }
   };

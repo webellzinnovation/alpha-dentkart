@@ -27,7 +27,7 @@ const mockUser: User = {
   email: 'test@example.com',
   name: 'Test User',
   phone: '9876543210',
-  userType: 'regular',
+  userType: 'dental-doctor',
   registrationDate: new Date().toISOString(),
   isVerified: true,
   verificationStatus: 'approved',

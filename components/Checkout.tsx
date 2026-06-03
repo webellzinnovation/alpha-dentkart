@@ -11,11 +11,12 @@ interface CheckoutProps {
     cart: CartItem[];
     user: User;
     onUpdateUser: (data: Partial<User>) => void;
-    onPlaceOrder: (paymentId: string, transactionId: string, signature?: string) => void;
+    onPlaceOrder: (paymentId: string, transactionId: string, signature?: string, paymentMethod?: string) => void;
     onNavigateBack: () => void;
     razorpayKey?: string;
     appliedCoupon?: Coupon | null;
     onApplyCoupon?: (coupon: Coupon | null) => void;
+    settings?: any;
 }
 
 export const Checkout: React.FC<CheckoutProps> = ({
@@ -26,16 +27,40 @@ export const Checkout: React.FC<CheckoutProps> = ({
     onNavigateBack,
     razorpayKey,
     appliedCoupon,
-    onApplyCoupon
+    onApplyCoupon,
+    settings
 }) => {
     const [couponCode, setCouponCode] = useState('');
     const [isApplying, setIsApplying] = useState(false);
     const [couponError, setCouponError] = useState('');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
 
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
         user.addresses?.find(a => a.isDefault)?.id || (user.addresses?.length > 0 ? user.addresses[0].id : null)
     );
     const [isProcessing, setIsProcessing] = useState(false);
+
+    // Verification Gate Modal State
+    const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+    const [isSavingVerification, setIsSavingVerification] = useState(false);
+    const [verifSelectedType, setVerifSelectedType] = useState<User['userType']>(
+        user.userType && user.userType !== 'regular' ? user.userType : 'dental-doctor'
+    );
+    const [verifFormData, setVerifFormData] = useState({
+        // Dental Doctor fields
+        licenseId: (user as any).dentalDoctorInfo?.licenseId || '',
+        licenseState: (user as any).dentalDoctorInfo?.licenseState || '',
+        clinicName: (user as any).dentalDoctorInfo?.clinicName || '',
+        // Student fields
+        studentId: (user as any).dentalStudentInfo?.studentId || '',
+        institution: (user as any).dentalStudentInfo?.institution || '',
+        course: (user as any).dentalStudentInfo?.course || '',
+        yearOfStudy: (user as any).dentalStudentInfo?.yearOfStudy || '',
+        // Business fields
+        gstNumber: (user as any).dentalBusinessInfo?.gstNumber || '',
+        businessName: (user as any).dentalBusinessInfo?.businessName || '',
+        businessType: (user as any).dentalBusinessInfo?.businessType || '',
+    });
 
     // Address Modal State (Adapted from Dashboard)
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -66,7 +91,24 @@ export const Checkout: React.FC<CheckoutProps> = ({
         }
     }
 
-    const shipping = subtotal > 5000 ? 0 : 150; // Mock shipping logic
+    // Dynamic Indian State shipping zone calculation (Option A)
+    const selectedAddress = user.addresses?.find(a => a.id === selectedAddressId);
+    const standardRate = settings?.shipping?.standardRate ?? 150;
+    const freeShippingThreshold = settings?.shipping?.freeShippingThreshold ?? 5000;
+    
+    let resolvedShippingRate = standardRate;
+    if (selectedAddress && settings?.shipping?.stateRules) {
+        const matchedRule = settings.shipping.stateRules.find((rule: any) => 
+            rule.states?.some((stateName: string) => 
+                stateName.toLowerCase().trim() === selectedAddress.state?.toLowerCase().trim()
+            )
+        );
+        if (matchedRule) {
+            resolvedShippingRate = matchedRule.amount;
+        }
+    }
+
+    const shipping = subtotal > freeShippingThreshold ? 0 : resolvedShippingRate;
     const total = Math.max(0, subtotal - discount + shipping);
 
     const handleApplyCoupon = async () => {
@@ -123,7 +165,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
             }
         }
 
-        let newAddresses = [...user.addresses];
+        let newAddresses = user.addresses ? [...user.addresses] : [];
 
         // If setting default, unset others
         if (addressFormData.isDefault) {
@@ -147,50 +189,94 @@ export const Checkout: React.FC<CheckoutProps> = ({
         toast.success('Address saved successfully');
     };
 
-    const handlePayment = async () => {
+    // Check if user can proceed to payment - must be professional and verified/pending
+    const canProceedToPayment = (): boolean => {
+        const isRegular = !user.userType || user.userType === 'regular';
+        const vStatus = user.verificationStatus;
+        if (isRegular) return false;
+        return vStatus === 'approved' || vStatus === 'pending';
+    };
+
+    const handleVerificationSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSavingVerification(true);
+        try {
+            const updateData: Partial<User> = {
+                userType: verifSelectedType,
+                verificationStatus: 'pending',
+                isVerified: false,
+            };
+            if (verifSelectedType === 'dental-doctor') {
+                updateData.dentalDoctorInfo = {
+                    licenseId: verifFormData.licenseId,
+                    licenseState: verifFormData.licenseState,
+                    clinicName: verifFormData.clinicName,
+                } as any;
+            } else if (verifSelectedType === 'dental-student') {
+                updateData.dentalStudentInfo = {
+                    studentId: verifFormData.studentId,
+                    institution: verifFormData.institution,
+                    course: verifFormData.course,
+                    yearOfStudy: Number(verifFormData.yearOfStudy) || 1,
+                } as any;
+            } else if (verifSelectedType === 'dental-business') {
+                updateData.dentalBusinessInfo = {
+                    gstNumber: verifFormData.gstNumber,
+                    businessName: verifFormData.businessName,
+                    businessType: verifFormData.businessType,
+                } as any;
+            }
+            await onUpdateUser(updateData);
+            setIsVerificationModalOpen(false);
+            toast.success('Professional details submitted! Your account is now pending verification. You can proceed to payment.');
+            // Proceed to payment automatically after verification submit
+            setTimeout(() => handlePaymentCore(), 500);
+        } catch (err) {
+            toast.error('Failed to save details. Please try again.');
+        } finally {
+            setIsSavingVerification(false);
+        }
+    };
+
+    const handlePaymentCore = async () => {
         if (!selectedAddressId) {
             alert('Please select a shipping address');
             return;
         }
-
         setIsProcessing(true);
-
         try {
+            if (selectedPaymentMethod === 'cod') {
+                const mockPaymentId = 'cod_' + Date.now();
+                const mockTransactionId = 'trans_cod_' + Date.now();
+                await onPlaceOrder(mockPaymentId, mockTransactionId, undefined, 'cod');
+                toast.success('Order placed successfully with Cash on Delivery!');
+                return;
+            }
+
             const orderId = createRazorpayOrder(total);
-
             const keyToUse = razorpayKey || getRazorpayKey();
-
             if (!keyToUse) {
                 alert('Payment gateway not configured. Please contact admin.');
                 setIsProcessing(false);
                 return;
             }
-
             const success = await initializeRazorpay({
                 key: keyToUse,
                 amount: formatAmountForRazorpay(total),
                 currency: 'INR',
                 name: 'Alpha Dentkart',
                 description: `Order for ${cart.length} items`,
-                // order_id: orderId, // Removed to support client-side testing without backend
                 handler: (response: RazorpayResponse) => {
-                    onPlaceOrder(response.razorpay_payment_id, orderId, response.razorpay_signature);
+                    onPlaceOrder(response.razorpay_payment_id, orderId, response.razorpay_signature, 'razorpay');
                 },
                 prefill: {
                     name: user.name,
                     email: user.email,
                     contact: user.phone
                 },
-                theme: {
-                    color: '#DD3B5F'
-                },
-                modal: {
-                    ondismiss: () => {
-                        setIsProcessing(false);
-                    }
-                }
+                theme: { color: '#DD3B5F' },
+                modal: { ondismiss: () => { setIsProcessing(false); } }
             });
-
             if (!success) {
                 alert('Failed to initialize payment. Please try again.');
                 setIsProcessing(false);
@@ -201,6 +287,22 @@ export const Checkout: React.FC<CheckoutProps> = ({
             setIsProcessing(false);
         }
     };
+
+    const handlePayment = async () => {
+        if (!selectedAddressId) {
+            alert('Please select a shipping address');
+            return;
+        }
+
+        // Gate: Only professional (non-regular) users with pending/approved status can pay
+        if (!canProceedToPayment()) {
+            setIsVerificationModalOpen(true);
+            return;
+        }
+
+        await handlePaymentCore();
+    };
+
 
     return (
         <div className="w-full py-8">
@@ -269,22 +371,51 @@ export const Checkout: React.FC<CheckoutProps> = ({
                         )}
                     </section>
 
-                    {/* Payment Method - For now static */}
+                    {/* Payment Method Selector */}
                     <section className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2 mb-6">
                             <i className="fas fa-credit-card text-primary"></i> Payment Method
                         </h2>
-                        <div className="p-4 border border-primary/30 bg-primary/5 rounded-xl flex items-center gap-4">
-                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary shadow-sm">
-                                <i className="fas fa-shield-alt"></i>
-                            </div>
-                            <div>
-                                <p className="font-bold text-gray-800 dark:text-white">Razorpay Secure Payment</p>
-                                <p className="text-xs text-gray-500">Cards, UPI, NetBanking, Wallets</p>
-                            </div>
-                            <div className="ml-auto">
-                                <i className="fas fa-check-circle text-primary text-xl"></i>
-                            </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Razorpay Online */}
+                            <label className={`flex flex-col p-4 border rounded-xl cursor-pointer transition-all ${selectedPaymentMethod === 'razorpay' ? 'border-primary bg-pink-50/5 dark:bg-pink-950/5' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark hover:border-gray-300'}`}>
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="font-bold text-sm text-gray-800 dark:text-white">Pay Online Securely</span>
+                                    <input type="radio" name="paymentMethod" checked={selectedPaymentMethod === 'razorpay'} onChange={() => setSelectedPaymentMethod('razorpay')} className="text-primary focus:ring-primary h-4 w-4" />
+                                </div>
+                                <span className="text-xs text-gray-500">Supports UPI, NetBanking, Cards & Wallets (Powered by Razorpay)</span>
+                            </label>
+
+                            {/* Cash on Delivery */}
+                            {settings?.payment?.cod?.enabled && (() => {
+                                const minCODAmount = settings.payment.cod.minAmount || 0;
+                                const isEligible = subtotal >= minCODAmount;
+
+                                return (
+                                    <label className={`flex flex-col p-4 border rounded-xl transition-all ${!isEligible ? 'opacity-60 cursor-not-allowed bg-gray-50/50 dark:bg-gray-800/10 border-gray-200 dark:border-gray-700' : selectedPaymentMethod === 'cod' ? 'border-primary bg-pink-50/5 dark:bg-pink-950/5 cursor-pointer' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark hover:border-gray-300 cursor-pointer'}`}>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-bold text-sm text-gray-800 dark:text-white">Cash on Delivery (COD)</span>
+                                            <input 
+                                                type="radio" 
+                                                name="paymentMethod" 
+                                                disabled={!isEligible}
+                                                checked={selectedPaymentMethod === 'cod'} 
+                                                onChange={() => {
+                                                    if (isEligible) setSelectedPaymentMethod('cod');
+                                                }} 
+                                                className="text-primary focus:ring-primary h-4 w-4 disabled:opacity-50" 
+                                            />
+                                        </div>
+                                        <span className="text-xs text-gray-500">Pay cash upon safe delivery at your clinic or office.</span>
+                                        {!isEligible && (
+                                            <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-orange-600 dark:text-orange-400 font-bold bg-orange-50 dark:bg-orange-950/20 px-2 py-1 rounded">
+                                                <i className="fas fa-circle-exclamation"></i>
+                                                <span>Minimum purchase of ₹{minCODAmount.toLocaleString('en-IN')} required for COD</span>
+                                            </div>
+                                        )}
+                                    </label>
+                                );
+                            })()}
                         </div>
                     </section>
 
@@ -382,7 +513,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    <span>Pay ₹{total.toLocaleString('en-IN')}</span>
+                                    <span>{selectedPaymentMethod === 'cod' ? `Place COD Order (₹${total.toLocaleString('en-IN')})` : `Pay ₹${total.toLocaleString('en-IN')}`}</span>
                                     <i className="fas fa-arrow-right"></i>
                                 </>
                             )}
@@ -390,7 +521,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
 
                         <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
                             <i className="fas fa-lock"></i>
-                            <span>Secure Checkout powered by Razorpay</span>
+                            <span>{selectedPaymentMethod === 'cod' ? 'Safe and Secure Ordering' : 'Secure Checkout powered by Razorpay'}</span>
                         </div>
                     </div>
                 </div>
@@ -507,6 +638,228 @@ export const Checkout: React.FC<CheckoutProps> = ({
                                     className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-pink-700 text-sm font-medium"
                                 >
                                     Save Address
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Professional Verification Gate Modal */}
+            {isVerificationModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                        onClick={() => setIsVerificationModalOpen(false)}
+                    />
+                    <div className="relative z-10 w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
+                        {/* Modal Header */}
+                        <div className="bg-gradient-to-r from-primary to-rose-500 p-6 text-white">
+                            <div className="flex items-center gap-3 mb-1">
+                                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                    <i className="fas fa-shield-alt text-lg"></i>
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold">Professional Verification Required</h2>
+                                    <p className="text-white/80 text-sm">Alpha Dentkart is exclusively for dental professionals</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleVerificationSubmit} className="p-6 space-y-5">
+                            {/* Info banner */}
+                            <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
+                                <i className="fas fa-info-circle text-amber-500 mt-0.5 flex-shrink-0"></i>
+                                <p className="text-xs text-amber-700 dark:text-amber-300">
+                                    Please select your professional type and enter your credentials. Your account will be set to <strong>Pending Verification</strong> and you can proceed to payment immediately while our team reviews your details.
+                                </p>
+                            </div>
+
+                            {/* Role Selector */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    I am a <span className="text-primary">*</span>
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { value: 'dental-doctor', label: 'Dental Doctor', icon: 'fas fa-tooth' },
+                                        { value: 'dental-student', label: 'Student', icon: 'fas fa-graduation-cap' },
+                                        { value: 'dental-business', label: 'Business', icon: 'fas fa-building' },
+                                    ].map(option => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => setVerifSelectedType(option.value as User['userType'])}
+                                            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-xs font-semibold transition-all ${
+                                                verifSelectedType === option.value
+                                                    ? 'border-primary bg-primary/5 text-primary'
+                                                    : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <i className={`${option.icon} text-lg`}></i>
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Dental Doctor Fields */}
+                            {verifSelectedType === 'dental-doctor' && (
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">License ID <span className="text-primary">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="e.g. MCI-2024-XXXX"
+                                                value={verifFormData.licenseId}
+                                                onChange={e => setVerifFormData({ ...verifFormData, licenseId: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">License State <span className="text-primary">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="e.g. Maharashtra"
+                                                value={verifFormData.licenseState}
+                                                onChange={e => setVerifFormData({ ...verifFormData, licenseState: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Clinic Name</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Smile Dental Clinic"
+                                            value={verifFormData.clinicName}
+                                            onChange={e => setVerifFormData({ ...verifFormData, clinicName: e.target.value })}
+                                            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Student Fields */}
+                            {verifSelectedType === 'dental-student' && (
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Student ID <span className="text-primary">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="e.g. BDS-2024-001"
+                                                value={verifFormData.studentId}
+                                                onChange={e => setVerifFormData({ ...verifFormData, studentId: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Year of Study <span className="text-primary">*</span></label>
+                                            <select
+                                                required
+                                                value={verifFormData.yearOfStudy}
+                                                onChange={e => setVerifFormData({ ...verifFormData, yearOfStudy: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                            >
+                                                <option value="">Select Year</option>
+                                                {[1,2,3,4,5].map(y => <option key={y} value={y}>Year {y}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Institution <span className="text-primary">*</span></label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="e.g. Government Dental College, Mumbai"
+                                            value={verifFormData.institution}
+                                            onChange={e => setVerifFormData({ ...verifFormData, institution: e.target.value })}
+                                            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Course</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. BDS, MDS"
+                                            value={verifFormData.course}
+                                            onChange={e => setVerifFormData({ ...verifFormData, course: e.target.value })}
+                                            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Business Fields */}
+                            {verifSelectedType === 'dental-business' && (
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">GST Number <span className="text-primary">*</span></label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="e.g. 22AAAAA0000A1Z5"
+                                                value={verifFormData.gstNumber}
+                                                onChange={e => setVerifFormData({ ...verifFormData, gstNumber: e.target.value.toUpperCase() })}
+                                                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Business Type <span className="text-primary">*</span></label>
+                                            <select
+                                                required
+                                                value={verifFormData.businessType}
+                                                onChange={e => setVerifFormData({ ...verifFormData, businessType: e.target.value })}
+                                                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                            >
+                                                <option value="">Select Type</option>
+                                                <option value="distributor">Distributor</option>
+                                                <option value="manufacturer">Manufacturer</option>
+                                                <option value="retailer">Retailer</option>
+                                                <option value="hospital">Hospital/Clinic</option>
+                                                <option value="lab">Dental Lab</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Business Name <span className="text-primary">*</span></label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="e.g. ABC Dental Supplies Pvt. Ltd."
+                                            value={verifFormData.businessName}
+                                            onChange={e => setVerifFormData({ ...verifFormData, businessName: e.target.value })}
+                                            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Footer actions */}
+                            <div className="flex gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsVerificationModalOpen(false)}
+                                    className="flex-1 py-3 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 rounded-xl font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSavingVerification}
+                                    className="flex-[2] py-3 bg-gradient-to-r from-primary to-rose-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-primary/30 flex items-center justify-center gap-2 disabled:opacity-70"
+                                >
+                                    {isSavingVerification ? (
+                                        <><i className="fas fa-spinner fa-spin"></i> Saving...</>
+                                    ) : (
+                                        <><i className="fas fa-check-circle"></i> Submit & Proceed to Pay</>
+                                    )}
                                 </button>
                             </div>
                         </form>

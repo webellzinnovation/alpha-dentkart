@@ -16,8 +16,67 @@ export const getAllPromotionalTiles = async (req: Request, res: Response) => {
             query = query.limit(parseInt(limit as string));
         }
 
-        const snapshot = await query.get();
-        const tiles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let snapshot = await query.get();
+
+        // Seed default promotional tiles if collection is empty
+        if (snapshot.empty) {
+            const defaults = [
+                {
+                    id: "1",
+                    title: "High Speed Airotor Handpiece",
+                    category: "Clinic Essential",
+                    price: "FROM ₹7,500",
+                    image: "https://placehold.co/300x300/transparent/DD3B5F?text=Airotor",
+                    link: "/shop?brand=NSK",
+                    order: 1,
+                    isActive: true
+                },
+                {
+                    id: "2",
+                    title: "Composite Restoration Kit",
+                    category: "Bundle Deal",
+                    price: "FROM ₹16,900",
+                    image: "https://placehold.co/300x300/transparent/DD3B5F?text=Composite+Kit",
+                    link: "/shop?category=Restorative",
+                    order: 2,
+                    isActive: true
+                },
+                {
+                    id: "3",
+                    title: "Digital Apex Locator V5",
+                    category: "New Arrival",
+                    price: "FROM ₹12,500",
+                    image: "https://placehold.co/300x300/transparent/DD3B5F?text=Apex+Locator",
+                    link: "/shop?category=Endodontics",
+                    order: 3,
+                    isActive: true
+                }
+            ];
+
+            const batch = db.batch();
+            defaults.forEach(tile => {
+                const docRef = db.collection('promotional_tiles').doc(tile.id);
+                batch.set(docRef, {
+                    title: tile.title,
+                    category: tile.category,
+                    price: tile.price,
+                    image: tile.image,
+                    link: tile.link,
+                    order: tile.order,
+                    isActive: tile.isActive,
+                    createdAt: new Date().toISOString()
+                });
+            });
+            await batch.commit();
+
+            // Re-fetch snapshot
+            snapshot = await query.get();
+        }
+
+        const tiles = snapshot.docs.map(doc => ({ 
+            id: isNaN(Number(doc.id)) ? doc.id : Number(doc.id), 
+            ...doc.data() 
+        }));
 
         // Return in {tiles:[]} format matching frontend expectation
         res.json({ tiles });
@@ -69,10 +128,16 @@ export const updatePromotionalTile = async (req: Request, res: Response) => {
             Object.entries(updates).filter(([_, v]) => v !== undefined)
         );
 
-        await db.collection('promotional_tiles').doc(String(id)).update(cleanUpdates);
+        // Remove ID from body if passed in updates
+        delete cleanUpdates.id;
+
+        await db.collection('promotional_tiles').doc(String(id)).set(cleanUpdates, { merge: true });
         const updatedDoc = await db.collection('promotional_tiles').doc(String(id)).get();
 
-        res.json({ id: updatedDoc.id, ...updatedDoc.data() });
+        res.json({ 
+            id: isNaN(Number(updatedDoc.id)) ? updatedDoc.id : Number(updatedDoc.id), 
+            ...updatedDoc.data() 
+        });
     } catch (error) {
         logger.error('Error updating promotional tile:', error);
         res.status(500).json({ error: 'Failed to update promotional tile' });

@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Product, Category, BrandProfile, ProductVariation } from '../../types';
 import { toast } from 'sonner';
 import { productSchema } from '../../utils/schemas';
-import { productsAPI } from '../../utils/api';
+import { productsAPI, wordpressSyncAPI } from '../../utils/api';
+import { resolveProductImage } from '../../utils/image';
 
 interface ProductsTabProps {
     products: Product[];
@@ -43,15 +44,30 @@ const Pagination = ({ currentPage, totalItems, onPageChange }: { currentPage: nu
                 >
                     <i className="fas fa-chevron-left text-xs"></i>
                 </button>
-                {[...Array(totalPages)].map((_, i) => (
-                    <button
-                        key={i + 1}
-                        onClick={() => onPageChange(i + 1)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${currentPage === i + 1 ? 'bg-primary text-white shadow-md shadow-primary/20' : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 hover:bg-gray-50'}`}
-                    >
-                        {i + 1}
-                    </button>
-                ))}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                        pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                    } else {
+                        pageNum = currentPage - 2 + i;
+                    }
+
+                    if (pageNum < 1 || pageNum > totalPages) return null;
+
+                    return (
+                        <button
+                            key={pageNum}
+                            onClick={() => onPageChange(pageNum)}
+                            className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${currentPage === pageNum ? 'bg-primary text-white shadow-md shadow-primary/20' : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 hover:bg-gray-50'}`}
+                        >
+                            {pageNum}
+                        </button>
+                    );
+                })}
                 <button
                     disabled={currentPage === totalPages}
                     onClick={() => onPageChange(currentPage + 1)}
@@ -154,7 +170,17 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
     // Handlers
     const handleSyncProducts = async () => {
         setIsLoading(true);
+        const toastId = toast.loading('Syncing products from WooCommerce...');
         try {
+            // 1. Run actual background WordPress sync
+            const syncRes = await wordpressSyncAPI.syncProducts(false);
+            if (syncRes && syncRes.success) {
+                toast.success(syncRes.message || 'WooCommerce products synced successfully!', { id: toastId });
+            } else {
+                toast.error(syncRes?.error || syncRes?.message || 'Sync completed with warnings', { id: toastId });
+            }
+
+            // 2. Load the updated products from Firestore
             const response = await productsAPI.getAll({ limit: 5000 });
             let freshProducts: any[] = [];
             if (response && response.products) {
@@ -195,11 +221,10 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                     sku: p.sku,
                 }));
                 setProducts(transformed);
-                toast.success(`Successfully synced ${transformed.length} products`);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("❌ Failed to sync products:", err);
-            toast.error("Failed to sync products");
+            toast.error(err?.message || "Failed to sync products", { id: toastId });
         } finally {
             setIsLoading(false);
         }
@@ -493,7 +518,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                                 <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
-                                            <img src={product.image} className="w-12 h-12 object-contain rounded-lg border bg-white p-1" alt="" />
+                                            <img src={resolveProductImage(product.image)} className="w-12 h-12 object-contain rounded-lg border bg-white p-1" alt="" />
                                             <span className="font-bold text-gray-900 dark:text-white">{product.name}</span>
                                         </div>
                                     </td>
@@ -655,7 +680,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                                             <div className="w-24 h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden group relative">
                                                 {productFormData.image ? (
                                                     <>
-                                                        <img src={productFormData.image} className="w-full h-full object-contain p-2" alt="" />
+                                                        <img src={resolveProductImage(productFormData.image)} className="w-full h-full object-contain p-2" alt="" />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button type="button" onClick={() => setProductFormData({ ...productFormData, image: '' })} className="text-white hover:text-red-400">
                                                                 <i className="fas fa-trash"></i>
@@ -680,7 +705,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                                         <div className="grid grid-cols-4 gap-3">
                                             {productFormData.images.map((img: string, idx: number) => (
                                                 <div key={idx} className="aspect-square border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 relative group overflow-hidden">
-                                                    <img src={img} className="w-full h-full object-contain p-1" alt="" />
+                                                    <img src={resolveProductImage(img)} className="w-full h-full object-contain p-1" alt="" />
                                                     <button
                                                         type="button"
                                                         onClick={() => removeGalleryImage(idx)}

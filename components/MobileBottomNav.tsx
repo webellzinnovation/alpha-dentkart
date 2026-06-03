@@ -20,7 +20,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 }) => {
   const navItems = [
     { id: 'home', icon: 'fa-home', label: 'Home', view: 'home' },
-    { id: 'categories', icon: 'fa-grid-2', label: 'Category', view: 'categories' },
+    { id: 'categories', icon: 'fa-th-large', label: 'Category', view: 'categories' },
     { id: 'brands', icon: 'fa-award', label: 'Brand', view: 'brands' },
     { id: 'search', icon: 'fa-search', label: 'Search', view: 'search' },
     { id: 'wishlist', icon: 'fa-heart', label: 'Wishlist', view: 'wishlist', badge: wishlistCount, badgeColor: 'bg-accent' },

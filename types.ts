@@ -113,6 +113,8 @@ export interface PromotionalTile {
   badgeColor?: string;
   order: number;
   isActive: boolean;
+  bgColorClass?: string;
+  tagColorClass?: string;
 }
 
 export interface HeroSlide {
@@ -287,7 +289,7 @@ export interface AdminNotification {
 }
 
 export interface StockNotification {
-  productId: number;
+  productId: number | string;
   productName: string;
   userEmail: string;
   userName: string;

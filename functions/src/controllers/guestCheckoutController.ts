@@ -154,6 +154,7 @@ export const createGuestOrder = async (req: Request, res: Response) => {
             paymentStatus: 'pending',
             items: items, // Native array
             shippingAddress: shippingAddress, // Native object
+            date: new Date().toISOString(),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };

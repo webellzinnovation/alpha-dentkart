@@ -170,7 +170,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
     const updateBadge = (badgeId: ProductBadge['id'], updates: Partial<ProductBadge>) => {
         setHomepageSettings(prev => ({
             ...prev,
-            badges: prev.badges.map(badge =>
+            badges: (prev?.badges || []).map(badge =>
                 badge.id === badgeId ? { ...badge, ...updates } : badge
             )
         }));
@@ -180,20 +180,20 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
     const toggleCategory = (categoryName: string) => {
         setHomepageSettings(prev => ({
             ...prev,
-            showcaseCategories: prev.showcaseCategories.includes(categoryName)
-                ? prev.showcaseCategories.filter(c => c !== categoryName)
-                : [...prev.showcaseCategories, categoryName]
+            showcaseCategories: (prev?.showcaseCategories || []).includes(categoryName)
+                ? (prev?.showcaseCategories || []).filter(c => c !== categoryName)
+                : [...(prev?.showcaseCategories || []), categoryName]
         }));
     };
 
     const handleDragEndCategories = (event: DragEndEvent) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
-            const oldIndex = homepageSettings.showcaseCategories.indexOf(active.id as string);
-            const newIndex = homepageSettings.showcaseCategories.indexOf(over.id as string);
+            const oldIndex = (homepageSettings?.showcaseCategories || []).indexOf(active.id as string);
+            const newIndex = (homepageSettings?.showcaseCategories || []).indexOf(over.id as string);
             setHomepageSettings(prev => ({
                 ...prev,
-                showcaseCategories: arrayMove(prev.showcaseCategories, oldIndex, newIndex)
+                showcaseCategories: arrayMove(prev?.showcaseCategories || [], oldIndex, newIndex)
             }));
         }
     };
@@ -231,7 +231,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                 <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl p-6 text-white shadow-lg shadow-pink-500/30">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-pink-100 text-sm font-medium mb-1">Featured Brands</p>
+                            <p className="text-pink-100 text-sm font-medium mb-1">Collection of brands</p>
                             <h3 className="text-3xl font-bold">{featuredBrands.length}</h3>
                         </div>
                         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -254,7 +254,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-blue-100 text-sm font-medium mb-1">Active Badges</p>
-                            <h3 className="text-3xl font-bold">{homepageSettings.badges.filter(b => b.enabled).length}/3</h3>
+                            <h3 className="text-3xl font-bold">{(homepageSettings?.badges || []).filter(b => b.enabled).length}/3</h3>
                         </div>
                         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                             <i className="fas fa-tag text-2xl"></i>
@@ -268,7 +268,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                 <div className="flex gap-2 min-w-max">
                     <button onClick={() => setActiveSection('hero')} className={`px-6 py-3 font-semibold rounded-lg transition-all ${activeSection === 'hero' ? 'bg-primary text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50'}`}><i className="fas fa-images mr-2"></i>Hero Slider</button>
                     <button onClick={() => setActiveSection('promotions')} className={`px-6 py-3 font-semibold rounded-lg transition-all ${activeSection === 'promotions' ? 'bg-primary text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50'}`}><i className="fas fa-ad mr-2"></i>Promotional Banners</button>
-                    <button onClick={() => setActiveSection('brands')} className={`px-6 py-3 font-semibold rounded-lg transition-all ${activeSection === 'brands' ? 'bg-primary text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50'}`}><i className="fas fa-certificate mr-2"></i>Featured Brands</button>
+                    <button onClick={() => setActiveSection('brands')} className={`px-6 py-3 font-semibold rounded-lg transition-all ${activeSection === 'brands' ? 'bg-primary text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50'}`}><i className="fas fa-certificate mr-2"></i>Collection of brands</button>
                     <button onClick={() => setActiveSection('badges')} className={`px-6 py-3 font-semibold rounded-lg transition-all ${activeSection === 'badges' ? 'bg-primary text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50'}`}><i className="fas fa-tag mr-2"></i>Product Badges</button>
                     <button onClick={() => setActiveSection('categories')} className={`px-6 py-3 font-semibold rounded-lg transition-all ${activeSection === 'categories' ? 'bg-primary text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50'}`}><i className="fas fa-th-large mr-2"></i>Categories</button>
                 </div>
@@ -438,7 +438,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
 
                     {/* Selected Brands */}
                     <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px]">
-                        <div className="p-4 border-b bg-primary/5 font-bold text-primary">Selected Featured Brands ({featuredBrands.length})</div>
+                        <div className="p-4 border-b bg-primary/5 font-bold text-primary">Selected Collection of brands ({featuredBrands.length})</div>
                         <div className="overflow-y-auto p-4 space-y-2 flex-1">
                             {featuredBrands.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-gray-400">
@@ -480,7 +480,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
             {/* --- OLD SECTIONS (BADGES & CATEGORIES) --- */}
             {activeSection === 'badges' && (
                 <div className="grid gap-6">
-                    {homepageSettings.badges.map((badge) => (
+                    {(homepageSettings?.badges || []).map((badge) => (
                         <div key={badge.id} className="bg-white dark:bg-surface-dark p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700">
                             <div className="flex justify-between items-center mb-4">
                                 <h4 className="font-bold">Badge: {badge.name}</h4>
@@ -506,7 +506,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                                 <div key={cat.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-all">
                                     <input
                                         type="checkbox"
-                                        checked={homepageSettings.showcaseCategories.includes(cat.name)}
+                                        checked={(homepageSettings?.showcaseCategories || []).includes(cat.name)}
                                         onChange={() => toggleCategory(cat.name)}
                                         className="w-5 h-5 rounded text-primary focus:ring-primary cursor-pointer"
                                     />
@@ -528,9 +528,9 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
 
                     {/* Selected Showcase Categories */}
                     <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px]">
-                        <div className="p-4 border-b bg-primary/5 font-bold text-primary">Showcase Order ({homepageSettings.showcaseCategories.length})</div>
+                        <div className="p-4 border-b bg-primary/5 font-bold text-primary">Showcase Order ({(homepageSettings?.showcaseCategories || []).length})</div>
                         <div className="overflow-y-auto p-4 space-y-2 flex-1">
-                            {homepageSettings.showcaseCategories.length === 0 ? (
+                            {(homepageSettings?.showcaseCategories || []).length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-gray-400">
                                     <i className="fas fa-th-large text-4xl mb-2 opacity-50"></i>
                                     <p>No categories selected</p>
@@ -543,12 +543,12 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                                     modifiers={[restrictToVerticalAxis]}
                                 >
                                     <SortableContext
-                                        items={homepageSettings.showcaseCategories}
+                                        items={homepageSettings?.showcaseCategories || []}
                                         strategy={verticalListSortingStrategy}
                                     >
                                         <div className="space-y-2">
-                                            {homepageSettings.showcaseCategories.map((catName, index) => {
-                                                const cat = categories.find(c => c.name === catName);
+                                            {(homepageSettings?.showcaseCategories || []).map((catName, index) => {
+                                                const cat = (categories || []).find(c => c.name === catName);
                                                 return (
                                                     <SortableItem key={catName} id={catName} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm group">
                                                         <div className="cursor-grab active:cursor-grabbing text-gray-300 group-hover:text-gray-500">

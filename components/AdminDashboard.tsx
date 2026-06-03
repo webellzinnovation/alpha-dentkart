@@ -33,6 +33,199 @@ import { InventoryTab } from './admin/InventoryTab';
 import { ProductsTab } from './admin/ProductsTab';
 import { productSchema, categorySchema, brandSchema } from '../utils/schemas';
 import { z } from 'zod';
+import { resolveProductImage } from '../utils/image';
+
+const INDIAN_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", 
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", 
+  "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", 
+  "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", 
+  "Ladakh", "Lakshadweep", "Puducherry"
+];
+
+const formatDate = (dateInput: any) => {
+    if (!dateInput) return 'N/A';
+    try {
+        let dateObj: Date | null = null;
+
+        // 1. If it's already a Date object
+        if (dateInput instanceof Date) {
+            dateObj = dateInput;
+        } 
+        // 2. If it's a string
+        else if (typeof dateInput === 'string') {
+            let cleaned = dateInput.trim();
+            
+            // Convert "YYYY-MM-DD HH:MM:SS..." to "YYYY-MM-DDTHH:MM:SS..."
+            if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(cleaned)) {
+                cleaned = cleaned.replace(/\s+/, 'T');
+            }
+
+            // Handle microsecond/nanosecond fractional parts (e.g. .000000Z or .000000)
+            const dotIndex = cleaned.indexOf('.');
+            if (dotIndex !== -1) {
+                const parts = cleaned.split('.');
+                const afterDot = parts[1] || '';
+                const tzMatch = afterDot.match(/([Zz]|\+|-)/);
+                let tzPart = '';
+                let fraction = afterDot;
+                if (tzMatch && tzMatch.index !== undefined) {
+                    fraction = afterDot.substring(0, tzMatch.index);
+                    tzPart = afterDot.substring(tzMatch.index);
+                }
+                // Truncate fractional seconds to 3 digits (milliseconds)
+                fraction = fraction.substring(0, 3).padEnd(3, '0');
+                cleaned = parts[0] + '.' + fraction + tzPart;
+            }
+
+            // Try standard Date parsing
+            const parsed = new Date(cleaned);
+            if (!isNaN(parsed.getTime())) {
+                dateObj = parsed;
+            } else {
+                // Try manual parsing as fallback if it still fails
+                // Matches "YYYY-MM-DDTHH:MM:SS" or "YYYY-MM-DD HH:MM:SS"
+                const parts = cleaned.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}):(\d{2}))?/);
+                if (parts) {
+                    const yr = parseInt(parts[1], 10);
+                    const mo = parseInt(parts[2], 10) - 1;
+                    const dy = parseInt(parts[3], 10);
+                    const hr = parts[4] ? parseInt(parts[4], 10) : 0;
+                    const mi = parts[5] ? parseInt(parts[5], 10) : 0;
+                    const sc = parts[6] ? parseInt(parts[6], 10) : 0;
+                    dateObj = new Date(Date.UTC(yr, mo, dy, hr, mi, sc));
+                }
+            }
+        } 
+        // 3. If it's an object (Firestore Timestamp or similar)
+        else if (typeof dateInput === 'object') {
+            if (typeof dateInput.toDate === 'function') {
+                dateObj = dateInput.toDate();
+            } else {
+                const sec = typeof dateInput.seconds === 'number' ? dateInput.seconds : 
+                            typeof dateInput._seconds === 'number' ? dateInput._seconds : null;
+                const nanosec = typeof dateInput.nanoseconds === 'number' ? dateInput.nanoseconds :
+                                typeof dateInput._nanoseconds === 'number' ? dateInput._nanoseconds : 0;
+                if (sec !== null) {
+                    dateObj = new Date(sec * 1000 + Math.floor(nanosec / 1000000));
+                } else {
+                    const parsed = new Date(dateInput);
+                    if (!isNaN(parsed.getTime())) {
+                        dateObj = parsed;
+                    }
+                }
+            }
+        } 
+        // 4. Any other type
+        else {
+            const parsed = new Date(dateInput);
+            if (!isNaN(parsed.getTime())) {
+                dateObj = parsed;
+            }
+        }
+
+        // If parsing failed completely, try one last check on the original value coerced to a string
+        if (!dateObj || isNaN(dateObj.getTime())) {
+            const parsed = new Date(dateInput);
+            if (!isNaN(parsed.getTime())) {
+                dateObj = parsed;
+            } else {
+                // Clean up the original string to remove ".000000Z" or similar
+                let fallback = String(dateInput);
+                fallback = fallback.replace(/\.000+Z?/gi, '');
+                fallback = fallback.replace(/T/gi, ' ');
+                fallback = fallback.replace(/Z/gi, '');
+                return fallback;
+            }
+        }
+
+        // Custom, stable, platform-independent formatting
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = months[dateObj.getMonth()];
+        const year = dateObj.getFullYear();
+        let hours = dateObj.getHours();
+        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // 0 should be 12
+        const strHours = String(hours).padStart(2, '0');
+
+        return `${day} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
+    } catch (e) {
+        let fallback = String(dateInput);
+        fallback = fallback.replace(/\.000+Z?/gi, '');
+        fallback = fallback.replace(/T/gi, ' ');
+        fallback = fallback.replace(/Z/gi, '');
+        return fallback;
+    }
+};
+
+const parseOrderDate = (order: any): Date => {
+    if (!order) return new Date();
+    const dateInput = order.date || order.createdAt || order.updatedAt || order.lastSync;
+    if (!dateInput) return new Date();
+    
+    if (dateInput instanceof Date) {
+        return dateInput;
+    }
+    
+    if (typeof dateInput === 'string') {
+        let cleaned = dateInput.trim();
+        if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(cleaned)) {
+            cleaned = cleaned.replace(/\s+/, 'T');
+        }
+        const dotIndex = cleaned.indexOf('.');
+        if (dotIndex !== -1) {
+            const parts = cleaned.split('.');
+            const afterDot = parts[1] || '';
+            const tzMatch = afterDot.match(/([Zz]|\+|-)/);
+            let tzPart = '';
+            let fraction = afterDot;
+            if (tzMatch && tzMatch.index !== undefined) {
+                fraction = afterDot.substring(0, tzMatch.index);
+                tzPart = afterDot.substring(tzMatch.index);
+            }
+            fraction = fraction.substring(0, 3).padEnd(3, '0');
+            cleaned = parts[0] + '.' + fraction + tzPart;
+        }
+        const parsed = new Date(cleaned);
+        if (!isNaN(parsed.getTime())) {
+            return parsed;
+        }
+        // Manual fallback matching
+        const parts = cleaned.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}):(\d{2}))?/);
+        if (parts) {
+            const yr = parseInt(parts[1], 10);
+            const mo = parseInt(parts[2], 10) - 1;
+            const dy = parseInt(parts[3], 10);
+            const hr = parts[4] ? parseInt(parts[4], 10) : 0;
+            const mi = parts[5] ? parseInt(parts[5], 10) : 0;
+            const sc = parts[6] ? parseInt(parts[6], 10) : 0;
+            return new Date(Date.UTC(yr, mo, dy, hr, mi, sc));
+        }
+    }
+    
+    if (typeof dateInput === 'object') {
+        if (typeof dateInput.toDate === 'function') {
+            return dateInput.toDate();
+        }
+        const sec = dateInput.seconds ?? dateInput._seconds ?? null;
+        const nanosec = dateInput.nanoseconds ?? dateInput._nanoseconds ?? 0;
+        if (sec !== null) {
+            return new Date(sec * 1000 + Math.floor(nanosec / 1000000));
+        }
+        const parsed = new Date(dateInput);
+        if (!isNaN(parsed.getTime())) {
+            return parsed;
+        }
+    }
+    
+    const fallback = new Date(dateInput);
+    return isNaN(fallback.getTime()) ? new Date() : fallback;
+};
 
 
 
@@ -80,7 +273,7 @@ interface AdminDashboardProps {
 }
 
 // --- Animated Graph Component ---
-const AnimatedGraph = ({ data, labels, colorHex }: { data: number[], labels: string[], colorHex: string }) => {
+const AnimatedGraph = ({ data, labels, colorHex, heightClass = "h-48" }: { data: number[], labels: string[], colorHex: string, heightClass?: string }) => {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -150,7 +343,7 @@ const AnimatedGraph = ({ data, labels, colorHex }: { data: number[], labels: str
             `}</style>
 
             <div
-                className="relative w-full h-64 cursor-crosshair touch-none"
+                className={`relative w-full ${heightClass} cursor-crosshair touch-none`}
                 ref={containerRef}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
@@ -290,7 +483,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     totalUsersPages,
     onUsersPageChange,
     isLoadingUsersPage,
-    isLoadingProducts
+    isLoadingProducts,
+    chatSessions,
+    setChatSessions
 }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'categories' | 'brands' | 'settings' | 'inventory' | 'reviews' | 'analytics' | 'homepage' | 'appearance' | 'themes' | 'chat-support' | 'coupons'>(() => {
         const savedTab = localStorage.getItem('alpha_admin_tab');
@@ -334,15 +529,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     // Derived state for the current homepage configuration (draft || saved || default)
     const currentHomepageSettings = useMemo(() => {
-        return homepageDraft || settings || DEFAULT_HOMEPAGE_SETTINGS;
-    }, [homepageDraft, settings]);
+        const base = homepageDraft || settings || DEFAULT_HOMEPAGE_SETTINGS;
+        return {
+            badges: base?.badges || DEFAULT_HOMEPAGE_SETTINGS.badges,
+            showcaseCategories: base?.showcaseCategories || DEFAULT_HOMEPAGE_SETTINGS.showcaseCategories,
+            showcaseBrands: base?.showcaseBrands || DEFAULT_HOMEPAGE_SETTINGS.showcaseBrands,
+            featuredCategorySections: base?.featuredCategorySections || DEFAULT_HOMEPAGE_SETTINGS.featuredCategorySections,
+            featuredBrandSections: base?.featuredBrandSections || DEFAULT_HOMEPAGE_SETTINGS.featuredBrandSections
+        };
+    }, [homepageDraft, settings, DEFAULT_HOMEPAGE_SETTINGS]);
 
     // Helper to handle functional updates from child components
     const handleSetHomepageSettings = (update: HomepageSettings | ((prev: HomepageSettings) => HomepageSettings)) => {
         if (typeof update === 'function') {
             setHomepageDraft((prev) => {
                 const base = prev || settings || DEFAULT_HOMEPAGE_SETTINGS;
-                return update(base);
+                const mergedBase = {
+                    badges: base?.badges || DEFAULT_HOMEPAGE_SETTINGS.badges,
+                    showcaseCategories: base?.showcaseCategories || DEFAULT_HOMEPAGE_SETTINGS.showcaseCategories,
+                    showcaseBrands: base?.showcaseBrands || DEFAULT_HOMEPAGE_SETTINGS.showcaseBrands,
+                    featuredCategorySections: base?.featuredCategorySections || DEFAULT_HOMEPAGE_SETTINGS.featuredCategorySections,
+                    featuredBrandSections: base?.featuredBrandSections || DEFAULT_HOMEPAGE_SETTINGS.featuredBrandSections
+                };
+                return update(mergedBase);
             });
         } else {
             setHomepageDraft(update);
@@ -379,7 +588,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
 
             if (freshProducts.length > 0) {
-                const transformed: Product[] = freshProducts.map((p: Product) => ({
+                const transformed: Product[] = freshProducts.map((p: any) => ({
                     id: p.id,
                     name: p.name || 'Unknown Product',
                     category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
@@ -415,6 +624,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             console.error("❌ Failed to sync products:", err);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // WordPress Sync block moved below activeSettingsTab declaration
+
+    const [isSyncingCategories, setIsSyncingCategories] = useState(false);
+    const [isSyncingBrands, setIsSyncingBrands] = useState(false);
+
+    const handleSyncCategories = async () => {
+        setIsSyncingCategories(true);
+        const toastId = toast.loading('Syncing categories from WooCommerce...');
+        try {
+            const { categoriesAPI } = await import('../utils/api');
+            const syncRes = await categoriesAPI.sync();
+            const allRes = await categoriesAPI.getAll();
+            if (allRes) {
+                setCategories(allRes);
+            }
+            toast.success(syncRes.message || 'Categories synced successfully!', { id: toastId });
+        } catch (err: any) {
+            console.error("❌ Failed to sync categories:", err);
+            toast.error(err?.response?.data?.error || err?.message || 'Failed to sync categories.', { id: toastId });
+        } finally {
+            setIsSyncingCategories(false);
+        }
+    };
+
+    const handleSyncBrands = async () => {
+        setIsSyncingBrands(true);
+        const toastId = toast.loading('Syncing brands from WooCommerce...');
+        try {
+            const { brandsAPI } = await import('../utils/api');
+            const syncRes = await brandsAPI.sync();
+            const allRes = await brandsAPI.getAll();
+            if (allRes) {
+                setBrands(allRes);
+            }
+            toast.success(syncRes.message || 'Brands synced successfully!', { id: toastId });
+        } catch (err: any) {
+            console.error("❌ Failed to sync brands:", err);
+            toast.error(err?.response?.data?.error || err?.message || 'Failed to sync brands.', { id: toastId });
+        } finally {
+            setIsSyncingBrands(false);
         }
     };
 
@@ -474,7 +726,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         // Process orders to calculate revenue
         orders.forEach(order => {
             try {
-                const orderDate = new Date(order.date);
+                const orderDate = parseOrderDate(order);
                 const now = new Date();
 
                 // Weekly calculation (last 7 days)
@@ -514,7 +766,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         return orders.reduce((total, order) => {
             try {
-                const orderDate = new Date(order.date);
+                const orderDate = parseOrderDate(order);
                 if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
                     return total + (order.total || 0);
                 }
@@ -551,7 +803,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [brandPage, setBrandPage] = useState(1);
     const itemsPerPage = 8;
     const [customerSearchTerm, setCustomerSearchTerm] = useState(() => localStorage.getItem('admin_customer_search') || '');
-    const [customerTypeFilter, setCustomerTypeFilter] = useState<'all' | 'dental-doctor' | 'dental-student' | 'dental-business' | 'regular'>(() => (localStorage.getItem('admin_customer_type_filter') as any) || 'all');
+    const [customerTypeFilter, setCustomerTypeFilter] = useState<'all' | 'dental-doctor' | 'dental-student' | 'dental-business' | 'regular' | 'hidden'>(() => (localStorage.getItem('admin_customer_type_filter') as any) || 'all');
 
     // Persistence Effects for Search/Filters
     useEffect(() => { localStorage.setItem('admin_order_search', orderSearchTerm); }, [orderSearchTerm]);
@@ -594,7 +846,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         const [year, month] = orderFilterMonth.split('-').map(Number);
         return orders.filter(order => {
             try {
-                const orderDate = new Date(order.date);
+                const orderDate = parseOrderDate(order);
                 return orderDate.getFullYear() === year && orderDate.getMonth() === month - 1;
             } catch (e) {
                 return false;
@@ -607,7 +859,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         const monthsSet = new Set<string>();
         orders.forEach(order => {
             try {
-                const orderDate = new Date(order.date);
+                const orderDate = parseOrderDate(order);
                 const monthKey = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
                 monthsSet.add(monthKey);
             } catch (e) {
@@ -649,7 +901,261 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
 
     // Settings Tab State
-    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'payment' | 'shipping' | 'email' | 'notifications'>('general');
+    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'payment' | 'shipping' | 'email' | 'notifications' | 'ai-chatbot' | 'wordpress'>('general');
+
+    const [wpSiteUrl, setWpSiteUrl] = useState('https://alphadentkart.com');
+    const [wpConsumerKey, setWpConsumerKey] = useState('');
+    const [wpConsumerSecret, setWpConsumerSecret] = useState('');
+    const [isTestingConnection, setIsTestingConnection] = useState(false);
+    const [isSyncingAll, setIsSyncingAll] = useState(false);
+    const [isSyncingProducts, setIsSyncingProducts] = useState(false);
+    const [isSyncingOrders, setIsSyncingOrders] = useState(false);
+    const [isSyncingUsers, setIsSyncingUsers] = useState(false);
+    const [forceFullSyncProducts, setForceFullSyncProducts] = useState(false);
+    const [forceFullSyncOrders, setForceFullSyncOrders] = useState(false);
+    const [forceFullSyncUsers, setForceFullSyncUsers] = useState(false);
+    const [syncLogs, setSyncLogs] = useState<string[]>(['📺 WordPress Sync Console ready...']);
+    const [syncStatus, setSyncStatus] = useState<any>(null);
+
+    const addLog = (msg: string) => {
+        const timestamp = new Date().toLocaleTimeString();
+        setSyncLogs(prev => [...prev, `[${timestamp}] ${msg}`]);
+    };
+
+    useEffect(() => {
+        if (activeSettingsTab === 'wordpress') {
+            const fetchWpSettings = async () => {
+                try {
+                    const { wordpressSyncAPI } = await import('../utils/api');
+                    const [credRes, statusRes] = await Promise.all([
+                        wordpressSyncAPI.getCredentials(),
+                        wordpressSyncAPI.getStatus()
+                    ]);
+                    
+                    if (credRes?.success && credRes.credentials) {
+                        setWpSiteUrl(credRes.credentials.siteUrl || 'https://alphadentkart.com');
+                        setWpConsumerKey(credRes.credentials.consumerKey || '');
+                    }
+                    
+                    if (statusRes?.success && statusRes.status) {
+                        setSyncStatus(statusRes.status);
+                    }
+                } catch (err) {
+                    console.error('Failed to load WordPress settings:', err);
+                }
+            };
+            fetchWpSettings();
+        }
+    }, [activeSettingsTab]);
+
+    const handleTestConnection = async () => {
+        if (!wpSiteUrl || !wpConsumerKey || !wpConsumerSecret) {
+            toast.error('Please enter Site URL, Consumer Key, and Consumer Secret');
+            return;
+        }
+        setIsTestingConnection(true);
+        addLog(`🔌 Testing connection to: ${wpSiteUrl}...`);
+        const toastId = toast.loading('Testing connection to WooCommerce...');
+        try {
+            const { wordpressSyncAPI } = await import('../utils/api');
+            const res = await wordpressSyncAPI.testConnection({
+                siteUrl: wpSiteUrl,
+                consumerKey: wpConsumerKey,
+                consumerSecret: wpConsumerSecret
+            });
+            if (res?.success) {
+                toast.success(res.message || 'Connected successfully!', { id: toastId });
+                addLog(`✅ Connected successfully! Found ${res.total} products.`);
+            } else {
+                toast.error(res?.error || 'Connection failed.', { id: toastId });
+                addLog(`❌ Connection failed: ${res?.error || 'Unknown error'}`);
+            }
+        } catch (err: any) {
+            console.error('Connection test error:', err);
+            const errMsg = err?.response?.data?.error || err?.message || 'Connection failed.';
+            toast.error(errMsg, { id: toastId });
+            addLog(`❌ Connection failed: ${errMsg}`);
+        } finally {
+            setIsTestingConnection(false);
+        }
+    };
+
+    const handleSaveWpCredentials = async () => {
+        if (!wpSiteUrl || !wpConsumerKey || !wpConsumerSecret) {
+            toast.error('Please enter Site URL, Consumer Key, and Consumer Secret');
+            return;
+        }
+        const toastId = toast.loading('Saving WooCommerce credentials...');
+        try {
+            const { wordpressSyncAPI } = await import('../utils/api');
+            const res = await wordpressSyncAPI.saveCredentials({
+                siteUrl: wpSiteUrl,
+                consumerKey: wpConsumerKey,
+                consumerSecret: wpConsumerSecret
+            });
+            if (res?.success) {
+                toast.success('Credentials saved successfully!', { id: toastId });
+                addLog('💾 WooCommerce credentials saved successfully.');
+            } else {
+                toast.error(res?.error || 'Failed to save credentials.', { id: toastId });
+            }
+        } catch (err: any) {
+            console.error('Save credentials error:', err);
+            toast.error(err?.response?.data?.error || err?.message || 'Failed to save credentials.', { id: toastId });
+        }
+    };
+
+    const triggerSyncProducts = async (force: boolean = false) => {
+        setIsSyncingProducts(true);
+        addLog(`📦 Starting Products Synchronization (Force Full Sync: ${force})...`);
+        const toastId = toast.loading('Syncing products from WooCommerce...');
+        try {
+            const { wordpressSyncAPI } = await import('../utils/api');
+            const res = await wordpressSyncAPI.syncProducts(force);
+            if (res?.success) {
+                toast.success(res.message || 'Products synced successfully!', { id: toastId });
+                addLog(`✅ Successfully synced ${res.synced} products.`);
+                
+                // Refresh local products list
+                const { productsAPI } = await import('../utils/api');
+                const productsRes = await productsAPI.getAll({ limit: 5000 });
+                if (productsRes) {
+                    const fresh = productsRes.products || productsRes;
+                    if (Array.isArray(fresh)) {
+                        setProducts(fresh.map((p: any) => ({
+                            id: p.id,
+                            name: p.name || 'Unknown Product',
+                            category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
+                            price: p.price || 0,
+                            stock: p.stock ?? 0,
+                            image: p.image || '',
+                            sku: p.sku
+                        })));
+                    }
+                }
+                
+                // Refresh status
+                const statusRes = await wordpressSyncAPI.getStatus();
+                if (statusRes?.success && statusRes.status) setSyncStatus(statusRes.status);
+            }
+        } catch (err: any) {
+            console.error('Products sync error:', err);
+            const errMsg = err?.response?.data?.error || err?.message || 'Products sync failed.';
+            toast.error(errMsg, { id: toastId });
+            addLog(`❌ Products sync failed: ${errMsg}`);
+        } finally {
+            setIsSyncingProducts(false);
+        }
+    };
+
+    const triggerSyncOrders = async (force: boolean = false) => {
+        setIsSyncingOrders(true);
+        addLog(`📋 Starting Orders Synchronization (Force Full Sync: ${force})...`);
+        const toastId = toast.loading('Syncing WooCommerce orders...');
+        try {
+            const { wordpressSyncAPI } = await import('../utils/api');
+            const res = await wordpressSyncAPI.syncOrders(force);
+            if (res?.success) {
+                toast.success(res.message || 'Orders synced successfully!', { id: toastId });
+                addLog(`✅ Successfully synced ${res.synced} orders.`);
+                // Refresh local orders list
+                const { ordersAPI } = await import('../utils/api');
+                const ordersRes = await ordersAPI.getAllAdmin({ limit: 5000 });
+                if (ordersRes) {
+                    setOrders(ordersRes);
+                }
+                // Refresh status
+                const statusRes = await wordpressSyncAPI.getStatus();
+                if (statusRes?.success && statusRes.status) setSyncStatus(statusRes.status);
+            }
+        } catch (err: any) {
+            console.error('Orders sync error:', err);
+            const errMsg = err?.response?.data?.error || err?.message || 'Orders sync failed.';
+            toast.error(errMsg, { id: toastId });
+            addLog(`❌ Orders sync failed: ${errMsg}`);
+        } finally {
+            setIsSyncingOrders(false);
+        }
+    };
+
+    const triggerSyncUsers = async (force: boolean = false) => {
+        setIsSyncingUsers(true);
+        addLog(`👥 Starting Customers Synchronization (Force Full Sync: ${force})...`);
+        const toastId = toast.loading('Syncing customers from WooCommerce...');
+        try {
+            const { wordpressSyncAPI } = await import('../utils/api');
+            const res = await wordpressSyncAPI.syncUsers(force);
+            if (res?.success) {
+                toast.success(res.message || 'Customers synced successfully!', { id: toastId });
+                addLog(`✅ Successfully synced ${res.synced} customers.`);
+                // Refresh local users list
+                const { usersAPI } = await import('../utils/api');
+                const usersRes = await usersAPI.getAll({ limit: 5000 });
+                if (usersRes) {
+                    setUsers(usersRes.users || usersRes);
+                }
+                // Refresh status
+                const statusRes = await wordpressSyncAPI.getStatus();
+                if (statusRes?.success && statusRes.status) setSyncStatus(statusRes.status);
+            }
+        } catch (err: any) {
+            console.error('Customers sync error:', err);
+            const errMsg = err?.response?.data?.error || err?.message || 'Customers sync failed.';
+            toast.error(errMsg, { id: toastId });
+            addLog(`❌ Customers sync failed: ${errMsg}`);
+        } finally {
+            setIsSyncingUsers(false);
+        }
+    };
+
+    const triggerSyncFull = async (force: boolean = false) => {
+        setIsSyncingAll(true);
+        addLog(`🔄 Initiating Full WooCommerce System Synchronization (Force Full: ${force})...`);
+        const toastId = toast.loading('Running full system sync (this may take up to 2 minutes)...');
+        try {
+            const { wordpressSyncAPI } = await import('../utils/api');
+            const res = await wordpressSyncAPI.syncAll(force);
+            if (res?.success) {
+                toast.success('Full WooCommerce synchronization completed successfully!', { id: toastId });
+                addLog(`✅ Full Sync complete: Categories: ${res.categories}, Brands: ${res.brands}, Products: ${res.products}, Orders: ${res.orders}, Customers: ${res.users}.`);
+                
+                // Refresh all datasets
+                const { productsAPI, ordersAPI, usersAPI } = await import('../utils/api');
+                const [pRes, oRes, uRes] = await Promise.all([
+                    productsAPI.getAll({ limit: 5000 }),
+                    ordersAPI.getAllAdmin({ limit: 5000 }),
+                    usersAPI.getAll({ limit: 5000 })
+                ]);
+                if (pRes) {
+                    const fresh = pRes.products || pRes;
+                    if (Array.isArray(fresh)) {
+                        setProducts(fresh.map((p: any) => ({
+                            id: p.id,
+                            name: p.name || 'Unknown Product',
+                            category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
+                            price: p.price || 0,
+                            stock: p.stock ?? 0,
+                            image: p.image || '',
+                            sku: p.sku
+                        })));
+                    }
+                }
+                if (oRes) setOrders(oRes);
+                if (uRes) setUsers(uRes.users || uRes);
+                
+                // Refresh status
+                const statusRes = await wordpressSyncAPI.getStatus();
+                if (statusRes?.success && statusRes.status) setSyncStatus(statusRes.status);
+            }
+        } catch (err: any) {
+            console.error('Full sync error:', err);
+            const errMsg = err?.response?.data?.error || err?.message || 'Full sync failed.';
+            toast.error(errMsg, { id: toastId });
+            addLog(`❌ Full sync failed: ${errMsg}`);
+        } finally {
+            setIsSyncingAll(false);
+        }
+    };
 
     // Hero Slides State
     const [isHeroSlideModalOpen, setIsHeroSlideModalOpen] = useState(false);
@@ -777,7 +1283,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             if (orderFilterMonth !== 'all') {
                 try {
                     const [year, month] = orderFilterMonth.split('-').map(Number);
-                    const orderDate = new Date(o.date);
+                    const orderDate = parseOrderDate(o);
                     matchesMonth = orderDate.getFullYear() === year && orderDate.getMonth() === month - 1;
                 } catch (e) {
                     matchesMonth = false;
@@ -1924,7 +2430,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                     {/* Interactive Revenue Chart */}
-                                    <div className="lg:col-span-2 bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+                                    <div className="lg:col-span-2 bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 self-start">
                                         <div className="flex justify-between items-center mb-6">
                                             <div>
                                                 <h3 className="text-lg font-bold text-gray-800 dark:text-white">Revenue Overview</h3>
@@ -1948,7 +2454,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <AnimatedGraph
                                             data={chartView === 'weekly' ? analyticsData.weeklyRevenue : analyticsData.monthlyRevenue}
                                             labels={chartView === 'weekly' ? analyticsData.weeklyLabels : analyticsData.monthlyLabels}
-                                            colorHex={chartView === 'weekly' ? '#6366f1' : '#DD3B5F'} // Indigo or Primary Pink
+                                            colorHex={chartView === 'weekly' ? '#D97706' : '#DD3B5F'} // Premium Amber Gold or Brand Primary Pink
                                         />
                                     </div>
 
@@ -2070,7 +2576,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                                         <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">{order.id}</td>
                                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{order.customerName || 'Guest'}</td>
-                                                        <td className="px-6 py-4 text-gray-500">{order.date}</td>
+                                                        <td className="px-6 py-4 text-gray-500">{formatDate(order.date || order.createdAt)}</td>
                                                         <td className="px-6 py-4 font-medium">₹{(order.total ?? 0).toLocaleString('en-IN')}</td>
                                                         <td className="px-6 py-4">
                                                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${statusBadgeColors[order.status] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
@@ -2267,7 +2773,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{order.customerName}</td>
-                                                        <td className="px-6 py-4 text-gray-500">{order.date}</td>
+                                                        <td className="px-6 py-4 text-gray-500">{formatDate(order.date || order.createdAt)}</td>
                                                         <td className="px-6 py-4 font-bold text-gray-800 dark:text-white">₹{(order.total ?? 0).toLocaleString('en-IN')}</td>
                                                         <td className="px-6 py-4">
                                                             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${statusBadgeColors[order.status] || 'bg-gray-100'}`}>
@@ -2342,6 +2848,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             <option value="dental-student">Students</option>
                                             <option value="dental-business">Business/Clinics</option>
                                             <option value="regular">Regular</option>
+                                            <option value="hidden">Hidden Users (No Mobile)</option>
                                         </select>
                                         <div className="relative w-full sm:w-64">
                                             <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
@@ -2392,8 +2899,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <div className="animate-fade-in space-y-6">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-layer-group text-primary"></i> Categories</h2>
-                                    <div className="flex gap-4 w-full sm:w-auto">
+                                    <div className="flex gap-3 w-full sm:w-auto">
                                         <SearchInput value={categorySearchTerm} onChange={setCategorySearchTerm} placeholder="Search categories..." />
+                                        <button
+                                            onClick={handleSyncCategories}
+                                            disabled={isSyncingCategories}
+                                            className="bg-gray-800 dark:bg-gray-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-700 dark:hover:bg-gray-600 transition-all flex items-center gap-2 disabled:opacity-50 flex-shrink-0 transition-transform active:scale-95"
+                                        >
+                                            {isSyncingCategories ? (
+                                                <>
+                                                    <i className="fas fa-spinner fa-spin"></i>
+                                                    Syncing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-sync-alt"></i>
+                                                    Sync Categories
+                                                </>
+                                            )}
+                                        </button>
                                         <button onClick={handleAddNewCategory} className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-pink-700 shadow-lg shadow-primary/30 flex-shrink-0 transition-transform active:scale-95"><i className="fas fa-plus mr-2"></i> Add Category</button>
                                     </div>
                                 </div>
@@ -2416,7 +2940,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <td className="px-6 py-4">
                                                             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary overflow-hidden">
                                                                 {cat.image ? (
-                                                                    <img src={cat.image} alt={cat.name} className="w-full h-full object-contain" />
+                                                                    <img src={resolveProductImage(cat.image)} alt={cat.name} className="w-full h-full object-contain" />
                                                                 ) : (
                                                                     <i className={cat.iconClass || 'fas fa-tooth'}></i>
                                                                 )}
@@ -2451,8 +2975,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <div className="animate-fade-in space-y-6">
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                                     <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2"><i className="fas fa-tags text-primary"></i> Brands</h2>
-                                    <div className="flex gap-4 w-full sm:w-auto">
+                                    <div className="flex gap-3 w-full sm:w-auto">
                                         <SearchInput value={brandSearchTerm} onChange={setBrandSearchTerm} placeholder="Search brands..." />
+                                        <button
+                                            onClick={handleSyncBrands}
+                                            disabled={isSyncingBrands}
+                                            className="bg-gray-800 dark:bg-gray-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-700 dark:hover:bg-gray-600 transition-all flex items-center gap-2 disabled:opacity-50 flex-shrink-0 transition-transform active:scale-95"
+                                        >
+                                            {isSyncingBrands ? (
+                                                <>
+                                                    <i className="fas fa-spinner fa-spin"></i>
+                                                    Syncing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-sync-alt"></i>
+                                                    Sync Brands
+                                                </>
+                                            )}
+                                        </button>
                                         <button onClick={handleAddNewBrand} className="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-pink-700 shadow-lg shadow-primary/30 flex-shrink-0 transition-transform active:scale-95"><i className="fas fa-plus mr-2"></i> Add Brand</button>
                                     </div>
                                 </div>
@@ -2472,7 +3013,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     <tr key={brand.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                                         <td className="px-6 py-4">
                                                             <div className="w-16 h-16 border rounded-lg bg-white flex items-center justify-center p-2">
-                                                                <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain" />
+                                                                <img src={resolveProductImage(brand.logo)} alt={brand.name} className="w-full h-full object-contain" />
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4">
@@ -2822,6 +3363,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 { id: 'email', label: 'Email', icon: 'fas fa-envelope' },
                                                 { id: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
                                                 { id: 'ai-chatbot', label: 'AI Chatbot', icon: 'fas fa-robot' },
+                                                { id: 'wordpress', label: 'WordPress Sync', icon: 'fab fa-wordpress' },
                                             ].map(tab => (
                                                 <button
                                                     key={tab.id}
@@ -3000,6 +3542,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                                             </label>
                                                         </div>
+                                                        {settings.payment.cod.enabled && (
+                                                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 animate-fade-in">
+                                                                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                                                    Minimum Order Total for COD (₹)
+                                                                </label>
+                                                                <input 
+                                                                    type="number" 
+                                                                    value={settings.payment.cod.minAmount || 0} 
+                                                                    onChange={(e) => setSettings({ 
+                                                                        ...settings, 
+                                                                        payment: { 
+                                                                            ...settings.payment, 
+                                                                            cod: { 
+                                                                                ...settings.payment.cod, 
+                                                                                minAmount: parseFloat(e.target.value) || 0 
+                                                                            } 
+                                                                        } 
+                                                                    })} 
+                                                                    className="w-full max-w-xs rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" 
+                                                                />
+                                                                <p className="text-[10px] text-gray-500 mt-1">
+                                                                    Customers can choose COD only if their order subtotal is at least this amount. Set to 0 for no minimum.
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -3033,6 +3600,164 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         <input type="checkbox" checked={settings.shipping.enableInternational} onChange={(e) => setSettings({ ...settings, shipping: { ...settings.shipping, enableInternational: e.target.checked } })} className="sr-only peer" />
                                                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                                                     </label>
+                                                </div>
+
+                                                <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <div>
+                                                            <h4 className="font-bold text-gray-800 dark:text-white text-base">Custom Shipping Zones (State-Specific Rates)</h4>
+                                                            <p className="text-xs text-gray-500">Configure different shipping amounts for specific Indian states.</p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newRule = { id: String(Date.now()), states: [], amount: 0 };
+                                                                setSettings({
+                                                                    ...settings,
+                                                                    shipping: {
+                                                                        ...settings.shipping,
+                                                                        stateRules: [...(settings.shipping.stateRules || []), newRule]
+                                                                    }
+                                                                });
+                                                            }}
+                                                            className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+                                                        >
+                                                            <i className="fas fa-plus"></i> Add Shipping Option / Zone
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="space-y-4">
+                                                        {(!settings.shipping.stateRules || settings.shipping.stateRules.length === 0) ? (
+                                                            <div className="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/50 dark:bg-gray-800/10">
+                                                                <i className="fas fa-truck-ramp-box text-3xl text-gray-300 dark:text-gray-600 mb-2"></i>
+                                                                <p className="text-xs text-gray-500 font-medium">No custom state shipping rates configured yet.</p>
+                                                                <p className="text-[10px] text-gray-400 mt-1">All states will fallback to the Standard Shipping Rate (Rest of India).</p>
+                                                            </div>
+                                                        ) : (
+                                                            settings.shipping.stateRules.map((rule: any, idx: number) => {
+                                                                const otherRulesStates = (settings.shipping.stateRules || [])
+                                                                    .filter((r: any) => r.id !== rule.id)
+                                                                    .flatMap((r: any) => r.states || []);
+                                                                
+                                                                const availableStates = INDIAN_STATES.filter(s => !otherRulesStates.includes(s));
+
+                                                                return (
+                                                                    <div key={rule.id || idx} className="p-5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-surface-dark relative shadow-sm hover:shadow transition-all group">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                const updatedRules = settings.shipping.stateRules.filter((r: any) => r.id !== rule.id);
+                                                                                setSettings({
+                                                                                    ...settings,
+                                                                                    shipping: {
+                                                                                        ...settings.shipping,
+                                                                                        stateRules: updatedRules
+                                                                                    }
+                                                                                });
+                                                                            }}
+                                                                            className="absolute top-4 right-4 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 p-2 rounded-lg transition-all"
+                                                                            title="Remove Rule"
+                                                                        >
+                                                                            <i className="fas fa-trash-can text-sm"></i>
+                                                                        </button>
+
+                                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start pr-8">
+                                                                            <div className="md:col-span-2">
+                                                                                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+                                                                                    Select States in this Zone
+                                                                                </label>
+                                                                                
+                                                                                <div className="flex flex-wrap gap-1.5 p-2 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 rounded-lg min-h-[42px] max-h-[140px] overflow-y-auto">
+                                                                                    {(!rule.states || rule.states.length === 0) && (
+                                                                                        <p className="text-xs text-gray-400 self-center pl-1 font-medium italic">No states selected yet. Click below to add.</p>
+                                                                                    )}
+                                                                                    {(rule.states || []).map((st: string) => (
+                                                                                        <span key={st} className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs px-2.5 py-1 rounded-md font-semibold border border-blue-100 dark:border-blue-800/30 shadow-sm">
+                                                                                            {st}
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() => {
+                                                                                                    const updatedStates = rule.states.filter((s: string) => s !== st);
+                                                                                                    const updatedRules = settings.shipping.stateRules.map((r: any) => 
+                                                                                                        r.id === rule.id ? { ...r, states: updatedStates } : r
+                                                                                                    );
+                                                                                                    setSettings({
+                                                                                                        ...settings,
+                                                                                                        shipping: {
+                                                                                                            ...settings.shipping,
+                                                                                                            stateRules: updatedRules
+                                                                                                        }
+                                                                                                    });
+                                                                                                }}
+                                                                                                className="text-blue-500 hover:text-blue-700 font-bold hover:scale-110 transition-transform"
+                                                                                            >
+                                                                                                &times;
+                                                                                            </button>
+                                                                                        </span>
+                                                                                    ))}
+                                                                                </div>
+
+                                                                                <div className="mt-2 relative">
+                                                                                    <select
+                                                                                        value=""
+                                                                                        onChange={(e) => {
+                                                                                            const selectedState = e.target.value;
+                                                                                            if (!selectedState) return;
+                                                                                            const updatedStates = [...(rule.states || []), selectedState];
+                                                                                            const updatedRules = settings.shipping.stateRules.map((r: any) => 
+                                                                                                r.id === rule.id ? { ...r, states: updatedStates } : r
+                                                                                            );
+                                                                                            setSettings({
+                                                                                                ...settings,
+                                                                                                shipping: {
+                                                                                                    ...settings.shipping,
+                                                                                                    stateRules: updatedRules
+                                                                                                }
+                                                                                            });
+                                                                                        }}
+                                                                                        className="w-full text-xs rounded-lg border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white py-1.5 focus:ring-primary focus:border-primary"
+                                                                                    >
+                                                                                        <option value="">+ Add state to this rule...</option>
+                                                                                        {availableStates.map(st => (
+                                                                                            <option key={st} value={st}>{st}</option>
+                                                                                        ))}
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div>
+                                                                                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+                                                                                    Shipping Rate (₹)
+                                                                                </label>
+                                                                                <div className="relative">
+                                                                                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₹</span>
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        value={rule.amount}
+                                                                                        onChange={(e) => {
+                                                                                            const updatedRules = settings.shipping.stateRules.map((r: any) => 
+                                                                                                r.id === rule.id ? { ...r, amount: parseFloat(e.target.value) || 0 } : r
+                                                                                            );
+                                                                                            setSettings({
+                                                                                                ...settings,
+                                                                                                shipping: {
+                                                                                                    ...settings.shipping,
+                                                                                                    stateRules: updatedRules
+                                                                                                }
+                                                                                            });
+                                                                                        }}
+                                                                                        className="w-full pl-8 rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm font-bold"
+                                                                                        placeholder="0"
+                                                                                    />
+                                                                                </div>
+                                                                                <p className="text-[10px] text-gray-500 mt-1 font-medium">Applied below Free Shipping Threshold.</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
@@ -3259,6 +3984,301 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             </div>
                                         )}
 
+                                        {/* WordPress Sync Settings */}
+                                        {activeSettingsTab === 'wordpress' && (
+                                            <div className="animate-fade-in space-y-6">
+                                                {/* Header Banner */}
+                                                <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-pink-950 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+                                                    <div className="absolute right-0 top-0 opacity-10 transform translate-x-12 -translate-y-6">
+                                                        <i className="fab fa-wordpress text-[200px]"></i>
+                                                    </div>
+                                                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                                        <div>
+                                                            <div className="flex items-center gap-2 bg-pink-500/20 text-pink-300 px-3 py-1 rounded-full text-xs font-semibold w-max mb-2 border border-pink-500/30">
+                                                                <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+                                                                WordPress / WooCommerce Integration
+                                                            </div>
+                                                            <h2 className="text-2xl font-bold tracking-tight">WordPress Synchronization Center</h2>
+                                                            <p className="text-gray-300 text-sm mt-1 max-w-xl">
+                                                                Seamlessly import and keep products, categories, brands, customers, and active orders synchronized with your WooCommerce store.
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => triggerSyncFull(true)}
+                                                            disabled={isSyncingAll}
+                                                            className={`bg-white text-gray-950 font-bold px-6 py-3 rounded-xl hover:bg-gray-100 transition-all flex items-center gap-2 border border-white active:scale-95 shadow-lg ${isSyncingAll ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                                        >
+                                                            {isSyncingAll ? (
+                                                                <>
+                                                                    <i className="fas fa-spinner animate-spin"></i>
+                                                                    Syncing WooCommerce...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <i className="fas fa-sync-alt"></i>
+                                                                    Force Full Sync All
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                                    {/* Left 1/3: WooCommerce Credentials */}
+                                                    <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
+                                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+                                                            <i className="fas fa-key text-pink-500"></i> WooCommerce API Keys
+                                                        </h3>
+                                                        <div className="space-y-3">
+                                                            <div>
+                                                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Site URL</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={wpSiteUrl}
+                                                                    onChange={(e) => setWpSiteUrl(e.target.value)}
+                                                                    placeholder="https://alphadentkart.com"
+                                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-850 dark:text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Consumer Key</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={wpConsumerKey}
+                                                                    onChange={(e) => setWpConsumerKey(e.target.value)}
+                                                                    placeholder="ck_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-850 dark:text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-mono"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Consumer Secret</label>
+                                                                <input
+                                                                    type="password"
+                                                                    value={wpConsumerSecret}
+                                                                    onChange={(e) => setWpConsumerSecret(e.target.value)}
+                                                                    placeholder="cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-850 dark:text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-mono"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="pt-2 flex flex-col gap-2">
+                                                            <button
+                                                                onClick={handleTestConnection}
+                                                                disabled={isTestingConnection}
+                                                                className="w-full bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-800 dark:text-white font-bold py-2.5 rounded-xl text-sm transition-all border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2"
+                                                            >
+                                                                {isTestingConnection ? (
+                                                                    <i className="fas fa-circle-notch animate-spin text-gray-500"></i>
+                                                                ) : (
+                                                                    <i className="fas fa-plug"></i>
+                                                                )}
+                                                                Test Connection
+                                                            </button>
+                                                            <button
+                                                                onClick={handleSaveWpCredentials}
+                                                                className="w-full bg-primary hover:bg-pink-700 text-white font-bold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-sm shadow-primary/20"
+                                                            >
+                                                                <i className="fas fa-save"></i>
+                                                                Save Credentials
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Right 2/3: Entity Synchronizers & Realtime Console Logs */}
+                                                    <div className="lg:col-span-2 space-y-6">
+                                                        {/* Synced Cards Grid */}
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            {/* Products Card */}
+                                                            <div className="bg-white dark:bg-surface-dark p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between space-y-4">
+                                                                <div>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-950/30 flex items-center justify-center text-pink-500 text-lg">
+                                                                            <i className="fas fa-box"></i>
+                                                                        </div>
+                                                                        <span className="text-[10px] bg-pink-100 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400 px-2 py-0.5 rounded-full font-bold">
+                                                                            Products & Variations
+                                                                        </span>
+                                                                    </div>
+                                                                    <h4 className="font-bold text-gray-900 dark:text-white mt-3 text-sm">Synchronize Products</h4>
+                                                                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                                                                        Last Sync: {syncStatus?.lastProductSync ? new Date(syncStatus.lastProductSync.seconds * 1000).toLocaleString() : 'Never'}
+                                                                    </p>
+                                                                    
+                                                                    <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-gray-855 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Force Full Sync</span>
+                                                                        <label className="relative inline-flex items-center cursor-pointer">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={forceFullSyncProducts}
+                                                                                onChange={(e) => setForceFullSyncProducts(e.target.checked)}
+                                                                                className="sr-only peer"
+                                                                            />
+                                                                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none dark:bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => triggerSyncProducts(forceFullSyncProducts)}
+                                                                    disabled={isSyncingProducts}
+                                                                    className="w-full bg-primary hover:bg-pink-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all"
+                                                                >
+                                                                    {isSyncingProducts ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-sync"></i>}
+                                                                    Sync Products
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Orders Card */}
+                                                            <div className="bg-white dark:bg-surface-dark p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between space-y-4">
+                                                                <div>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-950/30 flex items-center justify-center text-pink-500 text-lg">
+                                                                            <i className="fas fa-shopping-cart"></i>
+                                                                        </div>
+                                                                        <span className="text-[10px] bg-pink-100 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400 px-2 py-0.5 rounded-full font-bold">
+                                                                            Sales & Daily Orders
+                                                                        </span>
+                                                                    </div>
+                                                                    <h4 className="font-bold text-gray-900 dark:text-white mt-3 text-sm">Synchronize Orders</h4>
+                                                                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                                                                        Last Sync: {syncStatus?.lastOrderSync ? new Date(syncStatus.lastOrderSync.seconds * 1000).toLocaleString() : 'Never'}
+                                                                    </p>
+
+                                                                    <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-gray-855 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Force Full Sync</span>
+                                                                        <label className="relative inline-flex items-center cursor-pointer">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={forceFullSyncOrders}
+                                                                                onChange={(e) => setForceFullSyncOrders(e.target.checked)}
+                                                                                className="sr-only peer"
+                                                                            />
+                                                                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none dark:bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => triggerSyncOrders(forceFullSyncOrders)}
+                                                                    disabled={isSyncingOrders}
+                                                                    className="w-full bg-primary hover:bg-pink-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all"
+                                                                >
+                                                                    {isSyncingOrders ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-sync"></i>}
+                                                                    Sync Orders
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Customers Card */}
+                                                            <div className="bg-white dark:bg-surface-dark p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between space-y-4">
+                                                                <div>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-950/30 flex items-center justify-center text-pink-500 text-lg">
+                                                                            <i className="fas fa-users"></i>
+                                                                        </div>
+                                                                        <span className="text-[10px] bg-pink-100 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400 px-2 py-0.5 rounded-full font-bold">
+                                                                            User Profiles & Billing
+                                                                        </span>
+                                                                    </div>
+                                                                    <h4 className="font-bold text-gray-900 dark:text-white mt-3 text-sm">Synchronize Customers</h4>
+                                                                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                                                                        Last Sync: {syncStatus?.lastUserSync ? new Date(syncStatus.lastUserSync.seconds * 1000).toLocaleString() : 'Never'}
+                                                                    </p>
+
+                                                                    <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-gray-855 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+                                                                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Force Full Sync</span>
+                                                                        <label className="relative inline-flex items-center cursor-pointer">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={forceFullSyncUsers}
+                                                                                onChange={(e) => setForceFullSyncUsers(e.target.checked)}
+                                                                                className="sr-only peer"
+                                                                            />
+                                                                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none dark:bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => triggerSyncUsers(forceFullSyncUsers)}
+                                                                    disabled={isSyncingUsers}
+                                                                    className="w-full bg-primary hover:bg-pink-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all"
+                                                                >
+                                                                    {isSyncingUsers ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-sync"></i>}
+                                                                    Sync Customers
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Taxonomies Card */}
+                                                            <div className="bg-white dark:bg-surface-dark p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between space-y-4">
+                                                                <div>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="w-10 h-10 rounded-xl bg-pink-50 dark:bg-pink-950/30 flex items-center justify-center text-pink-500 text-lg">
+                                                                            <i className="fas fa-tags"></i>
+                                                                        </div>
+                                                                        <span className="text-[10px] bg-pink-100 dark:bg-pink-950/50 text-pink-600 dark:text-pink-400 px-2 py-0.5 rounded-full font-bold">
+                                                                            Brands & Categories
+                                                                        </span>
+                                                                    </div>
+                                                                    <h4 className="font-bold text-gray-900 dark:text-white mt-3 text-sm">Sync Categories & Brands</h4>
+                                                                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                                                                        Synchronize core catalog taxonomy terms to index properly on Alpha-Dentkart.
+                                                                    </p>
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={handleSyncCategories}
+                                                                        disabled={isSyncingCategories}
+                                                                        className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-800 dark:text-white font-bold py-2 rounded-xl text-[11px] border border-gray-200 dark:border-gray-700 transition-all flex items-center justify-center gap-1.5"
+                                                                    >
+                                                                        {isSyncingCategories ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-folder"></i>}
+                                                                        Categories
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={handleSyncBrands}
+                                                                        disabled={isSyncingBrands}
+                                                                        className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-800 dark:text-white font-bold py-2 rounded-xl text-[11px] border border-gray-200 dark:border-gray-700 transition-all flex items-center justify-center gap-1.5"
+                                                                    >
+                                                                        {isSyncingBrands ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-tag"></i>}
+                                                                        Brands
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Realtime Terminal Console Log */}
+                                                        <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-lg p-5 space-y-3">
+                                                            <div className="flex items-center justify-between border-b border-gray-800 pb-2.5">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                                                                    <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
+                                                                    <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                                                                    <span className="text-gray-400 font-mono text-xs ml-2">system-sync.log</span>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => setSyncLogs(['📺 WordPress Sync Console ready...'])}
+                                                                    className="text-gray-500 hover:text-gray-300 font-mono text-[10px] uppercase tracking-wider flex items-center gap-1"
+                                                                >
+                                                                    <i className="fas fa-trash"></i> Clear Console
+                                                                </button>
+                                                            </div>
+                                                            <div
+                                                                id="sync-console-box"
+                                                                className="font-mono text-xs text-green-400 h-48 overflow-y-auto space-y-1"
+                                                                ref={(el) => {
+                                                                    if (el) {
+                                                                        el.scrollTop = el.scrollHeight;
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {syncLogs.map((log, idx) => (
+                                                                    <div key={idx} className="whitespace-pre-wrap leading-relaxed">
+                                                                        {log}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* AI Chatbot Settings */}
                                         {activeSettingsTab === 'ai-chatbot' && (
                                             <div className="animate-fade-in">
@@ -3266,7 +4286,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             </div>
                                         )}
 
-                                        {activeSettingsTab !== 'ai-chatbot' && (
+                                        {activeSettingsTab !== 'ai-chatbot' && activeSettingsTab !== 'wordpress' && (
                                             <div className="mt-6 flex justify-end">
                                                 <button onClick={handleSaveSettings} className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-pink-700 shadow-lg shadow-primary/30 transition-all active:scale-95">
                                                     Save Changes
@@ -3492,7 +4512,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Main Image</label>
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-24 h-24 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                                                        {productFormData.image ? <img src={productFormData.image} className="w-full h-full object-contain" alt="Main" /> : <span className="text-xs text-gray-400">Preview</span>}
+                                                        {productFormData.image ? <img src={resolveProductImage(productFormData.image)} className="w-full h-full object-contain" alt="Main" /> : <span className="text-xs text-gray-400">Preview</span>}
                                                     </div>
                                                     <input type="file" onChange={handleProductImageUpload} className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
                                                 </div>
@@ -3502,7 +4522,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                 <div className="flex flex-wrap gap-4 mb-4">
                                                     {productFormData.images.map((img, idx) => (
                                                         <div key={idx} className="relative w-20 h-20 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden group">
-                                                            <img src={img} className="w-full h-full object-contain" alt={`Gallery ${idx}`} />
+                                                            <img src={resolveProductImage(img)} className="w-full h-full object-contain" alt={`Gallery ${idx}`} />
                                                             <button type="button" onClick={() => removeGalleryImage(idx)} className="absolute inset-0 bg-black/50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><i className="fas fa-trash"></i></button>
                                                         </div>
                                                     ))}
@@ -3634,7 +4654,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <div className="flex gap-4 items-center">
                                         <div className="w-16 h-16 border rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
                                             {categoryFormData.image ? (
-                                                <img src={categoryFormData.image} className="w-full h-full object-contain" />
+                                                <img src={resolveProductImage(categoryFormData.image)} className="w-full h-full object-contain" />
                                             ) : (
                                                 <i className={`${categoryFormData.iconClass || 'fas fa-tooth'} text-gray-400`}></i>
                                             )}
@@ -3672,7 +4692,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <label className="block text-xs font-medium text-gray-500 mb-1">Logo</label>
                                     <div className="flex gap-4 items-center">
                                         <div className="w-16 h-16 border rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                                            {brandFormData.logo ? <img src={brandFormData.logo} className="w-full h-full object-contain" /> : <span className="text-xs text-gray-400">No Img</span>}
+                                            {brandFormData.logo ? <img src={resolveProductImage(brandFormData.logo)} className="w-full h-full object-contain" /> : <span className="text-xs text-gray-400">No Img</span>}
                                         </div>
                                         <input type="file" onChange={handleBrandLogoUpload} className="text-xs text-gray-500" />
                                     </div>
@@ -3749,7 +4769,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             <div className="flex justify-between items-start mb-2">
                                                                 <div>
                                                                     <p className="font-bold text-gray-800 dark:text-white text-sm">Order #{order.id}</p>
-                                                                    <p className="text-xs text-gray-500">{order.date}</p>
+                                                                    <p className="text-xs text-gray-500">{formatDate(order.date || order.createdAt)}</p>
                                                                 </div>
                                                                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
                                                                     order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
@@ -3837,7 +4857,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
                                     <h4 className="font-bold text-gray-800 dark:text-white mb-2 text-sm uppercase">Customer Info</h4>
                                     <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">{selectedOrder.customerName}</p>
-                                    <p className="text-xs text-gray-500 mt-1">Placed on: {selectedOrder.date}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Placed on: {formatDate(selectedOrder.date || selectedOrder.createdAt)}</p>
                                     {(() => {
                                         const customer = users.find(u => u.name === selectedOrder.customerName);
                                         return customer ? (
@@ -4501,7 +5521,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                         </div>
                                                         <div>
                                                             <div className="font-bold text-gray-900 dark:text-white">{order.id}</div>
-                                                            <div className="text-sm text-gray-500">{order.date}</div>
+                                                            <div className="text-sm text-gray-500">{formatDate(order.date || order.createdAt)}</div>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">

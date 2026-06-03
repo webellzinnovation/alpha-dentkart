@@ -6,25 +6,16 @@ import logger from '../utils/logger';
 const memoryCache: Record<string, { data: any; timestamp: number }> = {};
 const CACHE_TTL = 300; // 5 minutes
 
+export function invalidateLocalCache() {
+    for (const key in memoryCache) {
+        delete memoryCache[key];
+    }
+}
+
 // Get all brands
 export async function getAllBrands(req: Request, res: Response) {
     try {
         const { featured } = req.query;
-        const cacheKey = `brands:featured:${featured || 'all'}`;
-        
-        // Check memory cache first
-        const memCached = memoryCache[cacheKey];
-        if (memCached && Date.now() - memCached.timestamp < CACHE_TTL * 1000) {
-            return res.json(memCached.data);
-        }
-
-        // Try cache service
-        let cached: any = null;
-        try {
-            const cacheService = require('../services/cacheService');
-            cached = await cacheService.get(cacheKey);
-            if (cached) return res.json(cached);
-        } catch (e) {}
 
         let query: FirebaseFirestore.Query = db.collection('brands');
 
@@ -37,16 +28,7 @@ export async function getAllBrands(req: Request, res: Response) {
         const snapshot = await query.get();
         const brands = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        const response = { brands };
-        
-        // Cache the result
-        memoryCache[cacheKey] = { data: response, timestamp: Date.now() };
-        try {
-            const cacheService = require('../services/cacheService');
-            await cacheService.set(cacheKey, response, 300);
-        } catch (e) {}
-
-        res.json(response);
+        res.json({ brands });
     } catch (error) {
         logger.error('Error fetching brands:', error);
         res.status(500).json({ error: 'Failed to fetch brands' });
@@ -66,6 +48,9 @@ export async function toggleBrandFeatured(req: Request, res: Response) {
 
         await db.collection('brands').doc(String(id)).update(updates);
         const updatedDoc = await db.collection('brands').doc(String(id)).get();
+
+        // Clear local memory cache
+        invalidateLocalCache();
 
         // Also invalidate cache since brand has changed
         try {
@@ -94,6 +79,9 @@ export async function reorderFeaturedBrands(req: Request, res: Response) {
         });
 
         await batch.commit();
+
+        // Clear local memory cache
+        invalidateLocalCache();
 
         try {
             const { cacheService } = require('../services/cacheService');
@@ -126,6 +114,10 @@ export async function createBrand(req: Request, res: Response) {
         };
 
         const docRef = await db.collection('brands').add(newBrand);
+        
+        // Clear local memory cache
+        invalidateLocalCache();
+        
         await cacheService.invalidateBrandsCache();
 
         res.status(201).json({
@@ -152,6 +144,10 @@ export async function updateBrand(req: Request, res: Response) {
         updates.updatedAt = new Date().toISOString();
 
         await docRef.update(updates);
+        
+        // Clear local memory cache
+        invalidateLocalCache();
+        
         await cacheService.invalidateBrandsCache();
 
         res.json({ message: 'Brand updated successfully' });
@@ -172,6 +168,10 @@ export async function deleteBrand(req: Request, res: Response) {
         }
 
         await docRef.delete();
+        
+        // Clear local memory cache
+        invalidateLocalCache();
+        
         await cacheService.invalidateBrandsCache();
 
         res.json({ message: 'Brand deleted successfully' });

@@ -92,9 +92,17 @@ self.addEventListener('fetch', (event) => {
 
   // Default to network
   event.respondWith(
-    fetchWithTimeout(request).catch(() => {
+    fetchWithTimeout(request).catch(async () => {
       // Return cached version if network fails
-      return caches.match(request);
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) return cachedResponse;
+      
+      // If no cache, return a fallback response instead of letting it fail
+      return new Response('Network error occurred', {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: new Headers({ 'Content-Type': 'text/plain' })
+      });
     })
   );
 });
@@ -263,7 +271,4 @@ self.addEventListener('notificationclick', (event) => {
   }
 });
 
-// Performance monitoring - skip API calls
-self.addEventListener('fetch', (event) => {
-  // Skip API monitoring to avoid double-fetching
-});
+// Performance monitoring - skip API calls

@@ -23,6 +23,12 @@ router.get('/:id', authenticateToken, getVerificationById);
 router.get('/:id/audit-logs', authenticateToken, getVerificationAuditLogs);
 router.delete('/:id', authenticateToken, deleteVerification);
 
+// Frontend hook aliases
+router.get('/documents', authenticateToken, getUserVerifications);
+router.post('/documents', authenticateToken, uploadVerificationFile, submitVerification);
+router.get('/documents/:id', authenticateToken, getVerificationById);
+router.delete('/documents/:id', authenticateToken, deleteVerification);
+
 // Admin routes
 router.get('/', authenticateToken, getAllVerifications);
 router.get('/user/:userId', authenticateToken, getVerificationsByUserId);

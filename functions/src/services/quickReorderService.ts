@@ -57,6 +57,7 @@ export class QuickReorderService {
         notes: data.notes || `Quick reorder from order ${data.orderId}`,
         shippingAddress: originalOrder.shippingAddress,
         billingAddress: originalOrder.billingAddress,
+        date: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };

@@ -54,6 +54,7 @@ export async function createOrder(req: Request, res: Response) {
             }],
             couponId: validatedData.couponId || null,
             couponDiscount: validatedData.couponDiscount || 0,
+            date: new Date().toISOString(),
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
@@ -170,10 +171,18 @@ export async function getMyOrders(req: Request, res: Response) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
 
-        const snapshot = await db.collection('orders')
-            .where('userId', '==', userId)
-            .orderBy('createdAt', 'desc')
-            .get();
+        let snapshot;
+        try {
+            snapshot = await db.collection('orders')
+                .where('userId', '==', userId)
+                .orderBy('createdAt', 'desc')
+                .get();
+        } catch (idxError) {
+            logger.warn('Failed ordered getMyOrders query, falling back to unordered query and sorting in-memory', { error: idxError, userId });
+            snapshot = await db.collection('orders')
+                .where('userId', '==', userId)
+                .get();
+        }
 
         const orders = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -182,6 +191,13 @@ export async function getMyOrders(req: Request, res: Response) {
                 ...data,
                 createdAt: (data.createdAt as any)?.toDate ? (data.createdAt as any).toDate() : data.createdAt,
             };
+        });
+
+        // Safe in-memory sorting by createdAt descending (newest first)
+        orders.sort((a: any, b: any) => {
+            const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return timeB - timeA;
         });
 
         res.json({ orders });
@@ -202,10 +218,6 @@ export async function getAllOrders(req: Request, res: Response) {
 
         let query: FirebaseFirestore.Query = db.collection('orders');
 
-        if (status && status !== 'All') {
-            query = query.where('status', '==', status);
-        }
-
         const snapshot = await query.orderBy('createdAt', 'desc').get();
         let allOrders = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -215,6 +227,11 @@ export async function getAllOrders(req: Request, res: Response) {
                 createdAt: (data.createdAt as any)?.toDate ? (data.createdAt as any).toDate() : data.createdAt,
             };
         });
+
+        if (status && status !== 'All') {
+            const sLower = status.toLowerCase();
+            allOrders = allOrders.filter((o: any) => o.status && o.status.toLowerCase() === sLower);
+        }
 
         if (search) {
             const s = search.toLowerCase();

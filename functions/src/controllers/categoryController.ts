@@ -20,6 +20,12 @@ const wooApi = new WooCommerceRestApi({
 const memoryCache: Record<string, { data: any; timestamp: number }> = {};
 const CACHE_TTL = 300; // 5 minutes
 
+export function invalidateLocalCache() {
+    for (const key in memoryCache) {
+        delete memoryCache[key];
+    }
+}
+
 // Fetch categories from WooCommerce as fallback
 async function fetchCategoriesFromWooCommerce(): Promise<any[]> {
     try {
@@ -41,14 +47,6 @@ async function fetchCategoriesFromWooCommerce(): Promise<any[]> {
 
 export async function getAllCategories(req: Request, res: Response) {
     try {
-        const cacheKey = 'categories:all';
-        
-        // Check memory cache first
-        const memCached = memoryCache[cacheKey];
-        if (memCached && Date.now() - memCached.timestamp < CACHE_TTL * 1000) {
-            return res.json(memCached.data);
-        }
-
         let categories: any[] = [];
         
         try {
@@ -66,12 +64,7 @@ export async function getAllCategories(req: Request, res: Response) {
             categories = await fetchCategoriesFromWooCommerce();
         }
         
-        const response = { categories };
-        
-        // Cache the result
-        memoryCache[cacheKey] = { data: response, timestamp: Date.now() };
-        
-        res.json(response);
+        res.json({ categories });
     } catch (error: any) {
         console.error('Error fetching categories:', error);
         logger.error('Error fetching categories:', error);
@@ -106,6 +99,9 @@ export async function createCategory(req: Request, res: Response) {
 
         const docRef = await db.collection('categories').add(newCategory);
 
+        // Clear local memory cache
+        invalidateLocalCache();
+
         await cacheService.invalidateCategoriesCache();
 
         res.status(201).json({
@@ -132,6 +128,10 @@ export async function updateCategory(req: Request, res: Response) {
         updates.updatedAt = new Date().toISOString();
 
         await docRef.update(updates);
+        
+        // Clear local memory cache
+        invalidateLocalCache();
+        
         await cacheService.invalidateCategoriesCache();
 
         res.json({ message: 'Category updated successfully' });
@@ -152,6 +152,10 @@ export async function deleteCategory(req: Request, res: Response) {
         }
 
         await docRef.delete();
+        
+        // Clear local memory cache
+        invalidateLocalCache();
+        
         await cacheService.invalidateCategoriesCache();
 
         res.json({ message: 'Category deleted successfully' });

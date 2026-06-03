@@ -38,7 +38,7 @@ const TermsOfService = lazy(() => import('./components/TermsOfService'));
 const AdminLogin = lazy(() => import('./components/AdminLogin').then(m => ({ default: m.AdminLogin })));
 import CookieConsent from './components/CookieConsent';
 import { PROMOS, HERO_SLIDES, CATEGORIES, BRAND_PROFILES } from './constants';
-import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile, HomepageSettings, ChatSession } from './types';
+import { Product, CartItem, User, Order, Category, BrandProfile, HeroSlide, PromotionalTile, HomepageSettings, ChatSession, Coupon } from './types';
 import cache, { CACHE_KEYS, CACHE_TTL } from './utils/cache';
 // import { adaptDemoData } from './utils/demoDataAdapter';
 import { createUniqueSlug, extractIdFromSlug, generateSlug } from './utils/slugify';
@@ -85,6 +85,54 @@ const transformProducts = (products: any[]): Product[] => {
   }));
 };
 
+const DEFAULT_PROMOTIONAL_TILES: PromotionalTile[] = [
+  {
+    id: 1,
+    title: "High Speed Airotor Handpiece",
+    category: "Clinic Essential",
+    price: "FROM ₹7,500",
+    image: "https://placehold.co/300x300/transparent/DD3B5F?text=Airotor",
+    link: "/shop?brand=NSK",
+    order: 1,
+    isActive: true,
+    bgColorClass: "bg-cyan-50 dark:bg-gray-800",
+    tagColorClass: "text-cyan-600"
+  },
+  {
+    id: 2,
+    title: "Composite Restoration Kit",
+    category: "Bundle Deal",
+    price: "FROM ₹16,900",
+    image: "https://placehold.co/300x300/transparent/DD3B5F?text=Composite+Kit",
+    link: "/shop?category=Restorative",
+    order: 2,
+    isActive: true,
+    bgColorClass: "bg-teal-50 dark:bg-gray-800",
+    tagColorClass: "text-teal-600"
+  },
+  {
+    id: 3,
+    title: "Digital Apex Locator V5",
+    category: "New Arrival",
+    price: "FROM ₹12,500",
+    image: "https://placehold.co/300x300/transparent/DD3B5F?text=Apex+Locator",
+    link: "/shop?category=Endodontics",
+    order: 3,
+    isActive: true,
+    bgColorClass: "bg-sky-50 dark:bg-gray-800",
+    tagColorClass: "text-sky-600"
+  }
+];
+
+const getPromoStyles = (index: number) => {
+  const styles = [
+    { bg: "bg-cyan-50 dark:bg-gray-800", tag: "text-cyan-600" },
+    { bg: "bg-teal-50 dark:bg-gray-800", tag: "text-teal-600" },
+    { bg: "bg-sky-50 dark:bg-gray-800", tag: "text-sky-600" }
+  ];
+  return styles[index % styles.length];
+};
+
 type ViewState = 'home' | 'shop' | 'brands' | 'categories' | 'wishlist' | 'product-detail' | 'login' | 'register' | 'forgot-password' | 'dashboard' | 'admin-dashboard' | 'admin-login' | 'theme2-demo' | 'theme3-demo' | 'checkout' | 'privacy-policy' | 'terms-of-service';
 
 function App() {
@@ -93,7 +141,7 @@ function App() {
 
   // Initialize view from URL
   const [currentView, setCurrentView] = useState<ViewState>(() => {
-    const path = location.pathname.substring(1); // remove leading slash
+    const path = location.pathname.replace(/\/+$/, '').substring(1); // remove leading and trailing slashes
     if (path === '' || path === 'home') return 'home';
     if (path === 'shop' || path.startsWith('category/') || path.startsWith('brand/')) return 'shop';
     if (path === 'brands') return 'brands';
@@ -114,7 +162,7 @@ function App() {
 
   // Auth State (Moved up to fix hoisting)
   const {
-    isLoggedIn, setIsLoggedIn,
+    isLoggedIn,
     user, setUser,
     isAdmin, setIsAdmin
   } = useAuth();
@@ -123,8 +171,13 @@ function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [totalProductCount, setTotalProductCount] = useState<number>(0);
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('alpha_orders');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('alpha_orders');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error('Error parsing alpha_orders:', e);
+      return [];
+    }
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<BrandProfile[]>([]);
@@ -133,7 +186,7 @@ function App() {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
 
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-  const [promotionalTiles, setPromotionalTiles] = useState<PromotionalTile[]>([]);
+  const [promotionalTiles, setPromotionalTiles] = useState<PromotionalTile[]>(DEFAULT_PROMOTIONAL_TILES);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
 
   const {
@@ -218,13 +271,13 @@ function App() {
         setLoadProgress(20);
 
         const savedIsAdmin = localStorage.getItem('isAdmin') === 'true';
-        const fetchLimit = savedIsAdmin ? 5000 : 200;
+        // Always start with a fast 200-product fetch — admin full catalog loads progressively in background
+        const fetchLimit = 200;
         
-        // Parallel fetch for ALL data to minimize waterfalls
-        console.log(`📡 Starting parallel fetch for products (limit: ${fetchLimit}) and other resources...`);
+        // PHASE 1: Fast UI data — unblocks loading screen immediately
+        console.log(`📡 Phase 1: Fetching fast UI data (categories, brands, slides, auth)...`);
         
-        const fetchPromises = [
-          productsAPI.getAll({ limit: fetchLimit }),
+        const fastPromises = [
           categoriesAPI.getAll(),
           brandsAPI.getAll(),
           heroSlidesAPI.getAll(),
@@ -233,72 +286,36 @@ function App() {
           authAPI.me()
         ];
 
-        // Pre-emptively fetch admin data if likely admin to avoid secondary waterfall
-        let adminDataIndices: Record<string, number> = {};
-        if (savedIsAdmin) {
-          const { reviewsAPI, chatSessionsAPI } = await import('./utils/api');
-          adminDataIndices.reviews = fetchPromises.length;
-          fetchPromises.push(reviewsAPI.getAllAdmin());
-          
-          adminDataIndices.chatSessions = fetchPromises.length;
-          fetchPromises.push(chatSessionsAPI.getAll());
-          
-          // Also fetch first page of users/customers
-          adminDataIndices.users = fetchPromises.length;
-          const usersPerPage = 100;
-          fetchPromises.push(usersAPI.getAll({ limit: usersPerPage, getTotal: true }));
-        }
-
-        const results = await Promise.allSettled(fetchPromises);
+        const fastResults = await Promise.allSettled(fastPromises);
         
-        const productsResult = results[0];
-        const categoriesResponse = results[1];
-        const brandsResponse = results[2];
-        const slidesResponse = results[3];
-        const tilesResponse = results[4];
-        const settingsResponse = results[5];
-        const authResponse = results[6];
-        
-        // Extract productsResponse from settled result
-        let productsResponse: any = null;
-        if (productsResult.status === 'fulfilled') {
-          productsResponse = productsResult.value;
-        } else {
-          console.error("❌ Products API call failed:", productsResult.reason);
-          // If critical data fails, we might want to throw, but since we have cache, let's proceed
-        }
+        // Map fast results to named positions
+        const categoriesResponse  = fastResults[0];
+        const brandsResponse      = fastResults[1];
+        const slidesResponse      = fastResults[2];
+        const tilesResponse       = fastResults[3];
+        const settingsResponse    = fastResults[4];
+        const authResponse        = fastResults[5];
 
         setLoadProgress(60);
 
+        // PHASE 2: Products — fetch in background, don't block page render
+        console.log(`📡 Phase 2: Fetching products in background (limit: ${fetchLimit})...`);
+        const productsPromise = productsAPI.getAll({ limit: fetchLimit });
+
+        // Pre-emptively fetch admin data if likely admin (users fetched separately via fetchUsersPage)
+        let adminDataIndices: Record<string, number> = {};
+        const adminFetchPromises: Promise<any>[] = [];
+        if (savedIsAdmin) {
+          const { reviewsAPI, chatSessionsAPI } = await import('./utils/api');
+          adminDataIndices.reviews = adminFetchPromises.length;
+          adminFetchPromises.push(reviewsAPI.getAllAdmin());
+          adminDataIndices.chatSessions = adminFetchPromises.length;
+          adminFetchPromises.push(chatSessionsAPI.getAll());
+        }
+
         setLoadProgress(70);
 
-        // Process products - check response structure and transform if needed
-        let freshProducts: any[] = [];
-        if (productsResponse && productsResponse.products) {
-          freshProducts = productsResponse.products;
-          if (productsResponse.pagination && productsResponse.pagination.total) {
-            setTotalProductCount(productsResponse.pagination.total);
-            console.log(`📊 API reports ${productsResponse.pagination.total} total products`);
-          }
-          console.log(`✅ Products response has ${freshProducts.length} products`);
-        } else if (productsResponse && Array.isArray(productsResponse)) {
-          freshProducts = productsResponse;
-          console.log(`✅ Products response is array with ${freshProducts.length} products`);
-        } else {
-          console.error("❌ Products response structure unexpected:", productsResponse);
-        }
-
-        const transformedProducts = transformProducts(freshProducts);
-
-        if (transformedProducts.length > 0) {
-          setProducts(transformedProducts);
-          cache.set(CACHE_KEYS.PRODUCTS, transformedProducts, CACHE_TTL.PRODUCTS);
-          console.log(`✅ Loaded and cached ${transformedProducts.length} products`);
-        } else {
-          console.warn("⚠️ No products loaded from API");
-        }
-
-        // Process other results
+        // Process other results (from fast phase)
         const processResult = (result: PromiseSettledResult<any>, key: string): any[] => {
           if (result.status === 'fulfilled' && result.value) {
             // Check for nested structure
@@ -366,7 +383,6 @@ function App() {
           setUser(meUser);
           setIsAdmin(meUser.role === 'admin');
           localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
-          setIsLoggedIn(true);
           console.log("👤 User session verified:", meUser.email, "Role:", meUser.role);
         } else {
           // If auth failed but we thought we were admin/logged in, reset state to stop 401 loops
@@ -374,67 +390,75 @@ function App() {
             console.warn("⚠️ Authentication session invalid or expired. Resetting local auth state.");
             setIsAdmin(false);
             setUser(null);
-            setIsLoggedIn(false);
             localStorage.setItem('isAdmin', 'false');
             localStorage.removeItem('alpha_user');
           }
         }
 
-        // Process pre-emptively fetched Admin Data
-        if (savedIsAdmin) {
-          // Reviews
+        // Admin data is now handled in the background phase below
+
+        // Unblock the UI — page is ready
+        setLoadProgress(90);
+        setIsDataLoading(false);
+        console.log("✅ Fast data loaded — page is now interactive");
+
+        // Resolve products in background (page already visible)
+        const productsResult = await productsPromise.then(v => ({ status: 'fulfilled' as const, value: v })).catch(e => ({ status: 'rejected' as const, reason: e }));
+        let productsResponse: any = null;
+        if (productsResult.status === 'fulfilled') {
+          productsResponse = productsResult.value;
+        } else {
+          console.error("❌ Products API call failed:", productsResult.reason);
+        }
+
+        let freshProducts: any[] = [];
+        if (productsResponse?.products) {
+          freshProducts = productsResponse.products;
+          if (productsResponse.pagination?.total) {
+            setTotalProductCount(productsResponse.pagination.total);
+          }
+        } else if (Array.isArray(productsResponse)) {
+          freshProducts = productsResponse;
+        }
+
+        const bgTransformedProducts = transformProducts(freshProducts);
+        if (bgTransformedProducts.length > 0) {
+          setProducts(bgTransformedProducts);
+          cache.set(CACHE_KEYS.PRODUCTS, bgTransformedProducts, CACHE_TTL.PRODUCTS);
+          console.log(`✅ Background: loaded ${bgTransformedProducts.length} products`);
+        }
+
+        // Resolve admin data in background
+        if (savedIsAdmin && adminFetchPromises.length > 0) {
+          const adminResults = await Promise.allSettled(adminFetchPromises);
           if (adminDataIndices.reviews !== undefined) {
-            const reviewsResult = results[adminDataIndices.reviews];
+            const reviewsResult = adminResults[adminDataIndices.reviews];
             if (reviewsResult.status === 'fulfilled' && reviewsResult.value) {
               const reviewsData = reviewsResult.value.reviews || reviewsResult.value;
               if (Array.isArray(reviewsData)) {
                 const stripHtml = (html: string) => html ? html.replace(/<[^>]*>/g, '').trim() : '';
-                const mappedReviews = reviewsData.map((r: any) => ({
+                setReviews(reviewsData.map((r: any) => ({
                   id: r.id,
                   product: r.productId || r.productName || 'Unknown Product',
                   user: r.reviewer || r.userId || 'Anonymous',
                   rating: r.rating || 0,
                   comment: stripHtml(r.content || r.title || ''),
-                  date: r.createdAt?._seconds 
+                  date: r.createdAt?._seconds
                     ? new Date(r.createdAt._seconds * 1000).toLocaleDateString()
                     : (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Unknown'),
                   isApproved: r.isApproved
-                }));
-                setReviews(mappedReviews);
+                })));
               }
             }
           }
-          
-          // Chat Sessions
           if (adminDataIndices.chatSessions !== undefined) {
-            const chatRes = results[adminDataIndices.chatSessions];
-            if (chatRes.status === 'fulfilled') {
-              setChatSessions(chatRes.value);
-            }
-          }
-
-          // Users
-          if (adminDataIndices.users !== undefined) {
-            const usersRes = results[adminDataIndices.users];
-            if (usersRes.status === 'fulfilled') {
-              const userData = usersRes.value;
-              if (userData && userData.users) {
-                setUsers(userData.users);
-                if (userData.total) {
-                  setTotalUsersCount(userData.total);
-                  setTotalUsersPages(Math.ceil(userData.total / 100));
-                }
-                if (userData.nextPageToken) {
-                  setUsersPageToken(userData.nextPageToken);
-                }
-              }
-            }
+            const chatRes = adminResults[adminDataIndices.chatSessions];
+            if (chatRes.status === 'fulfilled') setChatSessions(chatRes.value);
           }
         }
 
         setLoadProgress(100);
-        setIsDataLoading(false);
-        console.log("✅ All data loaded and cached successfully");
+        console.log("✅ All data fully loaded");
 
       } catch (err: any) {
         console.error("❌ Failed to fetch fresh data:", err);
@@ -707,6 +731,8 @@ function App() {
       setCurrentView('dashboard');
     } else if (path === '/admin') {
       setCurrentView('admin-dashboard');
+    } else if (path === '/admin-login') {
+      setCurrentView('admin-login');
     } else if (path === '/theme2-demo') {
       setCurrentView('theme2-demo');
     } else if (path === '/theme3-demo') {
@@ -767,6 +793,8 @@ function App() {
       newPath = '/dashboard';
     } else if (currentView === 'admin-dashboard') {
       newPath = '/admin';
+    } else if (currentView === 'admin-login') {
+      newPath = '/admin-login';
     } else if (currentView === 'home') {
       newPath = '/';
     } else if (currentView === 'checkout') {
@@ -782,10 +810,39 @@ function App() {
     }
   }, [currentView, selectedProduct, shopBrand, shopCategory, brands, categories]);
 
+  // Global View Scroll to Top reset
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTo(0, 0);
+    if (document.body) {
+      document.body.scrollTo(0, 0);
+    }
+    
+    const scrollTimeout = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTo(0, 0);
+    }, 50);
+
+    return () => clearTimeout(scrollTimeout);
+  }, [currentView, selectedProduct, shopCategory, shopBrand, location.pathname]);
+
   // Settings State (Lifted from AdminDashboard)
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('alpha_settings');
-    if (saved) return JSON.parse(saved);
+    try {
+      const saved = localStorage.getItem('alpha_settings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.payment && parsed.payment.cod && parsed.payment.cod.minAmount === undefined) {
+          parsed.payment.cod.minAmount = 0;
+        }
+        if (parsed.shipping && parsed.shipping.stateRules === undefined) {
+          parsed.shipping.stateRules = [];
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Error parsing alpha_settings:', e);
+    }
     return {
       general: {
         storeName: 'Alpha Dentkart',
@@ -801,12 +858,13 @@ function App() {
       payment: {
         phonepe: { enabled: false, merchantId: '', saltKey: '', saltIndex: '' },
         razorpay: { enabled: false, keyId: '', keySecret: '' },
-        cod: { enabled: true }
+        cod: { enabled: true, minAmount: 0 }
       },
       shipping: {
         standardRate: 150,
         freeShippingThreshold: 5000,
-        enableInternational: false
+        enableInternational: false,
+        stateRules: []
       },
       email: {
         host: '',
@@ -1022,6 +1080,22 @@ function App() {
     }
   };
 
+  // Featured Brands derived logic
+  const displayBrands = useMemo(() => {
+    const featured = (brands || []).filter(b => b.isFeatured).sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0));
+    return featured.length > 0 ? featured : brands;
+  }, [brands]);
+
+  const featuredBrandsOnly = useMemo(() => {
+    return (brands || []).filter(b => b.isFeatured).sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0));
+  }, [brands]);
+
+  // Active Promo Banners derived logic
+  const displayPromos = useMemo(() => {
+    const active = (promotionalTiles || []).filter(t => t.isActive);
+    return active.length > 0 ? active : DEFAULT_PROMOTIONAL_TILES;
+  }, [promotionalTiles]);
+
   // Logic for computing showcase categories for the storefront
   const { displayCategories, shouldAnimateCategories } = useMemo(() => {
     const display = (settings?.showcaseCategories && settings.showcaseCategories.length > 0)
@@ -1038,16 +1112,24 @@ function App() {
     setBrands(prev => prev.map(b => b.id === brandId ? { ...b, isFeatured } : b));
     try {
       const { brandsAPI } = await import('./utils/api');
-      // Assuming update method handles partials
-      await brandsAPI.update(brandId, { isFeatured });
+      await brandsAPI.updateFeatured(brandId, { isFeatured });
     } catch (e) {
       console.error("Failed to toggle featured brand", e);
     }
   };
 
   const handleReorderFeaturedBrands = async (reorderedBrands: BrandProfile[]) => {
-    // Logic for reordering if needed in future
-    console.log("Reorder not implemented yet");
+    // Optimistic update
+    setBrands(reorderedBrands);
+    try {
+      const { brandsAPI } = await import('./utils/api');
+      const payload = reorderedBrands
+        .filter(b => b.isFeatured)
+        .map(b => ({ id: b.id, featuredOrder: b.featuredOrder }));
+      await brandsAPI.reorder(payload);
+    } catch (e) {
+      console.error("Failed to reorder featured brands", e);
+    }
   };
 
   const handleSaveHomepageSettings = async (newSettings: Partial<HomepageSettings>) => {
@@ -1091,7 +1173,6 @@ function App() {
       // Set admin status based on backend role
       setIsAdmin(user.role === 'admin');
       localStorage.setItem('isAdmin', user.role === 'admin' ? 'true' : 'false');
-      setIsLoggedIn(true);
 
       // Navigate to appropriate dashboard
       if (user.role === 'admin') {
@@ -1125,7 +1206,6 @@ function App() {
           orders: [],
           recentlyViewed: [],
         });
-        setIsLoggedIn(true);
         setCurrentView('dashboard');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
@@ -1148,7 +1228,6 @@ function App() {
     }
     
     setUser(null);
-    setIsLoggedIn(false);
     setIsAdmin(false);
     localStorage.removeItem('isAdmin');
     localStorage.removeItem('alpha_user');
@@ -1162,11 +1241,9 @@ function App() {
     if (adminUser) {
       setUser(adminUser);
       setIsAdmin(true);
-      setIsLoggedIn(true);
       localStorage.setItem('isAdmin', 'true');
     } else {
       setIsAdmin(true);
-      setIsLoggedIn(true);
       localStorage.setItem('isAdmin', 'true');
     }
     setCurrentView('admin-dashboard');
@@ -1201,14 +1278,18 @@ function App() {
 
     setSelectedProduct(product);
     setCurrentView('product-detail');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
 
 
 
 
-  const handlePlaceOrder = async (paymentId: string, transactionId: string, signature?: string) => {
+  const handlePlaceOrder = async (paymentId: string, transactionId: string, signature?: string, paymentMethod: string = 'razorpay') => {
     if (!user) return;
 
     if (!user.addresses || user.addresses.length === 0) {
@@ -1238,7 +1319,7 @@ function App() {
         zip: shippingAddress.zip,
         phone: shippingAddress.phone,
       },
-      paymentMethod: 'razorpay',
+      paymentMethod: paymentMethod,
       paymentId: paymentId,
       transactionId: transactionId,
       signature: signature
@@ -1347,7 +1428,7 @@ function App() {
           const stripHtml = (html: string) => html ? html.replace(/<[^>]*>/g, '').trim() : '';
 
           // 1. Fetch Users, Orders, Reviews and Chat Sessions in parallel (The primary admin data)
-          const { reviewsAPI, chatSessionsAPI, productsAPI } = await import('./utils/api');
+          const { reviewsAPI, chatSessionsAPI, productsAPI, usersAPI: _usersAPI } = await import('./utils/api');
           
           const primaryAdminPromises = [
             ordersAPI.getAllAdmin({ limit: 500 }).catch(err => { console.warn('Orders API failed:', err); return null; }),
@@ -1773,6 +1854,11 @@ function App() {
             <div className="space-y-6 md:space-y-8 px-4 md:px-0">
               {products.length > 0 || heroSlides.length > 0 ? (
                 <>
+                  {brands.length > 0 && (
+                    <div className="px-4 md:px-0 mb-4">
+                      <BrandScroll onBrandClick={(brand) => navigateToShop(undefined, brand)} brands={brands} />
+                    </div>
+                  )}
                   <Hero
                     onShopClick={() => navigateToShop()}
                     onProductClick={handleProductClick}
@@ -1781,7 +1867,6 @@ function App() {
                     products={products}
                     slides={heroSlides}
                   />
-                  <BrandScroll onBrandClick={(brand) => navigateToShop(undefined, brand)} brands={brands} />
                 </>
               ) : (
                 <div className="animate-pulse">
@@ -1916,32 +2001,51 @@ function App() {
               </div>
             </section>
 
-            {/* Promo Banners - Slider on Mobile */}
+            {/* Promo Banners - Dynamic from settings / defaults */}
             <section className="px-4 md:px-0">
               <div className="flex overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:pb-0 gap-4 md:grid md:grid-cols-3 snap-x scrollbar-hide">
-                {PROMOS.map(promo => (
-                  <div key={promo.id} className={`min-w-[280px] md:min-w-0 w-full ${promo.bgColorClass} rounded-2xl p-5 md:p-6 flex items-center justify-between relative overflow-hidden group snap-center shadow-sm`}>
-                    <div className="z-10 w-1/2">
-                      <span className={`text-[10px] font-bold uppercase bg-white dark:bg-surface-dark px-2 py-1 rounded mb-2 inline-block shadow-sm ${promo.tagColorClass}`}>{promo.tag}</span>
-                      <h3 className="text-lg font-bold text-gray-800 dark:text-white leading-tight mb-2">{promo.title}</h3>
-                      <p className="text-primary font-bold text-sm">{promo.price}</p>
+                {displayPromos.map((promo, index) => {
+                  const style = getPromoStyles(index);
+                  const bgClass = promo.bgColorClass || style.bg;
+                  const tagColorClass = promo.tagColorClass || style.tag;
+                  return (
+                    <div 
+                      key={promo.id} 
+                      onClick={() => {
+                        if (promo.link) {
+                          if (promo.link.startsWith('/')) {
+                            navigate(promo.link);
+                          } else {
+                            window.location.href = promo.link;
+                          }
+                        }
+                      }}
+                      className={`min-w-[280px] md:min-w-0 w-full ${bgClass} rounded-2xl p-5 md:p-6 flex items-center justify-between relative overflow-hidden group snap-center shadow-sm ${promo.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+                    >
+                      <div className="z-10 w-1/2">
+                        <span className={`text-[10px] font-bold uppercase bg-white dark:bg-surface-dark px-2 py-1 rounded mb-2 inline-block shadow-sm ${tagColorClass}`}>{promo.category}</span>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-white leading-tight mb-2">{promo.title}</h3>
+                        <p className="text-primary font-bold text-sm">{promo.price}</p>
+                      </div>
+                      <OptimizedImageMemo alt={promo.title} className="w-28 h-28 md:w-32 md:h-32 object-contain absolute -right-2 -bottom-2 md:right-4 group-hover:scale-110 transition-transform duration-500" src={promo.image} width={200} height={200} />
                     </div>
-                    <OptimizedImageMemo alt={promo.title} className="w-28 h-28 md:w-32 md:h-32 object-contain absolute -right-2 -bottom-2 md:right-4 group-hover:scale-110 transition-transform duration-500" src={promo.image} width={200} height={200} />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
             {/* Dynamic Product Sections (Categories & Brands) */}
             {(() => {
-              // Priority: User configured sections. Fallback: Default sections only if nothing is configured.
-              const hasUserConfig = (settings?.featuredCategorySections?.length ?? 0) > 0 || (settings?.featuredBrandSections?.length ?? 0) > 0;
+              const categorySections = settings?.showcaseCategories !== undefined
+                ? settings.showcaseCategories
+                : ['Restorative', 'Endodontics', 'Equipment'];
               
-              const categorySections = settings?.featuredCategorySections || (hasUserConfig ? [] : ['Restorative', 'Endodontics', 'Equipment']);
-              const brandSections = settings?.featuredBrandSections || [];
+              const brandSections = (brands || [])
+                .filter(b => b.isFeatured)
+                .sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0))
+                .map(b => b.name);
               
               const allSections = [
-                ...categorySections.map(name => ({ name, type: 'category' })),
                 ...brandSections.map(name => ({ name, type: 'brand' }))
               ];
 
@@ -1984,9 +2088,7 @@ function App() {
                     title = `${section.name} Supplies`;
                   }
                 } else {
-                  title = `${section.name} Specials`;
-                  const brandObj = brands.find(b => b.name === section.name);
-                  // Use a distinct icon for brands if possible or stick to a nice one
+                  title = `${section.name} Collection`;
                   icon = 'fas fa-certificate'; 
                 }
 
@@ -2185,6 +2287,7 @@ function App() {
                 razorpayKey={settings.payment?.razorpay?.keyId}
                 appliedCoupon={appliedCoupon}
                 onApplyCoupon={setAppliedCoupon}
+                settings={settings}
               />
             </div>
           )}

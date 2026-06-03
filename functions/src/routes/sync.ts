@@ -5,36 +5,63 @@ import dotenv from 'dotenv';
 import logger from '../utils/logger';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { apiLimiter } from '../middleware/rateLimiter';
+import { cacheService } from '../services/cacheService';
 
 dotenv.config();
 
 const router = Router();
 
-const WP_URL = (process.env.WP_URL || "https://alphadentkart.com").replace(/\/$/, '');
-const WP_CONSUMER_KEY = process.env.WP_CONSUMER_KEY;
-const WP_CONSUMER_SECRET = process.env.WP_CONSUMER_SECRET;
+async function getWooClient() {
+    let url = (process.env.WP_URL || "https://alphadentkart.com").replace(/\/$/, '');
+    let consumerKey = process.env.WP_CONSUMER_KEY || '';
+    let consumerSecret = process.env.WP_CONSUMER_SECRET || '';
 
-const WC = (WooCommerceRestApi as any).default || WooCommerceRestApi;
-const api = new (WC as any)({
-    url: WP_URL,
-    consumerKey: WP_CONSUMER_KEY,
-    consumerSecret: WP_CONSUMER_SECRET,
-    version: "wc/v3",
-    queryStringAuth: true,
-    axiosConfig: { timeout: 60000 }
-});
+    try {
+        let doc = await db.collection('settings').doc('wordpress_credentials').get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data?.siteUrl) url = data.siteUrl.replace(/\/$/, '');
+            if (data?.consumerKey) consumerKey = data.consumerKey;
+            if (data?.consumerSecret) consumerSecret = data.consumerSecret;
+        } else {
+            // Fallback to settings/wordpress_sync
+            doc = await db.collection('settings').doc('wordpress_sync').get();
+            if (doc.exists) {
+                const data = doc.data();
+                if (data?.apiUrl || data?.siteUrl) {
+                    url = (data.apiUrl || data.siteUrl).replace(/\/$/, '');
+                }
+                if (data?.consumerKey) consumerKey = data.consumerKey;
+                if (data?.consumerSecret) consumerSecret = data.consumerSecret;
+            }
+        }
+    } catch (e) {
+        logger.warn('Could not read wordpress_credentials or wordpress_sync from Firestore, using env vars', { error: e });
+    }
+
+    const WC = (WooCommerceRestApi as any).default || WooCommerceRestApi;
+    return new (WC as any)({
+        url,
+        consumerKey,
+        consumerSecret,
+        version: "wc/v3",
+        queryStringAuth: true,
+        axiosConfig: { timeout: 60000 }
+    });
+}
 
 const BATCH_SIZE = 100;
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-async function fetchAll(endpoint: string, params: Record<string, any> = {}): Promise<any[]> {
+async function fetchAll(api: any, endpoint: string, params: Record<string, any> = {}): Promise<any[]> {
     let page = 1;
     let results: any[] = [];
     let totalPages = 1;
+    const cleanEndpoint = endpoint.replace(/^\//, '');
 
     try {
         do {
-            const { data, headers } = await api.get(endpoint, { ...params, per_page: BATCH_SIZE, page });
+            const { data, headers } = await api.get(cleanEndpoint, { ...params, per_page: BATCH_SIZE, page });
             if (data && Array.isArray(data)) {
                 results = results.concat(data);
             }
@@ -61,7 +88,6 @@ async function getLastSyncTime(type: string): Promise<Date | null> {
             }
         }
     } catch (e) {
-    } catch (e) {
         logger.warn(`Could not fetch last sync time for ${type}`, { error: e });
     }
     return null;
@@ -74,15 +100,14 @@ async function updateLastSyncTime(type: string, time: Date = new Date()) {
             [`${type}_last_success`]: admin.firestore.Timestamp.fromDate(new Date())
         }, { merge: true });
     } catch (e) {
-    } catch (e) {
         logger.error(`Failed to update last sync time for ${type}`, { error: e });
     }
 }
 
-async function syncProducts(forceFull = false): Promise<number> {
+async function syncProducts(api: any, forceFull = false): Promise<number> {
     logger.info("📦 Fetching products from WooCommerce...");
     
-    const params: any = { status: "publish,private,draft" };
+    const params: any = { status: "any" };
     const lastSync = !forceFull ? await getLastSyncTime('lastProductSync') : null;
     
     if (lastSync) {
@@ -92,7 +117,7 @@ async function syncProducts(forceFull = false): Promise<number> {
         logger.info(`Incremental sync: fetching products modified after ${params.after}`);
     }
 
-    const products = await fetchAll("/products", params);
+    const products = await fetchAll(api, "/products", params);
     logger.info(`Found ${products.length} products to sync`);
 
     if (products.length === 0) return 0;
@@ -118,7 +143,7 @@ async function syncProducts(forceFull = false): Promise<number> {
                 const chunk = variableItems.slice(i, i + 5);
                 await Promise.all(chunk.map(async (p) => {
                     try {
-                        const vars = await fetchAll(`/products/${p.id}/variations`);
+                        const vars = await fetchAll(api, `/products/${p.id}/variations`);
                         variationsMap.set(p.id, vars);
                     } catch (err) {
                         logger.warn(`      ⚠️ Failed variations for ${p.id}`, { error: err });
@@ -194,6 +219,7 @@ async function syncProducts(forceFull = false): Promise<number> {
     };
 
     // Process all products in batches of 50
+    for (let i = 0; i < products.length; i += 50) {
         const chunk = products.slice(i, i + 50);
         await processBatch(chunk);
         synced += chunk.length;
@@ -205,7 +231,7 @@ async function syncProducts(forceFull = false): Promise<number> {
     return synced;
 }
 
-async function syncOrders(forceFull = false): Promise<number> {
+async function syncOrders(api: any, forceFull = false): Promise<number> {
     logger.info("📋 Fetching orders from WooCommerce...");
     
     const params: any = { per_page: 100 };
@@ -217,7 +243,7 @@ async function syncOrders(forceFull = false): Promise<number> {
         logger.info(`Incremental sync: fetching orders modified after ${params.after}`);
     }
 
-    const orders = await fetchAll("/orders", params);
+    const orders = await fetchAll(api, "/orders", params);
     logger.info(`Found ${orders.length} orders to sync`);
 
     if (orders.length === 0) return 0;
@@ -265,9 +291,13 @@ async function syncOrders(forceFull = false): Promise<number> {
             shipping: parseFloat(order.shipping_total),
             tax: parseFloat(order.total_tax),
             total: parseFloat(order.total),
-            status: order.status === 'processing' ? 'pending' : order.status === 'completed' ? 'delivered' : order.status,
+            status: order.status === 'processing' ? 'Processing' :
+                    order.status === 'completed' ? 'Delivered' :
+                    order.status === 'cancelled' || order.status === 'failed' || order.status === 'refunded' ? 'Cancelled' :
+                    order.status === 'shipped' ? 'Shipped' : 'Processing',
             paymentMethod: order.payment_method_title,
             paymentStatus: order.payment_status === 'paid' ? 'paid' : 'pending',
+            date: order.date_created || new Date().toISOString(),
             createdAt: new Date(order.date_created),
             updatedAt: new Date(order.date_modified),
             lastSync: new Date(),
@@ -295,7 +325,7 @@ async function syncOrders(forceFull = false): Promise<number> {
     return synced;
 }
 
-async function syncUsers(forceFull = false): Promise<number> {
+async function syncUsers(api: any, forceFull = false): Promise<number> {
     logger.info("👥 Fetching customers from WooCommerce...");
     
     const params: any = { per_page: 100 };
@@ -307,7 +337,7 @@ async function syncUsers(forceFull = false): Promise<number> {
         logger.info(`Incremental sync: fetching users modified after ${params.after}`);
     }
 
-    const customers = await fetchAll("/customers", params);
+    const customers = await fetchAll(api, "/customers", params);
     logger.info(`Found ${customers.length} customers to sync`);
 
     if (customers.length === 0) return 0;
@@ -365,9 +395,9 @@ async function syncUsers(forceFull = false): Promise<number> {
     return synced;
 }
 
-async function syncCategories(): Promise<number> {
+async function syncCategories(api: any): Promise<number> {
     logger.info("📂 Fetching categories from WooCommerce...");
-    const categories = await fetchAll("/products/categories", { per_page: 100 });
+    const categories = await fetchAll(api, "/products/categories", { per_page: 100 });
     logger.info(`Found ${categories.length} categories`);
 
     let synced = 0;
@@ -409,7 +439,7 @@ async function syncCategories(): Promise<number> {
     return synced;
 }
 
-async function searchBrandLogo(brandName: string): Promise<string> {
+async function searchBrandLogo(api: any, brandName: string): Promise<string> {
     const cleanName = brandName.replace(/[^a-zA-Z0-9]/g, ' ').trim();
     const searchTerms = [
         cleanName + '+logo',
@@ -430,9 +460,9 @@ async function searchBrandLogo(brandName: string): Promise<string> {
     return '';
 }
 
-async function syncBrands(): Promise<number> {
+async function syncBrands(api: any): Promise<number> {
     logger.info("🏷️ Fetching tags (brands) from WooCommerce...");
-    const tags = await fetchAll("/products/tags", { per_page: 100 });
+    const tags = await fetchAll(api, "/products/tags", { per_page: 100 });
     logger.info(`Found ${tags.length} tags in WooCommerce`);
     
     // Also try to fetch from pa_brand attribute if available
@@ -444,7 +474,7 @@ async function syncBrands(): Promise<number> {
             a.slug === "pa_brand" || a.slug === "brand" || a.name.toLowerCase() === "brand"
         );
         if (brandAttr) {
-            brandsFromAttr = await fetchAll(`products/attributes/${brandAttr.id}/terms`);
+            brandsFromAttr = await fetchAll(api, `products/attributes/${brandAttr.id}/terms`);
             logger.info(`Found ${brandsFromAttr.length} brand terms in attributes`);
         }
     } catch (err) {
@@ -493,11 +523,94 @@ async function syncBrands(): Promise<number> {
     return synced;
 }
 
+router.post('/test-connection', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { siteUrl, consumerKey, consumerSecret } = req.body;
+        if (!siteUrl || !consumerKey || !consumerSecret) {
+            return res.status(400).json({ success: false, error: 'Site URL and API credentials are required' });
+        }
+
+        const cleanSiteUrl = siteUrl.replace(/\/$/, '');
+        const WC = (WooCommerceRestApi as any).default || WooCommerceRestApi;
+        const testApi = new (WC as any)({
+            url: cleanSiteUrl,
+            consumerKey,
+            consumerSecret,
+            version: 'wc/v3',
+            queryStringAuth: true,
+            axiosConfig: { timeout: 30000 }
+        });
+
+        const response = await testApi.get('products', { per_page: 1 });
+        const total = response.headers?.['x-wp-total'] || 0;
+        
+        res.json({ success: true, total, message: `Connected successfully! Found ${total} products.` });
+    } catch (error: any) {
+        logger.error('WooCommerce API connection test failed:', error);
+        const errMsg = error?.response?.data?.message || error?.message || String(error);
+        res.status(500).json({ success: false, error: errMsg });
+    }
+});
+
+router.post('/credentials', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { siteUrl, consumerKey, consumerSecret } = req.body;
+        if (!siteUrl || !consumerKey || !consumerSecret) {
+            return res.status(400).json({ success: false, error: 'Site URL and API credentials are required' });
+        }
+
+        await db.collection('settings').doc('wordpress_credentials').set({
+            siteUrl,
+            consumerKey,
+            consumerSecret,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        res.json({ success: true, message: 'WooCommerce credentials saved successfully' });
+    } catch (error: any) {
+        logger.error('Failed to save WooCommerce credentials:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/credentials', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const doc = await db.collection('settings').doc('wordpress_credentials').get();
+        if (doc.exists) {
+            const data = doc.data();
+            res.json({
+                success: true,
+                credentials: {
+                    siteUrl: data?.siteUrl || '',
+                    consumerKey: data?.consumerKey ? (data.consumerKey.substring(0, 5) + '...') : '',
+                    hasSecret: !!data?.consumerSecret
+                }
+            });
+        } else {
+            res.json({ success: true, credentials: null });
+        }
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/status', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const doc = await db.collection('settings').doc('sync_status').get();
+        res.json({ success: true, status: doc.exists ? doc.data() : null });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.post('/products', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
         const forceFull = req.query.force === 'true';
         logger.info(`Starting product sync (forceFull: ${forceFull})...`);
-        const synced = await syncProducts(forceFull);
+        const api = await getWooClient();
+        const synced = await syncProducts(api, forceFull);
+        // Invalidate products cache
+        await cacheService.invalidateProductsCache();
         res.json({ success: true, synced, message: `Synced ${synced} products from WordPress` });
     } catch (error: any) {
         logger.error('Product sync error', { error });
@@ -510,7 +623,8 @@ router.post('/orders', apiLimiter, authenticateToken, requireAdmin, async (req: 
     try {
         const forceFull = req.query.force === 'true';
         logger.info(`Starting order sync (forceFull: ${forceFull})...`);
-        const synced = await syncOrders(forceFull);
+        const api = await getWooClient();
+        const synced = await syncOrders(api, forceFull);
         res.json({ success: true, synced, message: `Synced ${synced} orders from WordPress` });
     } catch (error: any) {
         logger.error('Order sync error', { error });
@@ -523,7 +637,8 @@ router.post('/users', apiLimiter, authenticateToken, requireAdmin, async (req: R
     try {
         const forceFull = req.query.force === 'true';
         logger.info(`Starting user sync (forceFull: ${forceFull})...`);
-        const synced = await syncUsers(forceFull);
+        const api = await getWooClient();
+        const synced = await syncUsers(api, forceFull);
         res.json({ success: true, synced, message: `Synced ${synced} users from WordPress` });
     } catch (error: any) {
         logger.error('User sync error', { error });
@@ -535,7 +650,10 @@ router.post('/users', apiLimiter, authenticateToken, requireAdmin, async (req: R
 router.post('/categories', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
         logger.info("Starting category sync...");
-        const synced = await syncCategories();
+        const api = await getWooClient();
+        const synced = await syncCategories(api);
+        // Invalidate categories and dependent products cache
+        await cacheService.invalidateCategoriesCache();
         res.json({ success: true, synced, message: `Synced ${synced} categories from WordPress` });
     } catch (error: any) {
         logger.error('Category sync error', { error });
@@ -547,7 +665,10 @@ router.post('/categories', apiLimiter, authenticateToken, requireAdmin, async (r
 router.post('/brands', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
         logger.info("Starting brand sync...");
-        const synced = await syncBrands();
+        const api = await getWooClient();
+        const synced = await syncBrands(api);
+        // Invalidate brands and dependent products cache
+        await cacheService.invalidateBrandsCache();
         res.json({ success: true, synced, message: `Synced ${synced} brands from WordPress` });
     } catch (error: any) {
         logger.error('Brand sync error', { error });
@@ -560,19 +681,25 @@ router.post('/full', apiLimiter, authenticateToken, requireAdmin, async (req: Re
     try {
         const forceFull = req.query.force === 'true';
         logger.info(`Starting full sync (forceFull: ${forceFull})...`);
+        const api = await getWooClient();
         
-        // Use Promise.all for independent syncs to improve speed
-        // but keep products and orders separate to avoid overwhelming the API
-        const categoriesSynced = await syncCategories();
-        const brandsSynced = await syncBrands();
+        const categoriesSynced = await syncCategories(api);
+        const brandsSynced = await syncBrands(api);
         
         logger.info("Starting products sync...");
-        const productsSynced = await syncProducts(forceFull);
+        const productsSynced = await syncProducts(api, forceFull);
         
         logger.info("Starting orders and users sync...");
         const [ordersSynced, usersSynced] = await Promise.all([
-            syncOrders(forceFull),
-            syncUsers(forceFull)
+            syncOrders(api, forceFull),
+            syncUsers(api, forceFull)
+        ]);
+
+        // Invalidate all caches
+        await Promise.all([
+            cacheService.invalidateProductsCache(),
+            cacheService.invalidateCategoriesCache(),
+            cacheService.invalidateBrandsCache()
         ]);
 
         res.json({

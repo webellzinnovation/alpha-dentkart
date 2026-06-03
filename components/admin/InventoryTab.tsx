@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Product, Category, BrandProfile } from '../../types';
 import { toast } from 'sonner';
 import { productsAPI } from '../../utils/api';
+import { resolveProductImage } from '../../utils/image';
 import { 
     Search, 
     Filter, 
@@ -346,7 +347,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-gray-600">
                                                         {product.image ? (
-                                                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                                            <img src={resolveProductImage(product.image)} alt={product.name} className="w-full h-full object-cover" />
                                                         ) : (
                                                             <Package className="w-full h-full p-3 text-gray-400" />
                                                         )}

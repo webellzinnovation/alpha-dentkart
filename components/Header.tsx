@@ -47,6 +47,16 @@ const HeaderComponent: React.FC<HeaderProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isRecentlyViewedOpen, setIsRecentlyViewedOpen] = useState(false);
 
+  // Filter categories to show only selected showcase categories in the dropdown
+  const displayCategories = React.useMemo(() => {
+    if (settings?.showcaseCategories && Array.isArray(settings.showcaseCategories)) {
+      return settings.showcaseCategories
+        .map(name => categories.find(c => c.name === name))
+        .filter((cat): cat is Category => !!cat);
+    }
+    return categories;
+  }, [categories, settings]);
+
   // Search Suggestions State
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearchingSuggestions, setIsSearchingSuggestions] = useState(false);
@@ -380,14 +390,14 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                     <i className="fas fa-bars"></i> SHOP BY CATEGORY
                   </button>
                   {/* Dropdown Menu */}
-                  <div className="absolute top-full left-0 w-72 bg-white dark:bg-surface-dark shadow-2xl rounded-b-xl py-3 hidden group-hover:block border border-gray-100 dark:border-gray-700 z-50 animate-fade-in">
-                    {categories.map(cat => (
+                  <div className="absolute top-full left-0 w-72 bg-white dark:bg-surface-dark shadow-2xl rounded-b-xl py-3 hidden group-hover:block border border-gray-100 dark:border-gray-700 z-50 animate-fade-in max-h-[480px] overflow-y-auto">
+                    {displayCategories.map(cat => (
                       <a
                         key={cat.id}
                         onClick={() => onNavigate('shop', cat.name)}
                         className="px-6 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary transition-colors cursor-pointer flex items-center gap-4 text-gray-600 dark:text-gray-300 border-b border-gray-50 dark:border-gray-800 last:border-0 group/item"
                       >
-                        <i className={`${cat.iconClass} w-6 text-center text-gray-400 group-hover/item:text-primary transition-colors`}></i>
+                        <i className={`${cat.iconClass || 'fas fa-chevron-right'} w-6 text-center text-gray-400 group-hover/item:text-primary transition-colors`}></i>
                         <span className="font-medium">{cat.name}</span>
                         <i className="fas fa-chevron-right ml-auto text-[10px] text-gray-300 opacity-0 group-hover/item:opacity-100 transition-opacity"></i>
                       </a>

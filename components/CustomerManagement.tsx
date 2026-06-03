@@ -9,7 +9,7 @@ interface CustomerManagementProps {
     onDeleteUser: (uid: string) => Promise<void>;
     onResetPassword?: (email: string) => Promise<void>;
     searchTerm: string;
-    userTypeFilter: 'all' | 'dental-doctor' | 'dental-student' | 'dental-business' | 'regular';
+    userTypeFilter: 'all' | 'dental-doctor' | 'dental-student' | 'dental-business' | 'regular' | 'hidden';
     onViewOrder?: (order: Order) => void;
     settings?: any; // SMTP and other settings from admin
     itemsPerPage?: number;
@@ -59,15 +59,23 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
 
     // Filter customers
     const filteredCustomers = users.filter(user => {
+        const hasMobile = !!(user.phone && String(user.phone).trim());
+
         const matchesSearch = (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
             (user.email?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
             (user.phone && String(user.phone).includes(searchTerm) || false);
 
         // Default to 'regular' if userType is not set
         const userType = user.userType || 'regular';
-        const matchesType = userTypeFilter === 'all' || userType === userTypeFilter;
 
-        return matchesSearch && matchesType;
+        if (userTypeFilter === 'hidden') {
+            // Show only users without a mobile number
+            return matchesSearch && !hasMobile;
+        } else {
+            // Show users with a mobile number and matching selected type filter
+            const matchesType = userTypeFilter === 'all' || userType === userTypeFilter;
+            return matchesSearch && hasMobile && matchesType;
+        }
     });
 
     const isExternalPagination = externalCurrentPage !== undefined;

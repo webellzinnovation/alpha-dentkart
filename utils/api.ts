@@ -37,11 +37,19 @@ api.interceptors.response.use(
             localStorage.setItem('isAdmin', 'false');
             localStorage.removeItem('alpha_user');
             
-            // Force redirect to login if we are in admin area or if session is dead
-            if (window.location.pathname.includes('/admin')) {
-                window.location.href = '/admin-login';
-            } else if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
+            // Only force redirect to login if we are in a protected area (admin, dashboard, checkout)
+            const path = window.location.pathname;
+            const cleanPath = path.replace(/\/+$/, '');
+            const isProtectedPage = (cleanPath.includes('/admin') && cleanPath !== '/admin-login') || 
+                                    cleanPath.startsWith('/dashboard') || 
+                                    cleanPath.startsWith('/checkout');
+            
+            if (isProtectedPage) {
+                if (path.includes('/admin')) {
+                    window.location.href = '/admin-login';
+                } else if (path !== '/login') {
+                    window.location.href = '/login';
+                }
             }
         }
         return Promise.reject(error);
@@ -149,6 +157,10 @@ export const categoriesAPI = {
         const response = await api.delete(`/categories/${id}`);
         return response.data;
     },
+    sync: async () => {
+        const response = await api.post('/sync/categories');
+        return response.data;
+    },
 };
 
 // Brands API
@@ -175,6 +187,10 @@ export const brandsAPI = {
     },
     delete: async (id: number | string) => {
         const response = await api.delete(`/brands/${id}`);
+        return response.data;
+    },
+    sync: async () => {
+        const response = await api.post('/sync/brands');
         return response.data;
     },
 };
@@ -235,6 +251,10 @@ export const ordersAPI = {
     updateStatus: async (id: string, status: string, trackingInfo?: { courierName?: string; trackingNumber?: string; trackingUrl?: string }) => {
         const response = await api.patch(`/orders/${id}/status`, { status, ...trackingInfo });
         return response.data;
+    },
+    sync: async (force = false) => {
+        const response = await api.post(`/sync/orders${force ? '?force=true' : ''}`);
+        return response.data;
     }
 };
 
@@ -264,6 +284,54 @@ export const usersAPI = {
     },
     delete: async (id: number | string) => {
         const response = await api.delete(`/users/${id}`);
+        return response.data;
+    },
+    sync: async (force = false) => {
+        const response = await api.post(`/sync/users${force ? '?force=true' : ''}`);
+        return response.data;
+    }
+};
+
+// WordPress Sync API
+export const wordpressSyncAPI = {
+    testConnection: async (credentials: any) => {
+        const response = await api.post('/sync/test-connection', credentials);
+        return response.data;
+    },
+    saveCredentials: async (credentials: any) => {
+        const response = await api.post('/sync/credentials', credentials);
+        return response.data;
+    },
+    getCredentials: async () => {
+        const response = await api.get('/sync/credentials');
+        return response.data;
+    },
+    getStatus: async () => {
+        const response = await api.get('/sync/status');
+        return response.data;
+    },
+    syncProducts: async (force = false) => {
+        const response = await api.post(`/sync/products${force ? '?force=true' : ''}`);
+        return response.data;
+    },
+    syncOrders: async (force = false) => {
+        const response = await api.post(`/sync/orders${force ? '?force=true' : ''}`);
+        return response.data;
+    },
+    syncUsers: async (force = false) => {
+        const response = await api.post(`/sync/users${force ? '?force=true' : ''}`);
+        return response.data;
+    },
+    syncCategories: async () => {
+        const response = await api.post('/sync/categories');
+        return response.data;
+    },
+    syncBrands: async () => {
+        const response = await api.post('/sync/brands');
+        return response.data;
+    },
+    syncAll: async (force = false) => {
+        const response = await api.post(`/sync/full${force ? '?force=true' : ''}`);
         return response.data;
     }
 };

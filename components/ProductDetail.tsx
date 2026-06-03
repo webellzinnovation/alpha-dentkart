@@ -103,7 +103,14 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
       setSelectedAttributes({});
     }
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll to top reliably on product change
+    window.scrollTo(0, 0);
+    const scrollTimeout = setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+
+    return () => clearTimeout(scrollTimeout);
   }, [product]);
 
   const fetchReviews = async () => {
@@ -508,12 +515,35 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
                   <div className="p-6 bg-white dark:bg-surface-dark border-t border-gray-200 dark:border-gray-700">
                     {product.specs ? (
                       <div className="grid grid-cols-1 gap-y-3">
-                        {Object.entries(product.specs).map(([key, value]) => (
-                          <div key={key} className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">{key}</span>
-                            <span className="text-gray-500 dark:text-gray-400">{value}</span>
-                          </div>
-                        ))}
+                        {Object.entries(product.specs)
+                          .filter(([key]) => {
+                            const normalizedKey = key.toLowerCase();
+                            if (normalizedKey === 'managestock' || normalizedKey === 'manage_stock') return false;
+                            
+                            const hasCapitalized = Object.keys(product.specs).some(
+                              k => k !== key && k.toLowerCase() === normalizedKey && k[0] === k[0].toUpperCase()
+                            );
+                            if (hasCapitalized && key !== key.toUpperCase() && key[0] !== key[0].toUpperCase()) {
+                              return false;
+                            }
+                            return true;
+                          })
+                          .map(([key, value]) => (
+                            <div key={key} className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0 last:pb-0">
+                              <span className="font-medium text-gray-700 dark:text-gray-300">{key}</span>
+                              <span className="text-gray-500 dark:text-gray-400">
+                                {typeof value === 'object' && value !== null ? (
+                                  ('length' in value || 'width' in value || 'height' in value) ? (
+                                    `${(value as any).length || 0} x ${(value as any).width || 0} x ${(value as any).height || 0}`
+                                  ) : Array.isArray(value) ? (
+                                    value.join(', ')
+                                  ) : (
+                                    JSON.stringify(value)
+                                  )
+                                ) : String(value)}
+                              </span>
+                            </div>
+                          ))}
                       </div>
                     ) : (
                       <p className="text-gray-500 italic">No specifications available.</p>

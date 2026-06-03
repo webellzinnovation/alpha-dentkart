@@ -6,7 +6,19 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
     <title>Alpha Dentkart - Dental Supplies</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+
+    <!-- Critical Resource Hints: preconnect to external domains so DNS + TLS is done before fetch -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://alphadentkart.com" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+
+    <!-- Preload LCP image (logo) so it doesn't block FCP -->
+    <link rel="preload" as="image" href="/Alpha-dentkart-logo-600p.png" />
+    <link rel="preload" as="image" href="/Alpha-dentkart-logo-icon.png" />
+
+    <!-- Fonts: use display=swap for non-blocking render -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -72,15 +84,11 @@
         }
     </style>
     <link rel="icon" type="image/png" href="/Alpha-dentkart-logo-icon.png" />
-  <script type="module" crossorigin src="/assets/index-bLIGLBqc.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/vendor-kejSF5BM.js">
-  <link rel="modulepreload" crossorigin href="/assets/vendor-ui-BdO8Q8-B.js">
-  <link rel="modulepreload" crossorigin href="/assets/vendor-react-C6ODAsLS.js">
-  <link rel="modulepreload" crossorigin href="/assets/vendor-cloud-GRSBMBhK.js">
-  <link rel="modulepreload" crossorigin href="/assets/app-admin-CZU4XeN7.js">
-  <link rel="modulepreload" crossorigin href="/assets/app-commerce-BqgGPXjA.js">
-  <link rel="stylesheet" crossorigin href="/assets/app-commerce-CpOn96BZ.css">
-  <link rel="stylesheet" crossorigin href="/assets/index-Cx-fpwPX.css">
+  <script type="module" crossorigin src="/assets/index-CVAG0Bom.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vendor-react-5nKXiLSd.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-router-CkhQepUO.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-ui-CSE38T31.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-qo-kTZnt.css">
 </head>
 
 <body
@@ -102,9 +110,8 @@
                                 if (newWorker) {
                                     newWorker.addEventListener('statechange', () => {
                                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                            if (confirm('New version available! Reload to update?')) {
-                                                window.location.reload();
-                                            }
+                                            // Silently update — no confirm dialog that could cause reload loops
+                                            console.log('🔄 New version available. Reload to update.');
                                         }
                                     });
                                 }

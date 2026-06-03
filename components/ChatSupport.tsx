@@ -9,19 +9,23 @@ export const ChatSupport: React.FC = () => {
     const [adminMessage, setAdminMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    const selectedSessionRef = useRef<ChatSession | null>(null);
+    selectedSessionRef.current = selectedSession;
+
     // Load sessions
     const loadSessions = React.useCallback(() => {
         const allSessions = getChatSessions();
         setSessions(allSessions);
 
         // Refresh selected session if viewing one
-        if (selectedSession) {
-            const updated = getChatById(selectedSession.id);
+        const currentSelected = selectedSessionRef.current;
+        if (currentSelected) {
+            const updated = getChatById(currentSelected.id);
             if (updated) {
                 setSelectedSession(updated);
             }
         }
-    }, [selectedSession]);
+    }, []);
 
     useEffect(() => {
         loadSessions();

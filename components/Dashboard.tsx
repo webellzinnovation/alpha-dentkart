@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Address, Order } from '../types';
 import { AlertCircle, Package, User as UserIcon, LogOut, MapPin, ChevronRight, Settings, Camera, ShieldCheck } from 'lucide-react';
 import VerificationManager from './VerificationManager';
@@ -9,6 +9,124 @@ import { CancelOrderModal } from './CancelOrderModal';
 import { ReturnRequestModal } from './ReturnRequestModal';
 import { QuickReorder } from './QuickReorder';
 import { SavedPaymentMethods } from './SavedPaymentMethods';
+
+const formatDate = (dateInput: any) => {
+    if (!dateInput) return 'N/A';
+    try {
+        let dateObj: Date | null = null;
+
+        // 1. If it's already a Date object
+        if (dateInput instanceof Date) {
+            dateObj = dateInput;
+        } 
+        // 2. If it's a string
+        else if (typeof dateInput === 'string') {
+            let cleaned = dateInput.trim();
+            
+            // Convert "YYYY-MM-DD HH:MM:SS..." to "YYYY-MM-DDTHH:MM:SS..."
+            if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(cleaned)) {
+                cleaned = cleaned.replace(/\s+/, 'T');
+            }
+
+            // Handle microsecond/nanosecond fractional parts (e.g. .000000Z or .000000)
+            const dotIndex = cleaned.indexOf('.');
+            if (dotIndex !== -1) {
+                const parts = cleaned.split('.');
+                const afterDot = parts[1] || '';
+                const tzMatch = afterDot.match(/([Zz]|\+|-)/);
+                let tzPart = '';
+                let fraction = afterDot;
+                if (tzMatch && tzMatch.index !== undefined) {
+                    fraction = afterDot.substring(0, tzMatch.index);
+                    tzPart = afterDot.substring(tzMatch.index);
+                }
+                // Truncate fractional seconds to 3 digits (milliseconds)
+                fraction = fraction.substring(0, 3).padEnd(3, '0');
+                cleaned = parts[0] + '.' + fraction + tzPart;
+            }
+
+            // Try standard Date parsing
+            const parsed = new Date(cleaned);
+            if (!isNaN(parsed.getTime())) {
+                dateObj = parsed;
+            } else {
+                // Try manual parsing as fallback if it still fails
+                // Matches "YYYY-MM-DDTHH:MM:SS" or "YYYY-MM-DD HH:MM:SS"
+                const parts = cleaned.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}):(\d{2}))?/);
+                if (parts) {
+                    const yr = parseInt(parts[1], 10);
+                    const mo = parseInt(parts[2], 10) - 1;
+                    const dy = parseInt(parts[3], 10);
+                    const hr = parts[4] ? parseInt(parts[4], 10) : 0;
+                    const mi = parts[5] ? parseInt(parts[5], 10) : 0;
+                    const sc = parts[6] ? parseInt(parts[6], 10) : 0;
+                    dateObj = new Date(Date.UTC(yr, mo, dy, hr, mi, sc));
+                }
+            }
+        } 
+        // 3. If it's an object (Firestore Timestamp or similar)
+        else if (typeof dateInput === 'object') {
+            if (typeof dateInput.toDate === 'function') {
+                dateObj = dateInput.toDate();
+            } else {
+                const sec = typeof dateInput.seconds === 'number' ? dateInput.seconds : 
+                            typeof dateInput._seconds === 'number' ? dateInput._seconds : null;
+                const nanosec = typeof dateInput.nanoseconds === 'number' ? dateInput.nanoseconds :
+                                typeof dateInput._nanoseconds === 'number' ? dateInput._nanoseconds : 0;
+                if (sec !== null) {
+                    dateObj = new Date(sec * 1000 + Math.floor(nanosec / 1000000));
+                } else {
+                    const parsed = new Date(dateInput);
+                    if (!isNaN(parsed.getTime())) {
+                        dateObj = parsed;
+                    }
+                }
+            }
+        } 
+        // 4. Any other type
+        else {
+            const parsed = new Date(dateInput);
+            if (!isNaN(parsed.getTime())) {
+                dateObj = parsed;
+            }
+        }
+
+        // If parsing failed completely, try one last check on the original value coerced to a string
+        if (!dateObj || isNaN(dateObj.getTime())) {
+            const parsed = new Date(dateInput);
+            if (!isNaN(parsed.getTime())) {
+                dateObj = parsed;
+            } else {
+                // Clean up the original string to remove ".000000Z" or similar
+                let fallback = String(dateInput);
+                fallback = fallback.replace(/\.000+Z?/gi, '');
+                fallback = fallback.replace(/T/gi, ' ');
+                fallback = fallback.replace(/Z/gi, '');
+                return fallback;
+            }
+        }
+
+        // Custom, stable, platform-independent formatting
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = months[dateObj.getMonth()];
+        const year = dateObj.getFullYear();
+        let hours = dateObj.getHours();
+        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // 0 should be 12
+        const strHours = String(hours).padStart(2, '0');
+
+        return `${day} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
+    } catch (e) {
+        let fallback = String(dateInput);
+        fallback = fallback.replace(/\.000+Z?/gi, '');
+        fallback = fallback.replace(/T/gi, ' ');
+        fallback = fallback.replace(/Z/gi, '');
+        return fallback;
+    }
+};
 
 const OrderTracker = ({ status }: { status: string }) => {
     const steps = ['Placed', 'Processing', 'Shipped', 'Delivered'];
@@ -68,7 +186,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUser, refreshOrders }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'returns' | 'addresses' | 'profile'>('overview');
-    const [selectedUserType, setSelectedUserType] = useState<User['userType']>(user.userType || 'regular');
+    const [selectedUserType, setSelectedUserType] = useState<User['userType']>(user?.userType || 'regular');
 
     // Address Modal State
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -114,18 +232,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
 
     // Profile Form State
     const [profileFormData, setProfileFormData] = useState({
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-        dentalDoctorInfo: { ...user.dentalDoctorInfo },
-        dentalStudentInfo: { ...user.dentalStudentInfo },
-        dentalBusinessInfo: { ...user.dentalBusinessInfo }
+        name: user?.name || '',
+        phone: user?.phone || '',
+        email: user?.email || '',
+        dentalDoctorInfo: { ...user?.dentalDoctorInfo },
+        dentalStudentInfo: { ...user?.dentalStudentInfo },
+        dentalBusinessInfo: { ...user?.dentalBusinessInfo }
     });
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [profileUpdateMessage, setProfileUpdateMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [isEditingInline, setIsEditingInline] = useState(false);
-    const [inlineName, setInlineName] = useState(user.name);
-    const [inlinePhone, setInlinePhone] = useState(user.phone);
+    const [inlineName, setInlineName] = useState(user?.name || '');
+    const [inlinePhone, setInlinePhone] = useState(user?.phone || '');
+
+    useEffect(() => {
+        if (user) {
+            setProfileFormData({
+                name: user.name || '',
+                phone: user.phone || '',
+                email: user.email || '',
+                dentalDoctorInfo: { ...user.dentalDoctorInfo },
+                dentalStudentInfo: { ...user.dentalStudentInfo },
+                dentalBusinessInfo: { ...user.dentalBusinessInfo }
+            });
+            setInlineName(user.name || '');
+            setInlinePhone(user.phone || '');
+            setSelectedUserType(user.userType || 'regular');
+        }
+    }, [user]);
 
     const statusColors: Record<string, string> = {
         Processing: 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -174,7 +308,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
             title: 'Delete Address',
             message: 'Are you sure you want to delete this address? This cannot be undone.',
             onConfirm: () => {
-                const newAddresses = user.addresses.filter(a => a.id !== id);
+                const newAddresses = (user.addresses || []).filter(a => a.id !== id);
                 onUpdateUser({ addresses: newAddresses });
                 setDeleteConfirmation(prev => ({ ...prev, isOpen: false }));
             }
@@ -184,7 +318,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
     const handleSaveAddress = (e: React.FormEvent) => {
         e.preventDefault();
 
-        let newAddresses = [...user.addresses];
+        let newAddresses = user.addresses ? [...user.addresses] : [];
 
         // If setting default, unset others
         if (addressFormData.isDefault) {
@@ -215,6 +349,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                 userType: selectedUserType,
             };
 
+            // When updating to a professional type, auto-flag for pending verification
+            const isProfessional = selectedUserType !== 'regular';
+            if (isProfessional) {
+                updateData.verificationStatus = 'pending';
+                updateData.isVerified = false;
+            }
+
             if (selectedUserType === 'dental-doctor') {
                 updateData.dentalDoctorInfo = profileFormData.dentalDoctorInfo as any;
             } else if (selectedUserType === 'dental-student') {
@@ -224,7 +365,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
             }
 
             await onUpdateUser(updateData);
-            setProfileUpdateMessage({ type: 'success', text: 'Profile updated successfully!' });
+            setProfileUpdateMessage({
+                type: 'success',
+                text: isProfessional
+                    ? 'Profile updated! Your verification is pending admin approval.'
+                    : 'Profile updated successfully!'
+            });
         } catch (error) {
             setProfileUpdateMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
         } finally {
@@ -429,7 +575,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                             {user.orders?.slice(0, 3).map(order => (
                                                 <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                                     <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
-                                                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{order.date}</td>
+                                                    <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{formatDate(order.date || order.createdAt)}</td>
                                                     <td className="px-6 py-4">
                                                         <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
                                                             {order.status}
@@ -456,7 +602,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                             <div className="flex gap-8 text-sm">
                                                 <div>
                                                     <p className="text-gray-500 mb-1 text-xs uppercase tracking-wide">Order Placed</p>
-                                                    <p className="font-bold text-gray-900 dark:text-white">{order.date}</p>
+                                                    <p className="font-bold text-gray-900 dark:text-white">{formatDate(order.date || order.createdAt)}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-gray-500 mb-1 text-xs uppercase tracking-wide">Total</p>
@@ -563,7 +709,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                 </button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {user.addresses.map((addr, idx) => (
+                                {(user.addresses || []).map((addr, idx) => (
                                     <div key={addr.id} className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 relative group hover:border-primary/50 transition-colors">
                                         {addr.isDefault && (
                                             <span className="absolute top-4 right-4 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200 px-2 py-1 rounded uppercase tracking-wide">Default</span>
@@ -1071,145 +1217,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                 </div>
             )}
 
-            {/* Tracking Modal */}
-            {trackingOrder && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-2xl">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h3 className="text-xl font-bold flex items-center gap-2">
-                                        <i className="fas fa-truck"></i> Order Tracking
-                                    </h3>
-                                    <p className="text-sm text-white/80 mt-1">Order #{trackingOrder.id}</p>
-                                </div>
-                                <button
-                                    onClick={() => { setTrackingOrder(null); setTrackingData(null); }}
-                                    className="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors"
-                                >
-                                    <i className="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
 
-                        <div className="p-6">
-                            {/* Tracking Info */}
-                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6 border border-blue-200 dark:border-blue-800">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
-                                        <i className="fas fa-shipping-fast text-blue-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-gray-900 dark:text-white">{trackingOrder.courierName || 'Courier'}</p>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">AWB: {trackingOrder.trackingNumber}</p>
-                                    </div>
-                                </div>
-                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${
-                                    trackingOrder.status === 'Delivered' 
-                                        ? 'bg-green-100 text-green-700' 
-                                        : 'bg-blue-100 text-blue-700'
-                                }`}>
-                                    <i className={`fas ${trackingOrder.status === 'Delivered' ? 'fa-check-circle' : 'fa-truck'}`}></i>
-                                    {trackingOrder.status}
-                                </div>
-                            </div>
-
-                            {/* Status Timeline */}
-                            <div className="space-y-4">
-                                <h4 className="font-bold text-gray-900 dark:text-white">Order Timeline</h4>
-                                
-                                <div className="relative">
-                                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-                                    
-                                    {/* Order Placed */}
-                                    <div className="relative flex items-start gap-4 pb-6">
-                                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center z-10">
-                                            <i className="fas fa-check text-white text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 dark:text-white">Order Placed</p>
-                                            <p className="text-sm text-gray-500">{trackingOrder.date}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Processing */}
-                                    <div className="relative flex items-start gap-4 pb-6">
-                                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center z-10">
-                                            <i className="fas fa-box text-white text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 dark:text-white">Processing</p>
-                                            <p className="text-sm text-gray-500">Order confirmed and being prepared</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Shipped */}
-                                    <div className={`relative flex items-start gap-4 pb-6 ${trackingOrder.status === 'Shipped' || trackingOrder.status === 'Delivered' ? '' : 'opacity-50'}`}>
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${trackingOrder.status === 'Shipped' || trackingOrder.status === 'Delivered' ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                                            <i className={`fas fa-truck text-white text-xs ${trackingOrder.status === 'Shipped' || trackingOrder.status === 'Delivered' ? '' : 'opacity-50'}`}></i>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 dark:text-white">Shipped</p>
-                                            <p className="text-sm text-gray-500">
-                                                {trackingOrder.courierName} - {trackingOrder.trackingNumber}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Delivered */}
-                                    <div className={`relative flex items-start gap-4 ${trackingOrder.status === 'Delivered' ? '' : 'opacity-50'}`}>
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${trackingOrder.status === 'Delivered' ? 'bg-green-500' : 'bg-gray-300'}`}>
-                                            <i className={`fas fa-home text-white text-xs ${trackingOrder.status === 'Delivered' ? '' : 'opacity-50'}`}></i>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 dark:text-white">Delivered</p>
-                                            <p className="text-sm text-gray-500">
-                                                {trackingOrder.status === 'Delivered' ? 'Order delivered successfully' : 'Pending delivery'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Track on Courier Website */}
-                            {trackingOrder.trackingNumber && (
-                                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                    {(() => {
-                                        const courierUrls: Record<string, { url: string; name: string }> = {
-                                            'Delhivery': { url: `https://www.delhivery.com/track/package/${trackingOrder.trackingNumber}`, name: 'Delhivery' },
-                                            'BlueDart': { url: `https://www.bluedart.com/track?AWB=${trackingOrder.trackingNumber}`, name: 'BlueDart' },
-                                            'FedEx': { url: `https://www.fedex.com/fedextrack/?trknbr=${trackingOrder.trackingNumber}`, name: 'FedEx' },
-                                            'DTDC': { url: `https://www.dtdc.com/tracking/track-result.php?strTdcval=${trackingOrder.trackingNumber}`, name: 'DTDC' },
-                                            'India Post': { url: `https://www.indiapost.gov.in/Pages/TrackDocument.aspx?TrackingId=${trackingOrder.trackingNumber}`, name: 'India Post' },
-                                            'Ekart': { url: `https://www.ekartlogistics.com/track/${trackingOrder.trackingNumber}`, name: 'Ekart' },
-                                            'Shadowfax': { url: `https://www.shadowfax.in/track-order/?order_id=${trackingOrder.trackingNumber}`, name: 'Shadowfax' },
-                                            'XpressBees': { url: `https://www.xpressbees.com/track/?tracking_id=${trackingOrder.trackingNumber}`, name: 'XpressBees' },
-                                            'Shiprocket': { url: `https://shiprocket.co/tracking/${trackingOrder.trackingNumber}`, name: 'Shiprocket' },
-                                        };
-                                        
-                                        const courier = courierUrls[trackingOrder.courierName || ''] || { 
-                                            url: `https://shiprocket.co/tracking/${trackingOrder.trackingNumber}`, 
-                                            name: trackingOrder.courierName || 'Courier' 
-                                        };
-                                        
-                                        return (
-                                            <a
-                                                href={courier.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg shadow-blue-600/20"
-                                            >
-                                                <i className="fas fa-external-link-alt"></i>
-                                                Track on {courier.name} Website
-                                            </a>
-                                        );
-                                    })()}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Invoice Modal */}
             {invoiceOrder && (

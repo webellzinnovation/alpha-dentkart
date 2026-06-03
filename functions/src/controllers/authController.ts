@@ -34,8 +34,8 @@ export async function register(req: Request, res: Response) {
             email,
             password: hashedPassword,
             name,
-            phone,
-            userType,
+            phone: phone !== undefined ? phone : null,
+            userType: userType !== undefined ? userType : 'regular',
             role,
             ...extraFields,
             createdAt: new Date().toISOString(),
@@ -199,9 +199,22 @@ export async function forgotPassword(req: Request, res: Response) {
 export async function resetPassword(req: Request, res: Response) {
     try {
         const validatedData = resetPasswordSchema.parse(req.body);
-        const { userId, password } = validatedData;
+        const { token, newPassword } = validatedData;
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const resetRef = db.collection('password_resets').doc(token);
+        const resetDoc = await resetRef.get();
+
+        if (!resetDoc.exists) {
+            return res.status(400).json({ error: 'Invalid or expired reset token' });
+        }
+
+        const resetData = resetDoc.data();
+        if (!resetData || resetData.used || new Date(resetData.expiresAt) < new Date()) {
+            return res.status(400).json({ error: 'Invalid or expired reset token' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const userId = resetData.userId;
 
         await db.collection('users').doc(userId).update({
             password: hashedPassword,
@@ -209,10 +222,19 @@ export async function resetPassword(req: Request, res: Response) {
             mustResetPassword: false
         });
 
+        // Mark the token as used
+        await resetRef.update({
+            used: true,
+            usedAt: new Date().toISOString()
+        });
+
         logger.info('Password reset successfully', { userId });
 
         return res.json({ message: 'Password reset successfully' });
-    } catch (error) {
+    } catch (error: any) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ error: 'Invalid input data', details: error.errors });
+        }
         logger.error('Password reset error', { error });
         return res.status(500).json({ error: 'Failed to reset password' });
     }
@@ -270,16 +292,30 @@ export async function updateProfile(req: any, res: Response) {
         }
 
         // Restricted fields that should not be updated via this endpoint
-        const restrictedFields = ['email', 'password', 'role', 'isVerified', 'verifiedAt', 'createdAt'];
+        const restrictedFields = ['email', 'password', 'role', 'verifiedAt', 'createdAt'];
         restrictedFields.forEach(field => delete updates[field]);
+
+        // Auto-enforce verification pending when professional details are updated
+        const professionalFields = ['dentalDoctorInfo', 'dentalStudentInfo', 'dentalBusinessInfo'];
+        const isProfessionalUpdate =
+            professionalFields.some(f => updates[f] !== undefined) ||
+            (updates.userType && updates.userType !== 'regular');
+
+        if (isProfessionalUpdate) {
+            updates.verificationStatus = 'pending';
+            updates.isVerified = false;
+        }
 
         updates.updatedAt = new Date().toISOString();
 
         await userRef.update(updates);
 
-        logger.info('User profile updated', { userId });
+        logger.info('User profile updated', { userId, isProfessionalUpdate });
 
-        return res.json({ message: 'Profile updated successfully' });
+        return res.json({
+            message: 'Profile updated successfully',
+            verificationStatus: updates.verificationStatus
+        });
     } catch (error: any) {
         logger.error('UpdateProfile error', { error, userId: req.user?.id });
         return res.status(500).json({ error: 'Failed to update profile' });

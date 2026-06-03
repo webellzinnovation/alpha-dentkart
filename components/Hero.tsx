@@ -71,43 +71,43 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCateg
         className={`w-full ${currentSlide.bgClass} rounded-[2rem] overflow-hidden relative group h-[300px] md:h-[500px] transition-all duration-700 shadow-premium ${currentSlide.link ? 'cursor-pointer' : ''}`}
         onClick={currentSlide.link ? handleSlideClick : undefined}
       >
-        <div key={currentSlide.id} className="absolute inset-0 flex flex-col md:flex-row items-center px-6 md:px-16 z-30 animate-fade-in">
+        <div key={currentSlide.id} className="absolute inset-0 flex flex-col md:flex-row items-start md:items-center px-6 md:px-16 z-30 animate-fade-in">
           {/* Text Content - Left Side */}
-          <div className="w-full md:w-1/2 flex flex-col justify-center space-y-4 md:space-y-8 pt-10 md:pt-0">
-            <div className="flex flex-col gap-2 md:gap-4">
-              <span className="bg-white/95 dark:bg-accent/20 backdrop-blur-md text-primary dark:text-accent text-[9px] md:text-sm font-black px-3 py-1 md:px-5 md:py-2 rounded-xl uppercase tracking-[0.2em] shadow-sm w-fit">
+          <div className="w-full md:w-1/2 flex flex-col justify-center space-y-3 md:space-y-8 pt-8 md:pt-0 z-30 relative max-w-[70%] md:max-w-none">
+            <div className="flex flex-col gap-1.5 md:gap-4">
+              <span className="bg-white/95 dark:bg-accent/20 backdrop-blur-md text-primary dark:text-accent text-[8px] md:text-sm font-black px-2.5 py-1 md:px-5 md:py-2 rounded-xl uppercase tracking-[0.2em] shadow-sm w-fit">
                 {currentSlide.badge}
               </span>
-              <h2 className="text-3xl md:text-7xl font-black text-gray-900 dark:text-white leading-[1.05] tracking-tighter whitespace-pre-line">
+              <h2 className="text-xl md:text-7xl font-black text-gray-900 dark:text-white leading-[1.1] tracking-tighter whitespace-pre-line">
                 {currentSlide.title}
               </h2>
             </div>
 
-            <p className="text-base md:text-2xl text-gray-600 dark:text-gray-300 font-medium max-w-xs md:max-w-md">
+            <p className="text-[10px] md:text-2xl text-gray-600 dark:text-gray-300 font-medium max-w-[180px] md:max-w-md leading-relaxed">
               Discover the future of professional dental care.
             </p>
 
             <div className="flex gap-4">
               <button
-                onClick={onShopClick}
-                className="bg-primary text-white px-6 py-3 md:px-12 md:py-5 rounded-2xl font-black hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 text-xs md:text-xl active:scale-95 flex items-center gap-2"
+                onClick={(e) => { e.stopPropagation(); onShopClick(); }}
+                className="bg-primary text-white px-4 py-2.5 md:px-12 md:py-5 rounded-xl md:rounded-2xl font-black hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 text-[10px] md:text-xl active:scale-95 flex items-center gap-1.5 w-fit"
               >
                 Shop Now
-                <i className="fas fa-arrow-right text-[10px]"></i>
+                <i className="fas fa-arrow-right text-[8px] md:text-[10px]"></i>
               </button>
             </div>
           </div>
 
           {/* Image Content - Right Side */}
-          <div className="w-full md:w-1/2 h-1/2 md:h-full flex items-center justify-center md:justify-end">
-            <div className="relative w-full h-full group-hover:scale-105 transition-transform duration-[3000ms]">
+          <div className="absolute right-2 bottom-4 w-[45%] h-[60%] md:relative md:right-0 md:bottom-0 md:w-1/2 md:h-full flex items-center justify-end z-10 pointer-events-none md:pointer-events-auto">
+            <div className="relative w-full h-full group-hover:scale-105 transition-transform duration-[3000ms] flex items-center justify-end">
               <OptimizedImageMemo
                 key={`img-${currentSlide.id}`}
                 alt={currentSlide.title}
-                className="w-full h-full object-contain object-right md:object-right-bottom p-4 md:p-12"
+                className="w-full h-full object-contain object-right-bottom p-1 md:p-12"
                 src={currentSlide.image}
                 priority={true}
-                width={1200}
+                width={600}
                 height={500}
               />
             </div>
