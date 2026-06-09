@@ -354,7 +354,6 @@ function App() {
 
         const freshBrands = processResult(brandsResponse, 'brands');
         if (freshBrands.length > 0) {
-          // Decode HTML entities and filter out invalid brand names (product attributes, not real brands)
           const decodeHtml = (html: string) => {
             const txt = document.createElement('textarea');
             txt.innerHTML = html;
@@ -363,20 +362,29 @@ function App() {
           const isValidBrand = (name: string) => {
             const n = (name || '').trim();
             if (!n) return false;
-            // Filter out attribute-style names like "(9gm)", "(Adhesive)", "- 50 Pcs"
             if (/^\(.*\)$/.test(n)) return false;
             if (/^-\s/.test(n)) return false;
+            if (/^-\S/.test(n)) return false;
             if (n.length < 2) return false;
-            return true;
+            if (/^\d/.test(n)) return false;
+            if (/\b(pcs?|pieces?|box|boxes|sticks?|rolls?|sheets?|feet|foot|holes?|ml|gm?|gms?|mm|cm|oz|litre|liter|ltr|kg|kgs|pack\s*of|per\s+set|per\s+box|per\s+pack)\b/i.test(n)) return false;
+            if (/^\d+\s*(pcs?|pieces?|ml|gm?|mm|cm|oz|litre|liter|ltr|kg|kgs|holes?)$/i.test(n)) return false;
+            const brandWords = /^(3m|dentsply|coltene|whaledent|ivoclar|kerr|ulp dental|shofu|gc|dmg|bisco|pentron|ultradent|henry schein| Coltene| voco| 3m espe| 3m unitek| angelus| bausch| being foshan| bionova| cavex| colgate| d-tech| dentsply sirona| fdent| harvard| hayashi| indus dental| jmorita| kerr| kulzer| marksans| meta biomed| mg dental| micro Mega| noris medical| nyk dental| odontos| premier| ptc| pyrax| raman dental| raypex| richardson| septodont| ss white| sun medical| tpc| trox| veirs dental| vox | zhermack)/i;
+            if (brandWords.test(n)) return true;
+            if (/^[A-Z][a-z]/.test(n) && n.length >= 3 && n.length <= 50) return true;
+            if (/^[A-Z]{2,}$/.test(n) && n.length <= 15) return true;
+            if (/\s/.test(n) && n.length >= 3 && n.length <= 50 && !/^\d/.test(n)) return true;
+            return false;
           };
           const brandsWithMeta = freshBrands
             .map((brand: any) => ({
               ...brand,
               name: decodeHtml(brand.name || ''),
-              logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
-              productCount: brand.productCount || 0
+              logo: brand.image || brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
+              productCount: brand.count || brand.productCount || 0
             }))
-            .filter((brand: any) => isValidBrand(brand.name));
+            .filter((brand: any) => isValidBrand(brand.name))
+            .slice(0, 100);
           setBrands(brandsWithMeta);
           cache.set(CACHE_KEYS.BRANDS, brandsWithMeta, CACHE_TTL.BRANDS);
         }
@@ -625,17 +633,27 @@ function App() {
           if (!n) return false;
           if (/^\(.*\)$/.test(n)) return false;
           if (/^-\s/.test(n)) return false;
+          if (/^-\S/.test(n)) return false;
           if (n.length < 2) return false;
-          return true;
+          if (/^\d/.test(n)) return false;
+          if (/\b(pcs?|pieces?|box|boxes|sticks?|rolls?|sheets?|feet|foot|holes?|ml|gm?|gms?|mm|cm|oz|litre|liter|ltr|kg|kgs|pack\s*of|per\s+set|per\s+box|per\s+pack)\b/i.test(n)) return false;
+          if (/^\d+\s*(pcs?|pieces?|ml|gm?|mm|cm|oz|litre|liter|ltr|kg|kgs|holes?)$/i.test(n)) return false;
+          const brandWords = /^(3m|dentsply|coltene|whaledent|ivoclar|kerr|ulp dental|shofu|gc|dmg|bisco|pentron|ultradent|henry schein| Coltene| voco| 3m espe| 3m unitek| angelus| bausch| being foshan| bionova| cavex| colgate| d-tech| dentsply sirona| fdent| harvard| hayashi| indus dental| jmorita| kerr| kulzer| marksans| meta biomed| mg dental| micro Mega| noris medical| nyk dental| odontos| premier| ptc| pyrax| raman dental| raypex| richardson| septodont| ss white| sun medical| tpc| trox| veirs dental| vox | zhermack)/i;
+          if (brandWords.test(n)) return true;
+          if (/^[A-Z][a-z]/.test(n) && n.length >= 3 && n.length <= 50) return true;
+          if (/^[A-Z]{2,}$/.test(n) && n.length <= 15) return true;
+          if (/\s/.test(n) && n.length >= 3 && n.length <= 50 && !/^\d/.test(n)) return true;
+          return false;
         };
         const brandsWithMeta = freshBrands
           .map((brand: any) => ({
             ...brand,
             name: decodeHtml(brand.name || ''),
-            logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
-            productCount: brand.productCount || 0
+            logo: brand.image || brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
+            productCount: brand.count || brand.productCount || 0
           }))
-          .filter((brand: any) => isValidBrand(brand.name));
+          .filter((brand: any) => isValidBrand(brand.name))
+          .slice(0, 100);
         setBrands(brandsWithMeta);
         cache.set(CACHE_KEYS.BRANDS, brandsWithMeta, CACHE_TTL.BRANDS);
       }
