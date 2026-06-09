@@ -4,9 +4,9 @@ import { Toaster, toast } from 'sonner';
 import { Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
 
 // Dev-only logging — silent in production
-const devLog = (...args: any[]) => { if (import.meta.env.DEV) devLog(...args); };
-const devWarn = (...args: any[]) => { if (import.meta.env.DEV) devWarn(...args); };
-const devError = (...args: any[]) => { if (import.meta.env.DEV) devError(...args); };
+const devLog = (...args: any[]) => { if (import.meta.env.DEV) console.log(...args); };
+const devWarn = (...args: any[]) => { if (import.meta.env.DEV) console.warn(...args); };
+const devError = (...args: any[]) => { if (import.meta.env.DEV) console.error(...args); };
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Loading } from './components/Loading';
