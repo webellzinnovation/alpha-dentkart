@@ -379,7 +379,7 @@ export const Shop: React.FC<ShopProps> = ({
                 <i className="fas fa-filter text-primary"></i> Filters
               </button>
               <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium">
-                {totalProducts > 0 ? `${totalProducts} Products` : `${filteredProducts.length} Products`}
+                {filteredProducts.length} Products
               </span>
             </div>
 

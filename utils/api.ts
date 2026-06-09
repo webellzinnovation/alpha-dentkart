@@ -31,26 +31,29 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            console.error('🚫 Global Auth Failure (401): Session expired or invalid.');
-            
-            // Clear local stale auth data
-            localStorage.setItem('isAdmin', 'false');
-            localStorage.removeItem('alpha_user');
-            
-            // Only force redirect to login if we are in a protected area (admin, dashboard, checkout)
+            // Only log and redirect for protected pages — auth/me 401 is expected for guests
             const path = window.location.pathname;
             const cleanPath = path.replace(/\/+$/, '');
             const isProtectedPage = (cleanPath.includes('/admin') && cleanPath !== '/admin-login') || 
                                     cleanPath.startsWith('/dashboard') || 
                                     cleanPath.startsWith('/checkout');
+            const isAuthCheck = error.config?.url?.includes('/auth/me');
             
-            if (isProtectedPage) {
+            if (isProtectedPage && !isAuthCheck) {
+                console.warn('⚠️ Auth failure on protected page, redirecting...');
+                localStorage.setItem('isAdmin', 'false');
+                localStorage.removeItem('alpha_user');
                 if (path.includes('/admin')) {
                     window.location.href = '/admin-login';
                 } else if (path !== '/login') {
                     window.location.href = '/login';
                 }
+            } else if (!isAuthCheck) {
+                // Non-protected page, non-auth endpoint: silently clear stale data
+                localStorage.setItem('isAdmin', 'false');
+                localStorage.removeItem('alpha_user');
             }
+            // auth/me 401 = guest user, totally expected — do nothing
         }
         return Promise.reject(error);
     }

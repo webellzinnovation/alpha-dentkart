@@ -93,8 +93,10 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 app.set('trust proxy', 1);
 
 // Security middleware
+const isProd = process.env.NODE_ENV === 'production' || 
+               !!(process.env.FUNCTION_NAME || process.env.FIREBASE_CONFIG);
 app.use(helmet({
-    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+    contentSecurityPolicy: isProd ? undefined : false,
 }));
 
 const ALLOWED_ORIGINS = [

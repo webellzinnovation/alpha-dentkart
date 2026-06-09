@@ -2,6 +2,11 @@
 import React, { useRef, useState, useMemo, useEffect, Suspense, lazy } from 'react';
 import { Toaster, toast } from 'sonner';
 import { Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
+
+// Dev-only logging — silent in production
+const devLog = (...args: any[]) => { if (import.meta.env.DEV) devLog(...args); };
+const devWarn = (...args: any[]) => { if (import.meta.env.DEV) devWarn(...args); };
+const devError = (...args: any[]) => { if (import.meta.env.DEV) devError(...args); };
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Loading } from './components/Loading';
@@ -61,7 +66,8 @@ const transformProducts = (products: any[]): Product[] => {
     rating: p.rating || 0,
     reviews: p.reviews || 0,
     image: p.image || p.images?.[0] || '/placeholder.png',
-    badge: p.badge,
+    // Filter out generic/unhelpful badges like "DENTAL"
+    badge: (p.badge && p.badge.toUpperCase() !== 'DENTAL') ? p.badge : undefined,
     badgeColor: p.badgeColor,
     badgeId: p.badgeId,
     timer: p.timer,
@@ -175,7 +181,7 @@ function App() {
       const saved = localStorage.getItem('alpha_orders');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      console.error('Error parsing alpha_orders:', e);
+      devError('Error parsing alpha_orders:', e);
       return [];
     }
   });
@@ -218,9 +224,14 @@ function App() {
   const [isAdminLoading, setIsAdminLoading] = useState(false);
 
   // STALE-WHILE-REVALIDATE: Load data with caching for instant display
+  const dataLoadInitiated = useRef(false);
   useEffect(() => {
+    // Prevent double-fire in React StrictMode (dev only)
+    if (dataLoadInitiated.current) return;
+    dataLoadInitiated.current = true;
+
     const loadAppData = async () => {
-      console.log("🚀 Starting app data load with stale-while-revalidate...");
+      if (import.meta.env.DEV) devLog("🚀 Starting app data load with stale-while-revalidate...");
       
       // STEP 1: Load from cache FIRST (instant - no waiting)
       const cachedProducts = cache.get<Product[]>(CACHE_KEYS.PRODUCTS);
@@ -231,7 +242,7 @@ function App() {
 
       // If we have cached data, show it immediately
       if (cachedProducts) {
-        console.log(`📦 Cache hit: ${cachedProducts.length} products loaded instantly`);
+        devLog(`📦 Cache hit: ${cachedProducts.length} products loaded instantly`);
         setProducts(cachedProducts);
       }
       if (cachedCategories) {
@@ -261,7 +272,7 @@ function App() {
       try {
         await fetch('/api/v1/csrf-token', { credentials: 'include' });
       } catch (err) {
-        console.warn('CSRF token fetch warning (non-critical):', err);
+        devWarn('CSRF token fetch warning (non-critical):', err);
       }
       
       try {
@@ -275,7 +286,7 @@ function App() {
         const fetchLimit = 200;
         
         // PHASE 1: Fast UI data — unblocks loading screen immediately
-        console.log(`📡 Phase 1: Fetching fast UI data (categories, brands, slides, auth)...`);
+        devLog(`📡 Phase 1: Fetching fast UI data (categories, brands, slides, auth)...`);
         
         const fastPromises = [
           categoriesAPI.getAll(),
@@ -299,7 +310,7 @@ function App() {
         setLoadProgress(60);
 
         // PHASE 2: Products — fetch in background, don't block page render
-        console.log(`📡 Phase 2: Fetching products in background (limit: ${fetchLimit})...`);
+        devLog(`📡 Phase 2: Fetching products in background (limit: ${fetchLimit})...`);
         const productsPromise = productsAPI.getAll({ limit: fetchLimit });
 
         // Pre-emptively fetch admin data if likely admin (users fetched separately via fetchUsersPage)
@@ -325,7 +336,7 @@ function App() {
             return [];
           }
           if (result.status === 'rejected') {
-            console.error(`❌ API call failed:`, result.reason);
+            devError(`❌ API call failed:`, result.reason);
           }
           return [];
         };
@@ -343,19 +354,42 @@ function App() {
 
         const freshBrands = processResult(brandsResponse, 'brands');
         if (freshBrands.length > 0) {
-          const brandsWithMeta = freshBrands.map((brand: any) => ({
-            ...brand,
-            logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
-            productCount: brand.productCount || 0
-          }));
+          // Decode HTML entities and filter out invalid brand names (product attributes, not real brands)
+          const decodeHtml = (html: string) => {
+            const txt = document.createElement('textarea');
+            txt.innerHTML = html;
+            return txt.value;
+          };
+          const isValidBrand = (name: string) => {
+            const n = (name || '').trim();
+            if (!n) return false;
+            // Filter out attribute-style names like "(9gm)", "(Adhesive)", "- 50 Pcs"
+            if (/^\(.*\)$/.test(n)) return false;
+            if (/^-\s/.test(n)) return false;
+            if (n.length < 2) return false;
+            return true;
+          };
+          const brandsWithMeta = freshBrands
+            .map((brand: any) => ({
+              ...brand,
+              name: decodeHtml(brand.name || ''),
+              logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
+              productCount: brand.productCount || 0
+            }))
+            .filter((brand: any) => isValidBrand(brand.name));
           setBrands(brandsWithMeta);
           cache.set(CACHE_KEYS.BRANDS, brandsWithMeta, CACHE_TTL.BRANDS);
         }
 
         const freshSlides = processResult(slidesResponse, 'slides');
         if (freshSlides.length > 0) {
-          setHeroSlides(freshSlides);
-          cache.set(CACHE_KEYS.HERO_SLIDES, freshSlides, CACHE_TTL.HERO_SLIDES);
+          // Filter out test/placeholder slides that shouldn't be in production
+          const filteredSlides = freshSlides.filter((s: any) => {
+            const title = (s.title || '').toLowerCase();
+            return !title.includes('test') && !title.includes('placeholder') && !title.includes('lorem');
+          });
+          setHeroSlides(filteredSlides.length > 0 ? filteredSlides : freshSlides);
+          cache.set(CACHE_KEYS.HERO_SLIDES, filteredSlides.length > 0 ? filteredSlides : freshSlides, CACHE_TTL.HERO_SLIDES);
         }
 
         const freshTiles = processResult(tilesResponse, 'tiles');
@@ -383,11 +417,11 @@ function App() {
           setUser(meUser);
           setIsAdmin(meUser.role === 'admin');
           localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
-          console.log("👤 User session verified:", meUser.email, "Role:", meUser.role);
+          devLog("👤 User session verified:", meUser.email, "Role:", meUser.role);
         } else {
           // If auth failed but we thought we were admin/logged in, reset state to stop 401 loops
           if (savedIsAdmin || isLoggedIn) {
-            console.warn("⚠️ Authentication session invalid or expired. Resetting local auth state.");
+            devWarn("⚠️ Authentication session invalid or expired. Resetting local auth state.");
             setIsAdmin(false);
             setUser(null);
             localStorage.setItem('isAdmin', 'false');
@@ -400,7 +434,7 @@ function App() {
         // Unblock the UI — page is ready
         setLoadProgress(90);
         setIsDataLoading(false);
-        console.log("✅ Fast data loaded — page is now interactive");
+        devLog("✅ Fast data loaded — page is now interactive");
 
         // Resolve products in background (page already visible)
         const productsResult = await productsPromise.then(v => ({ status: 'fulfilled' as const, value: v })).catch(e => ({ status: 'rejected' as const, reason: e }));
@@ -408,7 +442,7 @@ function App() {
         if (productsResult.status === 'fulfilled') {
           productsResponse = productsResult.value;
         } else {
-          console.error("❌ Products API call failed:", productsResult.reason);
+          devError("❌ Products API call failed:", productsResult.reason);
         }
 
         let freshProducts: any[] = [];
@@ -425,7 +459,7 @@ function App() {
         if (bgTransformedProducts.length > 0) {
           setProducts(bgTransformedProducts);
           cache.set(CACHE_KEYS.PRODUCTS, bgTransformedProducts, CACHE_TTL.PRODUCTS);
-          console.log(`✅ Background: loaded ${bgTransformedProducts.length} products`);
+          devLog(`✅ Background: loaded ${bgTransformedProducts.length} products`);
         }
 
         // Resolve admin data in background
@@ -458,18 +492,18 @@ function App() {
         }
 
         setLoadProgress(100);
-        console.log("✅ All data fully loaded");
+        devLog("✅ All data fully loaded");
 
       } catch (err: any) {
-        console.error("❌ Failed to fetch fresh data:", err);
-        console.error("Error type:", err?.constructor?.name);
-        console.error("Error message:", err?.message);
-        console.error("Error code:", err?.code);
-        console.error("Response data:", err?.response?.data);
+        devError("❌ Failed to fetch fresh data:", err);
+        devError("Error type:", err?.constructor?.name);
+        devError("Error message:", err?.message);
+        devError("Error code:", err?.code);
+        devError("Response data:", err?.response?.data);
         
         // If we have cached data, keep showing it (stale is better than nothing)
         if (cachedProducts || cachedCategories || cachedBrands) {
-          console.log("📦 Using stale cached data (fetch failed)");
+          devLog("📦 Using stale cached data (fetch failed)");
           setIsDataLoading(false);
           setDataLoadError("Using cached data. Some information may be outdated.");
         } else {
@@ -558,7 +592,7 @@ function App() {
       if (transformedProducts.length > 0) {
         setProducts(transformedProducts);
         cache.set(CACHE_KEYS.PRODUCTS, transformedProducts, CACHE_TTL.PRODUCTS);
-        console.log(`🔄 Refreshed ${transformedProducts.length} products`);
+        devLog(`🔄 Refreshed ${transformedProducts.length} products`);
       }
 
       const processResult = (result: PromiseSettledResult<any>, key: string): any[] => {
@@ -581,19 +615,39 @@ function App() {
 
       const freshBrands = processResult(brandsResponse, 'brands');
       if (freshBrands.length > 0) {
-        const brandsWithMeta = freshBrands.map((brand: any) => ({
-          ...brand,
-          logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
-          productCount: brand.productCount || 0
-        }));
+        const decodeHtml = (html: string) => {
+          const txt = document.createElement('textarea');
+          txt.innerHTML = html;
+          return txt.value;
+        };
+        const isValidBrand = (name: string) => {
+          const n = (name || '').trim();
+          if (!n) return false;
+          if (/^\(.*\)$/.test(n)) return false;
+          if (/^-\s/.test(n)) return false;
+          if (n.length < 2) return false;
+          return true;
+        };
+        const brandsWithMeta = freshBrands
+          .map((brand: any) => ({
+            ...brand,
+            name: decodeHtml(brand.name || ''),
+            logo: brand.logo || `https://placehold.co/200x200?text=${brand.name}`,
+            productCount: brand.productCount || 0
+          }))
+          .filter((brand: any) => isValidBrand(brand.name));
         setBrands(brandsWithMeta);
         cache.set(CACHE_KEYS.BRANDS, brandsWithMeta, CACHE_TTL.BRANDS);
       }
 
       const freshSlides = processResult(slidesResponse, 'slides');
       if (freshSlides.length > 0) {
-        setHeroSlides(freshSlides);
-        cache.set(CACHE_KEYS.HERO_SLIDES, freshSlides, CACHE_TTL.HERO_SLIDES);
+        const filteredSlides = freshSlides.filter((s: any) => {
+          const title = (s.title || '').toLowerCase();
+          return !title.includes('test') && !title.includes('placeholder') && !title.includes('lorem');
+        });
+        setHeroSlides(filteredSlides.length > 0 ? filteredSlides : freshSlides);
+        cache.set(CACHE_KEYS.HERO_SLIDES, filteredSlides.length > 0 ? filteredSlides : freshSlides, CACHE_TTL.HERO_SLIDES);
       }
 
       if (settingsResponse.status === 'fulfilled' && settingsResponse.value) {
@@ -604,9 +658,9 @@ function App() {
         }
       }
 
-      console.log("✅ Data refreshed successfully");
+      devLog("✅ Data refreshed successfully");
     } catch (err) {
-      console.error("❌ Refresh failed:", err);
+      devError("❌ Refresh failed:", err);
     } finally {
       setIsRefreshing(false);
     }
@@ -677,7 +731,7 @@ function App() {
                 navigate('/shop');
               }
             } catch (err) {
-              console.error('Failed to fetch product detail:', err);
+              devError('Failed to fetch product detail:', err);
               navigate('/shop');
             }
           })();
@@ -841,7 +895,7 @@ function App() {
         return parsed;
       }
     } catch (e) {
-      console.error('Error parsing alpha_settings:', e);
+      devError('Error parsing alpha_settings:', e);
     }
     return {
       general: {
@@ -947,7 +1001,7 @@ function App() {
         }
       } catch (error: any) {
         if (error.response?.status !== 401) {
-          console.error('Failed to refresh orders:', error);
+          devError('Failed to refresh orders:', error);
         }
       }
     }
@@ -1034,7 +1088,7 @@ function App() {
       const newSlide = await heroSlidesAPI.create(slide);
       setHeroSlides(prev => [...prev, newSlide]);
     } catch (e) {
-      console.error("Failed to create slide", e);
+      devError("Failed to create slide", e);
       // Fallback
       setHeroSlides([...heroSlides, { ...slide, id: Date.now() }]);
     }
@@ -1046,7 +1100,7 @@ function App() {
       await heroSlidesAPI.update(updatedSlide.id, updatedSlide);
       setHeroSlides(prev => prev.map(s => s.id === updatedSlide.id ? updatedSlide : s));
     } catch (e) {
-      console.error("Failed to update slide", e);
+      devError("Failed to update slide", e);
     }
   };
 
@@ -1056,7 +1110,7 @@ function App() {
       await heroSlidesAPI.delete(id);
       setHeroSlides(prev => prev.filter(s => s.id !== id));
     } catch (e) {
-      console.error("Failed to delete slide", e);
+      devError("Failed to delete slide", e);
     }
   };
 
@@ -1066,7 +1120,7 @@ function App() {
       const { heroSlidesAPI } = await import('./utils/api');
       await heroSlidesAPI.reorder(reorderedSlides);
     } catch (e) {
-      console.error("Failed to reorder", e);
+      devError("Failed to reorder", e);
     }
   };
 
@@ -1076,7 +1130,7 @@ function App() {
       await promotionalTilesAPI.update(updatedTile.id, updatedTile);
       setPromotionalTiles(prev => prev.map(t => t.id === updatedTile.id ? updatedTile : t));
     } catch (e) {
-      console.error("Failed to update tile", e);
+      devError("Failed to update tile", e);
     }
   };
 
@@ -1114,7 +1168,7 @@ function App() {
       const { brandsAPI } = await import('./utils/api');
       await brandsAPI.updateFeatured(brandId, { isFeatured });
     } catch (e) {
-      console.error("Failed to toggle featured brand", e);
+      devError("Failed to toggle featured brand", e);
     }
   };
 
@@ -1128,7 +1182,7 @@ function App() {
         .map(b => ({ id: b.id, featuredOrder: b.featuredOrder }));
       await brandsAPI.reorder(payload);
     } catch (e) {
-      console.error("Failed to reorder featured brands", e);
+      devError("Failed to reorder featured brands", e);
     }
   };
 
@@ -1183,7 +1237,7 @@ function App() {
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {
-      console.error('Login error:', error);
+      devError('Login error:', error);
       toast.error(error.response?.data?.error || 'Login failed. Please check your credentials.');
     }
   };
@@ -1214,7 +1268,7 @@ function App() {
         setCurrentView('login');
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
+      devError('Registration error:', error);
       toast.error(error.response?.data?.error || 'Registration failed. Please try again.');
     }
   };
@@ -1224,7 +1278,7 @@ function App() {
       const { authAPI } = await import('./utils/api');
       await authAPI.logout();
     } catch (e) {
-      console.error("Logout API failed:", e);
+      devError("Logout API failed:", e);
     }
     
     setUser(null);
@@ -1259,9 +1313,9 @@ function App() {
       try {
         const { authAPI } = await import('./utils/api');
         await authAPI.updateProfile(updatedData);
-        console.log("✅ User profile persisted to server");
+        devLog("✅ User profile persisted to server");
       } catch (error) {
-        console.error("❌ Failed to persist user profile:", error);
+        devError("❌ Failed to persist user profile:", error);
         // Rollback on failure
         setUser(previousUser);
       }
@@ -1270,7 +1324,7 @@ function App() {
 
   // Logic
   const handleProductClick = (product: Product) => {
-    console.log("Product Clicked:", product.name, product.id);
+    devLog("Product Clicked:", product.name, product.id);
     setRecentlyViewed(prev => {
       const filtered = prev.filter(p => p.id !== product.id);
       return [product, ...filtered].slice(0, 6);
@@ -1327,9 +1381,9 @@ function App() {
 
     try {
       setIsDataLoading(true);
-      console.log('Sending order payload:', JSON.stringify(orderPayload, null, 2));
+      devLog('Sending order payload:', JSON.stringify(orderPayload, null, 2));
       const response = await ordersAPI.create(orderPayload);
-      console.log('Order response:', response);
+      devLog('Order response:', response);
       const newOrder = response.order;
 
       // 2. Update Local State with Server Response
@@ -1353,9 +1407,9 @@ function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error: any) {
-      console.error('Failed to create order on backend:', error);
+      devError('Failed to create order on backend:', error);
       const serverError = error.response?.data?.error || error.response?.data?.message || 'Unknown server error';
-      console.error('Server error details:', serverError);
+      devError('Server error details:', serverError);
       toast.error(`Order creation failed: ${serverError}`);
     } finally {
       setIsDataLoading(false);
@@ -1422,7 +1476,7 @@ function App() {
       const loadAdminData = async () => {
         setIsAdminLoading(true);
         try {
-          console.log("📡 Admin detected, starting background data fetch...");
+          devLog("📡 Admin detected, starting background data fetch...");
           
           // Helper to strip HTML tags
           const stripHtml = (html: string) => html ? html.replace(/<[^>]*>/g, '').trim() : '';
@@ -1431,10 +1485,10 @@ function App() {
           const { reviewsAPI, chatSessionsAPI, productsAPI, usersAPI: _usersAPI } = await import('./utils/api');
           
           const primaryAdminPromises = [
-            ordersAPI.getAllAdmin({ limit: 500 }).catch(err => { console.warn('Orders API failed:', err); return null; }),
-            reviewsAPI.getAllAdmin().catch(err => { console.warn('Reviews API failed:', err); return null; }),
-            chatSessionsAPI.getAll().catch(err => { console.warn('Chat Sessions API failed:', err); return null; }),
-            fetchUsersPage(1).catch(err => { console.warn('Initial users fetch failed:', err); return null; })
+            ordersAPI.getAllAdmin({ limit: 500 }).catch(err => { devWarn('Orders API failed:', err); return null; }),
+            reviewsAPI.getAllAdmin().catch(err => { devWarn('Reviews API failed:', err); return null; }),
+            chatSessionsAPI.getAll().catch(err => { devWarn('Chat Sessions API failed:', err); return null; }),
+            fetchUsersPage(1).catch(err => { devWarn('Initial users fetch failed:', err); return null; })
           ];
 
           const [ordersRes, reviewsRes, chatSessionsRes, usersRes] = await Promise.all(primaryAdminPromises);
@@ -1468,7 +1522,7 @@ function App() {
           const needsProducts = products.length === 0 || (totalProductCount > 0 && products.length < totalProductCount) || (products.length < 200 && totalProductCount === 0);
           
           if (needsProducts) {
-            console.log(`📡 Background sync: catalog incomplete (${products.length}/${totalProductCount})`);
+            devLog(`📡 Background sync: catalog incomplete (${products.length}/${totalProductCount})`);
             
             const batchSize = 100; // Smaller batches are more stable for WordPress/API
             const endPage = Math.ceil((totalProductCount || 3000) / batchSize);
@@ -1506,14 +1560,14 @@ function App() {
                   });
                 }
               }
-              console.log("✅ Background catalog sync complete");
+              devLog("✅ Background catalog sync complete");
             };
             
-            processBatches().catch(err => console.error('Catalog sync error:', err));
+            processBatches().catch(err => devError('Catalog sync error:', err));
           }
 
         } catch (error) {
-          console.error('Failed to load general admin data:', error);
+          devError('Failed to load general admin data:', error);
         } finally {
           setIsAdminLoading(false);
         }
@@ -1544,7 +1598,7 @@ function App() {
       
       // If no token and not on page 1, we need to fetch sequentially from current position
       if (!pageToken && targetPage > 1 && targetPage > currentPage) {
-        console.log(`🔄 Need to fetch pages sequentially from ${currentPage + 1} to ${targetPage}`);
+        devLog(`🔄 Need to fetch pages sequentially from ${currentPage + 1} to ${targetPage}`);
         let nextToken = usersPageToken || usersPageTokens.get(currentPage + 1);
         let fetchPage = currentPage + 1;
         
@@ -1563,7 +1617,7 @@ function App() {
             params.getTotal = true;
           }
           
-          console.log(`📡 Sequential fetch via usersAPI: page ${fetchPage}`);
+          devLog(`📡 Sequential fetch via usersAPI: page ${fetchPage}`);
           
           const { usersAPI } = await import('./utils/api');
           const data = await usersAPI.getAll(params);
@@ -1579,7 +1633,7 @@ function App() {
               setTotalUsersCount(data.total);
               const pages = Math.ceil(data.total / usersPerPage);
               setTotalUsersPages(pages);
-              console.log(`📊 Total users: ${data.total}, Total pages: ${pages}`);
+              devLog(`📊 Total users: ${data.total}, Total pages: ${pages}`);
             }
             
             // Store next page token
@@ -1608,7 +1662,7 @@ function App() {
             nextToken = data.nextPageToken;
           } else {
             // No more pages
-            console.log('⚠️ No more pages available');
+            devLog('⚠️ No more pages available');
             break;
           }
           fetchPage++;
@@ -1631,7 +1685,7 @@ function App() {
         params.pageToken = pageToken;
       }
       
-      console.log(`📡 Fetching users page ${targetPage}...`);
+      devLog(`📡 Fetching users page ${targetPage}...`);
       
       const { usersAPI } = await import('./utils/api');
       const data = await usersAPI.getAll(params);
@@ -1645,7 +1699,7 @@ function App() {
         setTotalUsersCount(data.total);
         const pages = Math.ceil(data.total / usersPerPage);
         setTotalUsersPages(pages);
-        console.log(`📊 Total users: ${data.total}, Total pages: ${pages}`);
+        devLog(`📊 Total users: ${data.total}, Total pages: ${pages}`);
       }
       
       // Store next page token for next page
@@ -1662,7 +1716,7 @@ function App() {
       
       return data;
     } catch (error) {
-      console.error('Failed to fetch users page:', error);
+      devError('Failed to fetch users page:', error);
       throw error;
     } finally {
       setIsLoadingUsersPage(false);
@@ -1762,7 +1816,7 @@ function App() {
     );
   }
 
-  console.log("App Render:", { currentView, selectedProductId: selectedProduct?.id, productsCount: products.length });
+  devLog("App Render:", { currentView, selectedProductId: selectedProduct?.id, productsCount: products.length });
 
   // Show loading state while data is being fetched (prevents flash of wrong content on direct URL access)
   if (isDataLoading) {
@@ -2070,7 +2124,7 @@ function App() {
                 
                 if (sectionProducts.length === 0) {
                   if (products.length > 0) {
-                    console.log(`[Homepage] Section "${section.name}" (${section.type}) is empty. Products available: ${products.length}`);
+                    devLog(`[Homepage] Section "${section.name}" (${section.type}) is empty. Products available: ${products.length}`);
                   }
                   return null;
                 }

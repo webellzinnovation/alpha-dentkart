@@ -1,6 +1,8 @@
 import rateLimit from 'express-rate-limit';
 
-const isProd = process.env.NODE_ENV === 'production';
+// Detect production: check NODE_ENV OR Firebase Functions environment
+const isProd = process.env.NODE_ENV === 'production' || 
+               !!(process.env.FUNCTION_NAME || process.env.FIREBASE_CONFIG);
 
 const rateLimitOptions = {
     windowMs: 15 * 60 * 1000,

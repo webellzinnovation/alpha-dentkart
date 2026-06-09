@@ -15,6 +15,7 @@ build/
 .env.*.local
 firebase-service-account.json
 service-account-file.json
+alphadentkart-*-firebase-adminsdk-*.json
 
 # Firebase logs and cache
 firebase-debug.log

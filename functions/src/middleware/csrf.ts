@@ -2,7 +2,8 @@
 import csrf from 'csurf';
 import type { Request, Response, NextFunction } from 'express';
 
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === 'production' || 
+               !!(process.env.FUNCTION_NAME || process.env.FIREBASE_CONFIG);
 
 // CSRF protection middleware - validates tokens on mutating requests
 export const csrfProtection = csrf({
