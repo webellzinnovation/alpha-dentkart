@@ -14,19 +14,21 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCategoryClick, onBrandClick, products = [], slides }) => {
-  if (!slides || slides.length === 0) return null;
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   useEffect(() => {
+    if (!slides || slides.length === 0) return;
     const timer = setInterval(() => {
       setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [slides?.length]);
 
   const nextSlide = () => {
-    setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
+    setCurrentSlideIndex((prev) => (prev + 1) % (slides?.length || 1));
   };
+
+  if (!slides || slides.length === 0) return null;
 
   const prevSlide = () => {
     setCurrentSlideIndex((prev) => (prev - 1 + slides.length) % slides.length);
