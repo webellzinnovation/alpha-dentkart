@@ -357,6 +357,10 @@ export const wordpressSyncAPI = {
     syncAll: async (force = false) => {
         const response = await syncApi.post(`/sync/full${force ? '?force=true' : ''}`);
         return response.data;
+    },
+    updateBrandCounts: async () => {
+        const response = await syncApi.post('/sync/brand-counts');
+        return response.data;
     }
 };
 

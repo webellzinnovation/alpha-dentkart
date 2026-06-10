@@ -658,6 +658,46 @@ function isValidBrandName(name: string): boolean {
     return KNOWN_BRANDS.has(lower);
 }
 
+export async function updateBrandProductCounts(): Promise<number> {
+    logger.info("🔢 Recalculating brand product counts from Firestore...");
+    const brandsSnap = await db.collection('brands').get();
+    let updated = 0;
+
+    for (const brandDoc of brandsSnap.docs) {
+        const brandData = brandDoc.data();
+        const brandName = brandData.name;
+        if (!brandName) continue;
+
+        // Count products with this brand name
+        const productsSnap = await db.collection('products')
+            .where('brand', '==', brandName)
+            .count()
+            .get();
+        const actualCount = productsSnap.data().count;
+
+        // Also try brandId-based count
+        const productsByIdSnap = await db.collection('products')
+            .where('brandId', '==', brandDoc.id)
+            .count()
+            .get();
+        const countById = productsByIdSnap.data().count;
+
+        const finalCount = Math.max(actualCount, countById);
+
+        if (brandData.count !== finalCount || brandData.productCount !== finalCount) {
+            await db.collection('brands').doc(brandDoc.id).update({
+                count: finalCount,
+                productCount: finalCount,
+                updatedAt: new Date(),
+            });
+            updated++;
+        }
+    }
+
+    logger.info(`Updated product counts for ${updated} brands`);
+    return updated;
+}
+
 export async function syncBrands(api: any): Promise<number> {
     logger.info("🏷️ Fetching tags (brands) from WooCommerce...");
     const tags = await fetchAll(api, "/products/tags", { per_page: 100 });
@@ -895,6 +935,18 @@ router.post('/brands', apiLimiter, authenticateToken, requireAdmin, async (req: 
     }
 });
 
+router.post('/brand-counts', apiLimiter, authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+    try {
+        logger.info("🔢 Recalculating brand product counts...");
+        const updated = await updateBrandProductCounts();
+        res.json({ success: true, updated, message: `Updated product counts for ${updated} brands` });
+    } catch (error: any) {
+        logger.error('Brand count update error', { error });
+        const errMsg = error?.response?.data?.message || error?.message || String(error);
+        res.status(500).json({ success: false, error: errMsg });
+    }
+});
+
 router.post('/full', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     const results: any = { categories: 0, brands: 0, products: 0, orders: 0, users: 0 };
     const errors: string[] = [];
@@ -947,6 +999,13 @@ router.post('/full', apiLimiter, authenticateToken, requireAdmin, async (req: Re
             ]);
         } catch (e) {
             logger.warn('Cache invalidation failed', { error: e });
+        }
+
+        // Recalculate brand product counts from actual products
+        try {
+            results.brandCountsUpdated = await updateBrandProductCounts();
+        } catch (e) {
+            logger.warn('Brand product count update failed', { error: e });
         }
 
         res.json({

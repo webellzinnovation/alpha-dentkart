@@ -631,6 +631,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     const [isSyncingCategories, setIsSyncingCategories] = useState(false);
     const [isSyncingBrands, setIsSyncingBrands] = useState(false);
+    const [isRecalculatingCounts, setIsRecalculatingCounts] = useState(false);
 
     const handleSyncCategories = async () => {
         setIsSyncingCategories(true);
@@ -667,6 +668,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             toast.error(err?.response?.data?.error || err?.message || 'Failed to sync brands.', { id: toastId });
         } finally {
             setIsSyncingBrands(false);
+        }
+    };
+
+    const handleRecalculateBrandCounts = async () => {
+        setIsRecalculatingCounts(true);
+        const toastId = toast.loading('Recalculating brand product counts...');
+        try {
+            const { wordpressSyncAPI } = await import('../utils/api');
+            const res = await wordpressSyncAPI.updateBrandCounts();
+            toast.success(res.message || 'Brand counts updated!', { id: toastId });
+        } catch (err: any) {
+            toast.error(err?.response?.data?.error || err?.message || 'Failed to recalculate counts.', { id: toastId });
+        } finally {
+            setIsRecalculatingCounts(false);
         }
     };
 
@@ -4240,6 +4255,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                     >
                                                                         {isSyncingBrands ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-tag"></i>}
                                                                         Brands
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={handleRecalculateBrandCounts}
+                                                                        disabled={isRecalculatingCounts}
+                                                                        className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-800 dark:text-white font-bold py-2 rounded-xl text-[11px] border border-gray-200 dark:border-gray-700 transition-all flex items-center justify-center gap-1.5"
+                                                                        title="Recalculate product counts for all brands based on actual products in database"
+                                                                    >
+                                                                        {isRecalculatingCounts ? <i className="fas fa-spinner animate-spin"></i> : <i className="fas fa-calculator"></i>}
+                                                                        Counts
                                                                     </button>
                                                                 </div>
                                                             </div>

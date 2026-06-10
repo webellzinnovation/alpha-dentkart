@@ -1,5 +1,5 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { getWooClient, syncProducts, syncOrders, syncUsers, syncCategories, syncBrands } from "./routes/sync";
+import { getWooClient, syncProducts, syncOrders, syncUsers, syncCategories, syncBrands, updateBrandProductCounts } from "./routes/sync";
 import { cacheService } from "./services/cacheService";
 import logger from "./utils/logger";
 import { db } from "./config/firebase";
@@ -51,6 +51,11 @@ async function runFullSync(forceFull = false): Promise<{
         ]);
     } catch (e) {
         logger.warn('[scheduled-sync] Cache invalidation failed', { error: e });
+    }
+
+    // Recalculate brand product counts
+    try { await updateBrandProductCounts(); } catch (e) {
+        logger.warn('[scheduled-sync] Brand count update failed', { error: e });
     }
 
     // Write sync status to Firestore for the admin dashboard
