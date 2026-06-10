@@ -10,3 +10,6 @@ export const api = onRequest(
     }, 
     app
 );
+
+// Scheduled sync functions
+export { scheduledSyncDaily, scheduledSyncWeekly } from "./scheduled-sync";

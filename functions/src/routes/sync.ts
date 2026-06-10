@@ -11,7 +11,7 @@ dotenv.config();
 
 const router = Router();
 
-async function getWooClient() {
+export async function getWooClient() {
     let url = (process.env.WP_URL || "https://alphadentkart.com").replace(/\/$/, '');
     let consumerKey = process.env.WP_CONSUMER_KEY || '';
     let consumerSecret = process.env.WP_CONSUMER_SECRET || '';
@@ -104,7 +104,7 @@ async function updateLastSyncTime(type: string, time: Date = new Date()) {
     }
 }
 
-async function syncProducts(api: any, forceFull = false): Promise<number> {
+export async function syncProducts(api: any, forceFull = false): Promise<number> {
     logger.info("📦 Fetching products from WooCommerce...");
     
     // Pre-load brands map (name -> id) for brandId assignment
@@ -245,7 +245,7 @@ async function syncProducts(api: any, forceFull = false): Promise<number> {
     return synced;
 }
 
-async function syncOrders(api: any, forceFull = false): Promise<number> {
+export async function syncOrders(api: any, forceFull = false): Promise<number> {
     logger.info("📋 Fetching orders from WooCommerce...");
     
     const params: any = { per_page: 100 };
@@ -339,7 +339,7 @@ async function syncOrders(api: any, forceFull = false): Promise<number> {
     return synced;
 }
 
-async function syncUsers(api: any, forceFull = false): Promise<number> {
+export async function syncUsers(api: any, forceFull = false): Promise<number> {
     logger.info("👥 Fetching customers from WooCommerce...");
     
     const params: any = { per_page: 100 };
@@ -409,7 +409,7 @@ async function syncUsers(api: any, forceFull = false): Promise<number> {
     return synced;
 }
 
-async function syncCategories(api: any): Promise<number> {
+export async function syncCategories(api: any): Promise<number> {
     logger.info("📂 Fetching categories from WooCommerce...");
     const categories = await fetchAll(api, "/products/categories", { per_page: 100 });
     logger.info(`Found ${categories.length} categories`);
@@ -658,7 +658,7 @@ function isValidBrandName(name: string): boolean {
     return KNOWN_BRANDS.has(lower);
 }
 
-async function syncBrands(api: any): Promise<number> {
+export async function syncBrands(api: any): Promise<number> {
     logger.info("🏷️ Fetching tags (brands) from WooCommerce...");
     const tags = await fetchAll(api, "/products/tags", { per_page: 100 });
     logger.info(`Found ${tags.length} tags in WooCommerce`);

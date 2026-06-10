@@ -90,37 +90,26 @@
       ]
     },
     {
-      "collectionGroup": "orders",
+      "collectionGroup": "products",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "guestSessionId", "order": "ASCENDING" }
+        { "fieldPath": "brandId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "coupons",
+      "collectionGroup": "products",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "code", "order": "ASCENDING" }
+        { "fieldPath": "brand", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "users",
+      "collectionGroup": "products",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "email", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "refund_transactions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "returnId", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "verification_audit_logs",
-      "queryScope": "COLLECTION",
-      "fields": [
+        { "fieldPath": "categoryId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     }
