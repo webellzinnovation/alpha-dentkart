@@ -107,6 +107,15 @@ async function updateLastSyncTime(type: string, time: Date = new Date()) {
 async function syncProducts(api: any, forceFull = false): Promise<number> {
     logger.info("📦 Fetching products from WooCommerce...");
     
+    // Pre-load brands map (name -> id) for brandId assignment
+    const brandsSnap = await db.collection('brands').get();
+    const brandNameToId = new Map<string, string>();
+    brandsSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.name) brandNameToId.set(data.name.toLowerCase(), doc.id);
+    });
+    logger.info(`Loaded ${brandNameToId.size} brands for ID lookup`);
+    
     const params: any = { status: "any" };
     const lastSync = !forceFull ? await getLastSyncTime('lastProductSync') : null;
     
@@ -175,6 +184,9 @@ async function syncProducts(api: any, forceFull = false): Promise<number> {
                             product.attributes?.find((a: any) => a.slug === 'pa_brand' || a.name.toLowerCase() === 'brand')?.options?.[0] ||
                             product.tags?.[0]?.name || '';
 
+            // Look up brandId from the brands collection
+            const brandId = brandName ? brandNameToId.get(brandName.toLowerCase()) || null : null;
+
             const productData = {
                 wpId: product.id,
                 name: product.name,
@@ -192,6 +204,8 @@ async function syncProducts(api: any, forceFull = false): Promise<number> {
                 category: product.categories?.[0]?.name || 'Dental',
                 categoryId: product.categories?.[0]?.id || null,
                 brand: brandName,
+                brandId: brandId,
+                brandName: brandName,
                 type: product.type,
                 status: product.status,
                 createdAt: new Date(product.date_created),
@@ -441,23 +455,207 @@ async function syncCategories(api: any): Promise<number> {
 
 async function searchBrandLogo(api: any, brandName: string): Promise<string> {
     const cleanName = brandName.replace(/[^a-zA-Z0-9]/g, ' ').trim();
+    const slugName = brandName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+    
+    // Try multiple search patterns
     const searchTerms = [
-        cleanName + '+logo',
-        cleanName.replace(/\s+/g, '-') + '-logo',
-        cleanName.replace(/\s+/g, '_') + '_logo'
+        cleanName,
+        cleanName + ' logo',
+        slugName + '-logo',
+        slugName,
+        cleanName.replace(/\s+/g, '_') + '_logo',
     ];
 
     for (const term of searchTerms) {
         try {
-            const { data } = await api.get('/wp/v2/media', { search: term, per_page: 1 });
-            if (data && data.length > 0 && data[0].source_url) {
-                return data[0].source_url;
+            const { data } = await api.get('/wp/v2/media', { search: term, per_page: 5, orderby: 'relevance' });
+            if (data && data.length > 0) {
+                // Find best match - prefer images with brand name in title or slug
+                for (const media of data) {
+                    if (media.mime_type?.startsWith('image/') && media.source_url) {
+                        const title = (media.title?.rendered || '').toLowerCase();
+                        const mediaSlug = (media.slug || '').toLowerCase();
+                        const brandLower = brandName.toLowerCase();
+                        // Check if media title or slug contains the brand name
+                        if (title.includes(brandLower) || mediaSlug.includes(slugName) ||
+                            title.includes(cleanName.toLowerCase()) || mediaSlug.includes(cleanName.toLowerCase().replace(/\s+/g, '-'))) {
+                            return media.source_url;
+                        }
+                    }
+                }
+                // Fallback: return first image result
+                const firstImage = data.find((m: any) => m.mime_type?.startsWith('image/') && m.source_url);
+                if (firstImage) return firstImage.source_url;
             }
         } catch (e) {
             // Ignore errors, try next term
         }
     }
     return '';
+}
+
+function isValidBrandName(name: string): boolean {
+    const n = (name || '').trim();
+    if (!n) return false;
+    // Reject sizes, quantities, units
+    if (/^\(.*\)$/.test(n)) return false;
+    if (/^\d/.test(n)) return false;
+    if (/\b(pcs?|pieces?|box|boxes|sticks?|rolls?|sheets?|feet|foot|holes?|ml|gm?|gms?|mm|cm|oz|litre|liter|ltr|kg|kgs|pack\s*of|per\s+set|per\s+box|per\s+pack)\b/i.test(n)) return false;
+    // Strict whitelist of known dental companies/manufacturers (exact match, case-insensitive)
+    const KNOWN_BRANDS = new Set([
+        '3m', '3m espe', '3m unitek', '3m oral care',
+        'dentsply', 'dentsply sirona',
+        'coltene', 'coltene whaledent',
+        'ivoclar', 'ivoclar vivadent',
+        'kerr', 'kerr dental',
+        'shofu',
+        'gc', 'gc corporation', 'gc america',
+        'dmg', 'dmg america',
+        'bisco',
+        'pentron', 'pentron clinical',
+        'ultradent',
+        'voco',
+        'angelus',
+        'bausch',
+        'cavex',
+        'colgate',
+        'd-tech',
+        'harvard', 'harvard dental',
+        'hayashi', 'hayashi dental',
+        'indus dental',
+        'jmorita', 'j. morita',
+        'kulzer',
+        'marksans',
+        'meta biomed',
+        'mg dental',
+        'micro mega',
+        'noris medical',
+        'nyk dental',
+        'odontos',
+        'premier', 'premier dental',
+        'ptc',
+        'pyrax',
+        'raman dental',
+        'raypex',
+        'richardson',
+        'septodont',
+        'ss white',
+        'sun medical',
+        'tpc',
+        'trox',
+        'zhermack',
+        'waldent',
+        'alpok',
+        'alphadent',
+        'dental avenue',
+        'dentalor',
+        'mane',
+        'medent',
+        'prime dental',
+        'sanghi',
+        'surya',
+        'ticare',
+        'trevon',
+        'venus',
+        'verdant',
+        'woodpecker',
+        'woson',
+        'yeti',
+        'dentium',
+        'osstem',
+        'straumann',
+        'nobel biocare',
+        'ankybss',
+        'tomy',
+        'polydent',
+        'roland',
+        'prevest denpro', 'prevestdenpro',
+        'safeendo',
+        'goodwill',
+        'bionova',
+        'gdc',
+        'oracura',
+        'eighteeth',
+        'polodent',
+        'neoendo',
+        'kovo dent',
+        'denmax', 'denmax medical',
+        'dispodent',
+        'lascod',
+        'fgm',
+        'maarc',
+        'riverside',
+        'browne',
+        'detax',
+        'wizdent',
+        'being foshan',
+        'ams',
+        'surgicare',
+        'seil global',
+        'romsons',
+        'carestream',
+        'vatech',
+        'hmd',
+        'nsk',
+        'superendo',
+        'vishal dentocare',
+        'samit',
+        'kids e dental',
+        'capri',
+        'cotisen',
+        'icpa',
+        'suraksha',
+        'indoco',
+        'kalabhai',
+        'advanced biotech',
+        'endoking',
+        'prima dental',
+        'mailyard',
+        'printex',
+        'agkem',
+        'kovident',
+        'steris',
+        'unident',
+        'denpro',
+        'koden',
+        'dpi',
+        'mani',
+        'aaa dental',
+        'dentaurum',
+        'aquapick',
+        'vincismile',
+        'sdi',
+        'sure endo',
+        'hu-friedy', 'hu.friedy',
+        'ethicon',
+        'life.line medical',
+        'dynamic techno',
+        'supersnap',
+        'diadent',
+        'ammdent',
+        'tor vm',
+        'avue',
+        'apple dental',
+        'roeko',
+        'canalpro',
+        'medicept',
+        'gutta',
+        'metabiomed',
+        'mectron',
+        'element',
+        'tiodent',
+        'henry schein',
+        'fdent',
+        'ulp dental',
+        'veirs dental',
+        'vox',
+        'edfdent', 'edfdental',
+        'dentplus',
+        'dentalkart',
+        'denta port',
+    ]);
+    const lower = n.toLowerCase();
+    return KNOWN_BRANDS.has(lower);
 }
 
 async function syncBrands(api: any): Promise<number> {
@@ -483,19 +681,35 @@ async function syncBrands(api: any): Promise<number> {
 
     const allBrandTerms = [...tags, ...brandsFromAttr];
     const uniqueBrands = Array.from(new Map(allBrandTerms.map(item => [item.name, item])).values());
-    logger.info(`Processing ${uniqueBrands.length} unique brands`);
+    const filteredBrands = uniqueBrands.filter((b: any) => isValidBrandName(b.name));
+    logger.info(`Processing ${filteredBrands.length} valid brands (filtered from ${uniqueBrands.length} total)`);
 
     let synced = 0;
     let batch = db.batch();
     let countInBatch = 0;
 
-    for (const brand of uniqueBrands) {
+    for (const brand of filteredBrands) {
+        let logoUrl = brand.image?.src || '';
+        // If no logo from WooCommerce, search WordPress media
+        if (!logoUrl) {
+            try {
+                logoUrl = await searchBrandLogo(api, brand.name);
+                if (logoUrl) {
+                    logger.info(`   🔍 Found logo for "${brand.name}": ${logoUrl}`);
+                }
+                // Rate limit: wait 200ms between logo searches
+                await sleep(200);
+            } catch (e) {
+                // Ignore search errors
+            }
+        }
+
         const brandData = {
             wpId: brand.id,
             name: brand.name,
             slug: brand.slug,
             description: brand.description || '',
-            image: brand.image?.src || '',
+            image: logoUrl,
             count: brand.count || 0,
             lastSync: new Date(),
             updatedAt: new Date(),
@@ -509,7 +723,7 @@ async function syncBrands(api: any): Promise<number> {
 
         if (countInBatch >= 50) {
             await batch.commit();
-            logger.info(`Synced ${synced}/${uniqueBrands.length} brands`);
+            logger.info(`Synced ${synced}/${filteredBrands.length} brands`);
             batch = db.batch();
             countInBatch = 0;
         }
@@ -575,7 +789,11 @@ router.post('/credentials', apiLimiter, authenticateToken, requireAdmin, async (
 
 router.get('/credentials', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const doc = await db.collection('settings').doc('wordpress_credentials').get();
+        let doc = await db.collection('settings').doc('wordpress_credentials').get();
+        if (!doc.exists) {
+            // Fallback to wordpress_sync document
+            doc = await db.collection('settings').doc('wordpress_sync').get();
+        }
         if (doc.exists) {
             const data = doc.data();
             res.json({
@@ -678,43 +896,71 @@ router.post('/brands', apiLimiter, authenticateToken, requireAdmin, async (req: 
 });
 
 router.post('/full', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    const results: any = { categories: 0, brands: 0, products: 0, orders: 0, users: 0 };
+    const errors: string[] = [];
+    
     try {
         const forceFull = req.query.force === 'true';
         logger.info(`Starting full sync (forceFull: ${forceFull})...`);
         const api = await getWooClient();
         
-        const categoriesSynced = await syncCategories(api);
-        const brandsSynced = await syncBrands(api);
+        try {
+            results.categories = await syncCategories(api);
+        } catch (e: any) {
+            errors.push('categories: ' + (e?.message || 'unknown'));
+            logger.error('Category sync failed', { error: e });
+        }
+
+        try {
+            results.brands = await syncBrands(api);
+        } catch (e: any) {
+            errors.push('brands: ' + (e?.message || 'unknown'));
+            logger.error('Brand sync failed', { error: e });
+        }
         
-        logger.info("Starting products sync...");
-        const productsSynced = await syncProducts(api, forceFull);
+        try {
+            logger.info("Starting products sync...");
+            results.products = await syncProducts(api, forceFull);
+        } catch (e: any) {
+            errors.push('products: ' + (e?.message || 'unknown'));
+            logger.error('Product sync failed', { error: e });
+        }
         
-        logger.info("Starting orders and users sync...");
-        const [ordersSynced, usersSynced] = await Promise.all([
-            syncOrders(api, forceFull),
-            syncUsers(api, forceFull)
-        ]);
+        try {
+            logger.info("Starting orders and users sync...");
+            const [ordersSynced, usersSynced] = await Promise.all([
+                syncOrders(api, forceFull).catch(e => { errors.push('orders: ' + (e?.message || 'unknown')); return 0; }),
+                syncUsers(api, forceFull).catch(e => { errors.push('users: ' + (e?.message || 'unknown')); return 0; })
+            ]);
+            results.orders = ordersSynced;
+            results.users = usersSynced;
+        } catch (e: any) {
+            errors.push('orders/users: ' + (e?.message || 'unknown'));
+        }
 
         // Invalidate all caches
-        await Promise.all([
-            cacheService.invalidateProductsCache(),
-            cacheService.invalidateCategoriesCache(),
-            cacheService.invalidateBrandsCache()
-        ]);
+        try {
+            await Promise.all([
+                cacheService.invalidateProductsCache(),
+                cacheService.invalidateCategoriesCache(),
+                cacheService.invalidateBrandsCache()
+            ]);
+        } catch (e) {
+            logger.warn('Cache invalidation failed', { error: e });
+        }
 
         res.json({
             success: true,
-            categories: categoriesSynced,
-            brands: brandsSynced,
-            products: productsSynced,
-            orders: ordersSynced,
-            users: usersSynced,
-            message: 'Full sync completed successfully'
+            ...results,
+            errors: errors.length > 0 ? errors : undefined,
+            message: errors.length > 0 
+                ? `Sync completed with ${errors.length} errors` 
+                : 'Full sync completed successfully'
         });
     } catch (error: any) {
         logger.error('Full sync error', { error });
         const errMsg = error?.response?.data?.message || error?.message || String(error);
-        res.status(500).json({ success: false, error: errMsg });
+        res.status(500).json({ success: false, error: errMsg, results, errors });
     }
 });
 

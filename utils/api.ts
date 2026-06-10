@@ -104,7 +104,7 @@ export const authAPI = {
 
 // Products API
 export const productsAPI = {
-    getAll: async (params?: { page?: number; limit?: number; categoryId?: string | number; brandId?: string | number; search?: string; sortBy?: string; sortOrder?: string }) => {
+    getAll: async (params?: { page?: number; limit?: number; categoryId?: string | number; brandId?: string | number; brandName?: string; search?: string; sortBy?: string; sortOrder?: string }) => {
         const response = await api.get('/products', { params });
         return response.data;
     },
@@ -296,45 +296,66 @@ export const usersAPI = {
 };
 
 // WordPress Sync API
+const syncApi = axios.create({
+    baseURL: API_BASE_URL,
+    withCredentials: true,
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 600000, // 10 minute timeout for sync operations
+});
+
+// CSRF Protection for sync API
+syncApi.interceptors.request.use((config) => {
+    if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
+        const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrf-token='))
+            ?.split('=')[1];
+        if (csrfToken) {
+            config.headers['x-csrf-token'] = csrfToken;
+        }
+    }
+    return config;
+});
+
 export const wordpressSyncAPI = {
     testConnection: async (credentials: any) => {
-        const response = await api.post('/sync/test-connection', credentials);
+        const response = await syncApi.post('/sync/test-connection', credentials);
         return response.data;
     },
     saveCredentials: async (credentials: any) => {
-        const response = await api.post('/sync/credentials', credentials);
+        const response = await syncApi.post('/sync/credentials', credentials);
         return response.data;
     },
     getCredentials: async () => {
-        const response = await api.get('/sync/credentials');
+        const response = await syncApi.get('/sync/credentials');
         return response.data;
     },
     getStatus: async () => {
-        const response = await api.get('/sync/status');
+        const response = await syncApi.get('/sync/status');
         return response.data;
     },
     syncProducts: async (force = false) => {
-        const response = await api.post(`/sync/products${force ? '?force=true' : ''}`);
+        const response = await syncApi.post(`/sync/products${force ? '?force=true' : ''}`);
         return response.data;
     },
     syncOrders: async (force = false) => {
-        const response = await api.post(`/sync/orders${force ? '?force=true' : ''}`);
+        const response = await syncApi.post(`/sync/orders${force ? '?force=true' : ''}`);
         return response.data;
     },
     syncUsers: async (force = false) => {
-        const response = await api.post(`/sync/users${force ? '?force=true' : ''}`);
+        const response = await syncApi.post(`/sync/users${force ? '?force=true' : ''}`);
         return response.data;
     },
     syncCategories: async () => {
-        const response = await api.post('/sync/categories');
+        const response = await syncApi.post('/sync/categories');
         return response.data;
     },
     syncBrands: async () => {
-        const response = await api.post('/sync/brands');
+        const response = await syncApi.post('/sync/brands');
         return response.data;
     },
     syncAll: async (force = false) => {
-        const response = await api.post(`/sync/full${force ? '?force=true' : ''}`);
+        const response = await syncApi.post(`/sync/full${force ? '?force=true' : ''}`);
         return response.data;
     }
 };

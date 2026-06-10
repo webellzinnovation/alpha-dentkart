@@ -4,7 +4,7 @@ import app from "./server";
 export const api = onRequest(
     { 
         region: "asia-south1", 
-        timeoutSeconds: 300, 
+        timeoutSeconds: 540, 
         memory: "1GiB",
         invoker: "public"
     }, 

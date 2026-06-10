@@ -9,11 +9,12 @@ export async function getAllProducts(req: Request, res: Response) {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 20;
         const categoryId = req.query.categoryId ? String(req.query.categoryId) : undefined;
-        const brandId = req.query.brandId ? String(req.query.brandId) : undefined;
-        const search = req.query.search as string;
+    const brandId = req.query.brandId ? String(req.query.brandId) : undefined;
+    const brandName = req.query.brandName ? String(req.query.brandName) : undefined;
+    const search = req.query.search as string;
 
-        // Create cache key with pagination details
-        const cacheKey = `products:page:${page}:limit:${limit}:category:${categoryId || 'any'}:brand:${brandId || 'any'}:search:${search || 'none'}`;
+    // Create cache key with pagination details
+    const cacheKey = `products:page:${page}:limit:${limit}:category:${categoryId || 'any'}:brand:${brandId || brandName || 'any'}:search:${search || 'none'}`;
 
         // Try to get from cache first
         let cached = await cacheService.get(cacheKey);
@@ -26,7 +27,12 @@ export async function getAllProducts(req: Request, res: Response) {
 
         // Apply filters
         if (categoryId) productsRef = productsRef.where('categoryId', '==', categoryId);
-        if (brandId) productsRef = productsRef.where('brandId', '==', brandId);
+        if (brandId) {
+            productsRef = productsRef.where('brandId', '==', brandId);
+        } else if (brandName) {
+            // Fallback: filter by brand name (case-insensitive via lowercase comparison)
+            productsRef = productsRef.where('brand', '==', brandName);
+        }
 
         // Keyword-based search using Firestore array-contains-any
         if (search) {

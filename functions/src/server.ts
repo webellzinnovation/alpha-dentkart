@@ -144,7 +144,13 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 // CSRF protection - generate token on GET, validate on mutating requests
-app.use(csrfProtection);
+// Skip CSRF for sync routes (already protected by admin auth)
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api/v1/sync')) {
+        return next();
+    }
+    csrfProtection(req, res, next);
+});
 app.use(sendCsrfToken);
 app.use(sanitizeInput);
 app.use(requestLogger);

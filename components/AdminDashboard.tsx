@@ -4028,6 +4028,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
                                                         <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
                                                             <i className="fas fa-key text-pink-500"></i> WooCommerce API Keys
+                                                            {wpConsumerKey && (
+                                                                <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Active</span>
+                                                            )}
                                                         </h3>
                                                         <div className="space-y-3">
                                                             <div>
@@ -4101,7 +4104,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                     </div>
                                                                     <h4 className="font-bold text-gray-900 dark:text-white mt-3 text-sm">Synchronize Products</h4>
                                                                     <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                                                                        Last Sync: {syncStatus?.lastProductSync ? new Date(syncStatus.lastProductSync.seconds * 1000).toLocaleString() : 'Never'}
+                                                                        Last Sync: {syncStatus?.lastProductSync ? new Date((syncStatus.lastProductSync.seconds || syncStatus.lastProductSync._seconds || 0) * 1000).toLocaleString() : 'Never'}
                                                                     </p>
                                                                     
                                                                     <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-gray-855 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -4140,7 +4143,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                     </div>
                                                                     <h4 className="font-bold text-gray-900 dark:text-white mt-3 text-sm">Synchronize Orders</h4>
                                                                     <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                                                                        Last Sync: {syncStatus?.lastOrderSync ? new Date(syncStatus.lastOrderSync.seconds * 1000).toLocaleString() : 'Never'}
+                                                                        Last Sync: {syncStatus?.lastOrderSync ? new Date((syncStatus.lastOrderSync.seconds || syncStatus.lastOrderSync._seconds || 0) * 1000).toLocaleString() : 'Never'}
                                                                     </p>
 
                                                                     <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-gray-855 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -4179,7 +4182,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                     </div>
                                                                     <h4 className="font-bold text-gray-900 dark:text-white mt-3 text-sm">Synchronize Customers</h4>
                                                                     <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                                                                        Last Sync: {syncStatus?.lastUserSync ? new Date(syncStatus.lastUserSync.seconds * 1000).toLocaleString() : 'Never'}
+                                                                        Last Sync: {syncStatus?.lastUserSync ? new Date((syncStatus.lastUserSync.seconds || syncStatus.lastUserSync._seconds || 0) * 1000).toLocaleString() : 'Never'}
                                                                     </p>
 
                                                                     <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-gray-855 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">

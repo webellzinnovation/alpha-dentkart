@@ -79,6 +79,7 @@ export const Shop: React.FC<ShopProps> = ({
         limit: PER_PAGE,
         categoryId,
         brandId,
+        brandName: selectedBrand || undefined,
         search: searchQuery || undefined,
         sortBy: sortBy === 'price-low-high' ? 'price' : sortBy === 'price-high-low' ? 'price' : 'createdAt',
         sortOrder: sortBy === 'price-low-high' ? 'asc' : 'desc'
@@ -364,7 +365,9 @@ export const Shop: React.FC<ShopProps> = ({
               onClick={() => setIsMobileFilterOpen(false)}
               className="w-full bg-primary text-white py-3 rounded-lg font-bold shadow-lg shadow-primary/20"
             >
-              Show {filteredProducts.length} Results
+              Show {filteredProducts.length === totalProducts
+                ? `${totalProducts} Results`
+                : `${filteredProducts.length} of ${totalProducts} Results`}
             </button>
           </div>
         </aside>
@@ -379,7 +382,9 @@ export const Shop: React.FC<ShopProps> = ({
                 <i className="fas fa-filter text-primary"></i> Filters
               </button>
               <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium">
-                {filteredProducts.length} Products
+                {filteredProducts.length === totalProducts
+                  ? `${totalProducts} Products`
+                  : `${filteredProducts.length} of ${totalProducts} Products`}
               </span>
             </div>
 
