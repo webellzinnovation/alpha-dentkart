@@ -107,12 +107,14 @@ async function updateLastSyncTime(type: string, time: Date = new Date()) {
 export async function syncProducts(api: any, forceFull = false): Promise<number> {
     logger.info("📦 Fetching products from WooCommerce...");
     
-    // Pre-load brands map (name -> id) for brandId assignment
+    // Pre-load brands map (name -> id) and (wpId -> name) for brandId assignment
     const brandsSnap = await db.collection('brands').get();
     const brandNameToId = new Map<string, string>();
+    const brandWpIdToName = new Map<number, string>();
     brandsSnap.forEach(doc => {
         const data = doc.data();
         if (data.name) brandNameToId.set(data.name.toLowerCase(), doc.id);
+        if (data.wpId) brandWpIdToName.set(data.wpId, data.name);
     });
     logger.info(`Loaded ${brandNameToId.size} brands for ID lookup`);
     
@@ -126,9 +128,43 @@ export async function syncProducts(api: any, forceFull = false): Promise<number>
         logger.info(`Incremental sync: fetching products modified after ${params.after}`);
     }
 
-    const products = await fetchAll(api, "/products", params);
-    logger.info(`Found ${products.length} products to sync`);
+    let products = await fetchAll(api, "/products", params);
+    logger.info(`Found ${products.length} products from general fetch`);
 
+    // Also fetch products per brand using WC API brand filter
+    // This ensures we get ALL products even if brands field isn't populated on most products
+    const allBrandWpIds = Array.from(brandWpIdToName.keys());
+    if (allBrandWpIds.length > 0) {
+        logger.info(`🏷️ Fetching products per brand (${allBrandWpIds.length} brands)...`);
+        const existingWpIds = new Set(products.map((p: any) => p.id));
+        let brandProductsAdded = 0;
+
+        for (const brandWpId of allBrandWpIds) {
+            try {
+                const brandProducts = await fetchAll(api, "/products", { 
+                    ...params, 
+                    brand: brandWpId,
+                    per_page: 100 
+                });
+                for (const bp of brandProducts) {
+                    if (!existingWpIds.has(bp.id)) {
+                        products.push(bp);
+                        existingWpIds.add(bp.id);
+                        brandProductsAdded++;
+                    }
+                }
+                if (brandProducts.length > 0) {
+                    logger.info(`   ↳ Brand wpId ${brandWpId} (${brandWpIdToName.get(brandWpId)}): ${brandProducts.length} products`);
+                }
+                await sleep(100); // Rate limit
+            } catch (e) {
+                // Some brands may not exist as filter param, ignore
+            }
+        }
+        logger.info(`Added ${brandProductsAdded} products from per-brand fetches`);
+    }
+
+    logger.info(`Total products to sync: ${products.length}`);
     if (products.length === 0) return 0;
 
     let synced = 0;
@@ -184,8 +220,30 @@ export async function syncProducts(api: any, forceFull = false): Promise<number>
                             product.attributes?.find((a: any) => a.slug === 'pa_brand' || a.name.toLowerCase() === 'brand')?.options?.[0] ||
                             product.tags?.[0]?.name || '';
 
-            // Look up brandId from the brands collection
-            const brandId = brandName ? brandNameToId.get(brandName.toLowerCase()) || null : null;
+            // Look up brandId from the brands collection using WC brand ID first, then name
+            const wcBrandId = product.brands?.[0]?.id;
+            let brandId = null;
+            let resolvedBrandName = brandName;
+            
+            // Try WC brand ID -> Firestore brand document
+            if (wcBrandId) {
+                const firestoreBrandId = String(wcBrandId);
+                const firestoreBrandName = brandWpIdToName.get(wcBrandId);
+                if (firestoreBrandName) {
+                    brandId = firestoreBrandId;
+                    resolvedBrandName = firestoreBrandName;
+                }
+            }
+            
+            // Fallback: try name lookup
+            if (!brandId && brandName) {
+                brandId = brandNameToId.get(brandName.toLowerCase()) || null;
+                // If name lookup found a brand, use the Firestore name (which may differ from WC name)
+                if (brandId) {
+                    const fbName = brandsSnap.docs.find(d => d.id === brandId)?.data()?.name;
+                    if (fbName) resolvedBrandName = fbName;
+                }
+            }
 
             const productData = {
                 wpId: product.id,
@@ -203,9 +261,9 @@ export async function syncProducts(api: any, forceFull = false): Promise<number>
                 images: imageUrls,
                 category: product.categories?.[0]?.name || 'Dental',
                 categoryId: product.categories?.[0]?.id || null,
-                brand: brandName,
+                brand: resolvedBrandName,
                 brandId: brandId,
-                brandName: brandName,
+                brandName: resolvedBrandName,
                 type: product.type,
                 status: product.status,
                 createdAt: new Date(product.date_created),
