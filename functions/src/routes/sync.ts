@@ -140,25 +140,36 @@ export async function syncProducts(api: any, forceFull = false): Promise<number>
         let brandProductsAdded = 0;
 
         for (const brandWpId of allBrandWpIds) {
-            try {
-                const brandProducts = await fetchAll(api, "/products", { 
-                    ...params, 
-                    brand: brandWpId,
-                    per_page: 100 
-                });
-                for (const bp of brandProducts) {
-                    if (!existingWpIds.has(bp.id)) {
-                        products.push(bp);
-                        existingWpIds.add(bp.id);
-                        brandProductsAdded++;
+            let retries = 2;
+            while (retries > 0) {
+                try {
+                    const brandProducts = await fetchAll(api, "/products", { 
+                        ...params, 
+                        brand: brandWpId,
+                        per_page: 100 
+                    });
+                    for (const bp of brandProducts) {
+                        if (!existingWpIds.has(bp.id)) {
+                            products.push(bp);
+                            existingWpIds.add(bp.id);
+                            brandProductsAdded++;
+                        }
+                    }
+                    if (brandProducts.length > 0) {
+                        logger.info(`   ↳ Brand wpId ${brandWpId} (${brandWpIdToName.get(brandWpId)}): ${brandProducts.length} products`);
+                    }
+                    await sleep(500); // Rate limit - 500ms between requests
+                    break; // Success, exit retry loop
+                } catch (e: any) {
+                    retries--;
+                    const status = e?.response?.status;
+                    if (status === 429 || status === 502 || status === 503) {
+                        logger.warn(`   ⚠️ Rate limited/502 for brand ${brandWpId}, retrying in 3s...`);
+                        await sleep(3000);
+                    } else if (retries === 0) {
+                        logger.warn(`   ⚠️ Failed to fetch products for brand ${brandWpId}: ${e?.message || e}`);
                     }
                 }
-                if (brandProducts.length > 0) {
-                    logger.info(`   ↳ Brand wpId ${brandWpId} (${brandWpIdToName.get(brandWpId)}): ${brandProducts.length} products`);
-                }
-                await sleep(100); // Rate limit
-            } catch (e) {
-                // Some brands may not exist as filter param, ignore
             }
         }
         logger.info(`Added ${brandProductsAdded} products from per-brand fetches`);
