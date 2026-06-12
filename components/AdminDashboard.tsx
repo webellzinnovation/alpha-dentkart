@@ -4038,72 +4038,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                                    {/* Left 1/3: WooCommerce Credentials */}
-                                                    <div className="bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
-                                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
-                                                            <i className="fas fa-key text-pink-500"></i> WooCommerce API Keys
-                                                            {wpConsumerKey && (
-                                                                <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">Active</span>
-                                                            )}
-                                                        </h3>
-                                                        <div className="space-y-3">
-                                                            <div>
-                                                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Site URL</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={wpSiteUrl}
-                                                                    onChange={(e) => setWpSiteUrl(e.target.value)}
-                                                                    placeholder="https://alphadentkart.com"
-                                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-850 dark:text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Consumer Key</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={wpConsumerKey}
-                                                                    onChange={(e) => setWpConsumerKey(e.target.value)}
-                                                                    placeholder="ck_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-850 dark:text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-mono"
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Consumer Secret</label>
-                                                                <input
-                                                                    type="password"
-                                                                    value={wpConsumerSecret}
-                                                                    onChange={(e) => setWpConsumerSecret(e.target.value)}
-                                                                    placeholder="cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-850 dark:text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-mono"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="pt-2 flex flex-col gap-2">
-                                                            <button
-                                                                onClick={handleTestConnection}
-                                                                disabled={isTestingConnection}
-                                                                className="w-full bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-800 dark:text-white font-bold py-2.5 rounded-xl text-sm transition-all border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2"
-                                                            >
-                                                                {isTestingConnection ? (
-                                                                    <i className="fas fa-circle-notch animate-spin text-gray-500"></i>
-                                                                ) : (
-                                                                    <i className="fas fa-plug"></i>
-                                                                )}
-                                                                Test Connection
-                                                            </button>
-                                                            <button
-                                                                onClick={handleSaveWpCredentials}
-                                                                className="w-full bg-primary hover:bg-pink-700 text-white font-bold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-sm shadow-primary/20"
-                                                            >
-                                                                <i className="fas fa-save"></i>
-                                                                Save Credentials
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Right 2/3: Entity Synchronizers & Realtime Console Logs */}
-                                                    <div className="lg:col-span-2 space-y-6">
+                                                <div className="grid grid-cols-1 gap-6">
+                                                    {/* Entity Synchronizers & Realtime Console Logs */}
+                                                    <div className="space-y-6">
                                                         {/* Synced Cards Grid */}
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                             {/* Products Card */}
