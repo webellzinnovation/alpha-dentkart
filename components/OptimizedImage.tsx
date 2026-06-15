@@ -13,6 +13,7 @@ interface OptimizedImageProps {
   fallback?: string;
   onLoad?: () => void;
   onError?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   quality?: number;
   format?: 'webp' | 'jpg' | 'png' | 'auto';
   fetchPriority?: 'high' | 'low' | 'auto';
@@ -31,6 +32,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   fallback = FALLBACK_SRC,
   onLoad,
   onError,
+  onClick,
 }) => {
   // Always resolve to a safe HTTPS URL via the central helper
   const resolvedSrc = resolveProductImage(src);
@@ -73,8 +75,13 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onError?.();
   };
 
+  const isContain = className.includes('object-contain');
+
   return (
-    <div className={`${className} relative overflow-hidden`}>
+    <div 
+      className={`${className} relative overflow-hidden ${isContain ? 'flex items-center justify-center' : ''}`} 
+      onClick={onClick}
+    >
       {/* Skeleton shimmer while loading */}
       {!isLoaded && !hasError && (
         <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 animate-pulse" />
@@ -94,8 +101,9 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         fetchpriority={priority ? 'high' : 'auto'}
         onLoad={handleLoad}
         onError={handleError}
-        className={`transition-opacity duration-300 ease-in-out w-full h-full ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        style={{ objectFit: className.includes('object-contain') ? 'contain' : 'cover' }}
+        className={`transition-opacity duration-300 ease-in-out ${
+          isContain ? 'max-w-full max-h-full object-contain' : 'w-full h-full object-cover'
+        } ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
       />
 
       {/* Error state */}
