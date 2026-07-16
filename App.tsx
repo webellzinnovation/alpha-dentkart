@@ -71,7 +71,7 @@ const transformProducts = (products: any[]): Product[] => {
     badgeColor: p.badgeColor,
     badgeId: p.badgeId,
     timer: p.timer,
-    brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+    brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : (p.brandName || '')),
     description: p.description,
     features: p.features || [],
     specs: p.specs || {},
@@ -179,7 +179,12 @@ function App() {
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
       const saved = localStorage.getItem('alpha_orders');
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && Array.isArray(parsed.orders)) return parsed.orders;
+      }
+      return [];
     } catch (e) {
       devError('Error parsing alpha_orders:', e);
       return [];
@@ -282,8 +287,8 @@ function App() {
         setLoadProgress(20);
 
         const savedIsAdmin = localStorage.getItem('isAdmin') === 'true';
-        // Always start with a fast 200-product fetch — admin full catalog loads progressively in background
-        const fetchLimit = 200;
+        // Always start with a full product fetch to ensure all brands, categories, and products are visible
+        const fetchLimit = 5000;
         
         // PHASE 1: Fast UI data — unblocks loading screen immediately
         devLog(`📡 Phase 1: Fetching fast UI data (categories, brands, slides, auth)...`);
@@ -366,11 +371,14 @@ function App() {
             if (/^-\s/.test(n)) return false;
             if (/^-\S/.test(n)) return false;
             if (n.length < 2) return false;
+            
+            const brandWords = /^(3m|dentsply|coltene|whaledent|ivoclar|kerr|ulp dental|shofu|gc|dmg|bisco|pentron|ultradent|henry schein| Coltene| voco| 3m espe| 3m unitek| angelus| bausch| being foshan| bionova| cavex| colgate| d-tech| dentsply sirona| fdent| harvard| hayashi| indus dental| jmorita| kerr| kulzer| marksans| meta biomed| mg dental| micro Mega| noris medical| nyk dental| odontos| premier| ptc| pyrax| raman dental| raypex| richardson| septodont| ss white| sun medical| tpc| trox| veirs dental| vox | zhermack)/i;
+            if (brandWords.test(n)) return true;
+
             if (/^\d/.test(n)) return false;
             if (/\b(pcs?|pieces?|box|boxes|sticks?|rolls?|sheets?|feet|foot|holes?|ml|gm?|gms?|mm|cm|oz|litre|liter|ltr|kg|kgs|pack\s*of|per\s+set|per\s+box|per\s+pack)\b/i.test(n)) return false;
             if (/^\d+\s*(pcs?|pieces?|ml|gm?|mm|cm|oz|litre|liter|ltr|kg|kgs|holes?)$/i.test(n)) return false;
-            const brandWords = /^(3m|dentsply|coltene|whaledent|ivoclar|kerr|ulp dental|shofu|gc|dmg|bisco|pentron|ultradent|henry schein| Coltene| voco| 3m espe| 3m unitek| angelus| bausch| being foshan| bionova| cavex| colgate| d-tech| dentsply sirona| fdent| harvard| hayashi| indus dental| jmorita| kerr| kulzer| marksans| meta biomed| mg dental| micro Mega| noris medical| nyk dental| odontos| premier| ptc| pyrax| raman dental| raypex| richardson| septodont| ss white| sun medical| tpc| trox| veirs dental| vox | zhermack)/i;
-            if (brandWords.test(n)) return true;
+            
             if (/^[A-Z][a-z]/.test(n) && n.length >= 3 && n.length <= 50) return true;
             if (/^[A-Z]{2,}$/.test(n) && n.length <= 15) return true;
             if (/\s/.test(n) && n.length >= 3 && n.length <= 50 && !/^\d/.test(n)) return true;
@@ -426,6 +434,17 @@ function App() {
           setIsAdmin(meUser.role === 'admin');
           localStorage.setItem('isAdmin', meUser.role === 'admin' ? 'true' : 'false');
           devLog("👤 User session verified:", meUser.email, "Role:", meUser.role);
+          if (meUser.recentlyViewed && Array.isArray(meUser.recentlyViewed)) {
+            setRecentlyViewed(prev => {
+              const merged = [...prev];
+              meUser.recentlyViewed.forEach((p: any) => {
+                if (!merged.some(item => item.id === p.id)) {
+                  merged.push(p);
+                }
+              });
+              return merged.slice(0, 6);
+            });
+          }
         } else {
           // If auth failed but we thought we were admin/logged in, reset state to stop 401 loops
           if (savedIsAdmin || isLoggedIn) {
@@ -544,9 +563,8 @@ function App() {
       const api = await import('./utils/api');
       const { productsAPI, categoriesAPI, brandsAPI, heroSlidesAPI, settingsAPI } = api;
 
-      // Fetch products first
-      const isAdminUser = localStorage.getItem('isAdmin') === 'true';
-      const fetchLimit = isAdminUser ? 5000 : 200;
+      // Fetch all products
+      const fetchLimit = 5000;
       const productsResponse = await productsAPI.getAll({ limit: fetchLimit });
       
       // Then others
@@ -579,7 +597,7 @@ function App() {
         badgeColor: p.badgeColor,
         badgeId: p.badgeId,
         timer: p.timer,
-        brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+        brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : (p.brandName || '')),
         description: p.description,
         features: p.features || [],
         specs: p.specs || {},
@@ -635,11 +653,14 @@ function App() {
           if (/^-\s/.test(n)) return false;
           if (/^-\S/.test(n)) return false;
           if (n.length < 2) return false;
+          
+          const brandWords = /^(3m|dentsply|coltene|whaledent|ivoclar|kerr|ulp dental|shofu|gc|dmg|bisco|pentron|ultradent|henry schein| Coltene| voco| 3m espe| 3m unitek| angelus| bausch| being foshan| bionova| cavex| colgate| d-tech| dentsply sirona| fdent| harvard| hayashi| indus dental| jmorita| kerr| kulzer| marksans| meta biomed| mg dental| micro Mega| noris medical| nyk dental| odontos| premier| ptc| pyrax| raman dental| raypex| richardson| septodont| ss white| sun medical| tpc| trox| veirs dental| vox | zhermack)/i;
+          if (brandWords.test(n)) return true;
+
           if (/^\d/.test(n)) return false;
           if (/\b(pcs?|pieces?|box|boxes|sticks?|rolls?|sheets?|feet|foot|holes?|ml|gm?|gms?|mm|cm|oz|litre|liter|ltr|kg|kgs|pack\s*of|per\s+set|per\s+box|per\s+pack)\b/i.test(n)) return false;
           if (/^\d+\s*(pcs?|pieces?|ml|gm?|mm|cm|oz|litre|liter|ltr|kg|kgs|holes?)$/i.test(n)) return false;
-          const brandWords = /^(3m|dentsply|coltene|whaledent|ivoclar|kerr|ulp dental|shofu|gc|dmg|bisco|pentron|ultradent|henry schein| Coltene| voco| 3m espe| 3m unitek| angelus| bausch| being foshan| bionova| cavex| colgate| d-tech| dentsply sirona| fdent| harvard| hayashi| indus dental| jmorita| kerr| kulzer| marksans| meta biomed| mg dental| micro Mega| noris medical| nyk dental| odontos| premier| ptc| pyrax| raman dental| raypex| richardson| septodont| ss white| sun medical| tpc| trox| veirs dental| vox | zhermack)/i;
-          if (brandWords.test(n)) return true;
+          
           if (/^[A-Z][a-z]/.test(n) && n.length >= 3 && n.length <= 50) return true;
           if (/^[A-Z]{2,}$/.test(n) && n.length <= 15) return true;
           if (/\s/.test(n) && n.length >= 3 && n.length <= 50 && !/^\d/.test(n)) return true;
@@ -726,7 +747,7 @@ function App() {
                   badgeColor: p.badgeColor,
                   badgeId: p.badgeId,
                   timer: p.timer,
-                  brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+                  brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : (p.brandName || '')),
                   description: p.description,
                   features: p.features || [],
                   specs: p.specs || {},
@@ -981,6 +1002,31 @@ function App() {
     }
   }, [settings.general]);
 
+  // Verify PhonePe payment callback on redirect return
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gateway = params.get('gateway');
+    const orderId = params.get('orderId');
+    if (gateway === 'phonepe' && orderId) {
+      const verifyPayment = async () => {
+        try {
+          const { paymentsAPI } = await import('./utils/api');
+          const statusRes = await paymentsAPI.checkPhonePeStatus(orderId);
+          if (statusRes.status === 'success') {
+            toast.success('PhonePe payment verified successfully!');
+          } else if (statusRes.status === 'failed') {
+            toast.error(`PhonePe payment failed: ${statusRes.message}`);
+          }
+          // Remove query params from address bar
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (err) {
+          console.error('Error verifying PhonePe payment:', err);
+        }
+      };
+      verifyPayment();
+    }
+  }, []);
+
 
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>(() => {
     const saved = localStorage.getItem('alpha_recently_viewed');
@@ -995,6 +1041,16 @@ function App() {
   useEffect(() => { localStorage.setItem('alpha_settings', JSON.stringify(settings)); }, [settings]);
   useEffect(() => { localStorage.setItem('alpha_orders', JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem('alpha_recently_viewed', JSON.stringify(recentlyViewed)); }, [recentlyViewed]);
+
+  // Sync recently viewed to backend profile once page load completes
+  useEffect(() => {
+    if (user && !isAdmin && !isDataLoading) {
+      const syncTimeout = setTimeout(() => {
+        handleUpdateUser({ recentlyViewed });
+      }, 3000);
+      return () => clearTimeout(syncTimeout);
+    }
+  }, [recentlyViewed, user?.id, isDataLoading]);
 
   // Sync orders to user (for customer dashboard)
   useEffect(() => {
@@ -1015,7 +1071,10 @@ function App() {
             const otherOrders = prev.filter(o => o.userId !== user.id && o.userId !== user.email);
             return [...response.orders, ...otherOrders];
           });
-          setUser({ ...user, orders: response.orders });
+          setUser(currentUser => {
+            if (!currentUser) return null;
+            return { ...currentUser, orders: response.orders };
+          });
         }
       } catch (error: any) {
         if (error.response?.status !== 401) {
@@ -1025,9 +1084,11 @@ function App() {
     }
   };
 
-  // Fetch user orders on login
+  // Fetch user orders on login (guard against re-fetch when setUser updates user reference)
+  const fetchedOrdersForUserId = useRef<string | number | null>(null);
   useEffect(() => {
-    if (user && !isAdmin) {
+    if (user && !isAdmin && fetchedOrdersForUserId.current !== (user.id || user.email)) {
+      fetchedOrdersForUserId.current = user.id || user.email;
       refreshOrders();
     }
   }, [user, isAdmin]);
@@ -1214,6 +1275,56 @@ function App() {
   // Demo User for Local Mode - Use MOCK_USER from data
   // const DEMO_USER used locally was incomplete
 
+  // SECURE Google Auth Logic
+  const handleGoogleLogin = async (idToken: string) => {
+    try {
+      setIsDataLoading(true);
+      const { authAPI } = await import('./utils/api');
+      const response = await authAPI.googleLogin(idToken);
+      const { user } = response;
+
+      setUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone || '',
+        avatar: user.avatar || '',
+        addresses: user.addresses || [],
+        isVerified: true,
+        role: user.role,
+        cart: [],
+        orders: user.orders || [],
+        userType: user.userType || 'regular',
+        recentlyViewed: user.recentlyViewed || [],
+      });
+
+      if (user.recentlyViewed && Array.isArray(user.recentlyViewed)) {
+        setRecentlyViewed(prev => {
+          const merged = [...prev];
+          user.recentlyViewed.forEach((p: any) => {
+            if (!merged.some(item => item.id === p.id)) {
+              merged.push(p);
+            }
+          });
+          return merged.slice(0, 6);
+        });
+      }
+
+      localStorage.removeItem('alpha_cart');
+      localStorage.setItem('alpha_user', JSON.stringify(user));
+
+      toast.success('Signed in with Google successfully!');
+      setCurrentView('shop');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error: any) {
+      devError('Google login error:', error);
+      const serverError = error.response?.data?.error || error.response?.data?.message || 'Verification failed';
+      toast.error(`Google Login failed: ${serverError}`);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
   // SECURE Auth Logic - Uses Backend API
   const handleLogin = async (email?: string, password?: string) => {
     if (!email || !password) {
@@ -1237,10 +1348,21 @@ function App() {
         isVerified: user.isVerified ?? false,
         role: user.role,
         cart: [],
-        wishlist: [],
         orders: [],
-        recentlyViewed: [],
+        recentlyViewed: user.recentlyViewed || [],
       });
+
+      if (user.recentlyViewed && Array.isArray(user.recentlyViewed)) {
+        setRecentlyViewed(prev => {
+          const merged = [...prev];
+          user.recentlyViewed.forEach((p: any) => {
+            if (!merged.some(item => item.id === p.id)) {
+              merged.push(p);
+            }
+          });
+          return merged.slice(0, 6);
+        });
+      }
 
       // Set admin status based on backend role
       setIsAdmin(user.role === 'admin');
@@ -1326,7 +1448,9 @@ function App() {
     if (user) {
       // Optimistic update
       const previousUser = { ...user };
-      setUser({ ...user, ...updatedData });
+      const updatedUser = { ...user, ...updatedData };
+      setUser(updatedUser);
+      localStorage.setItem('alpha_user', JSON.stringify(updatedUser));
       
       try {
         const { authAPI } = await import('./utils/api');
@@ -1336,6 +1460,7 @@ function App() {
         devError("❌ Failed to persist user profile:", error);
         // Rollback on failure
         setUser(previousUser);
+        localStorage.setItem('alpha_user', JSON.stringify(previousUser));
       }
     }
   };
@@ -1361,7 +1486,7 @@ function App() {
 
 
 
-  const handlePlaceOrder = async (paymentId: string, transactionId: string, signature?: string, paymentMethod: string = 'razorpay') => {
+  const handlePlaceOrder = async (paymentId: string, transactionId: string, signature?: string, paymentMethod: string = 'razorpay', orderId?: string) => {
     if (!user) return;
 
     if (!user.addresses || user.addresses.length === 0) {
@@ -1394,7 +1519,8 @@ function App() {
       paymentMethod: paymentMethod,
       paymentId: paymentId,
       transactionId: transactionId,
-      signature: signature
+      signature: signature,
+      orderId: orderId
     };
 
     try {
@@ -2126,7 +2252,7 @@ function App() {
                 { bg: 'bg-teal-600/10 dark:bg-teal-900/20', text: 'text-teal-600 dark:text-teal-400', icon: 'fas fa-tooth' },
                 { bg: 'bg-cyan-600/10 dark:bg-cyan-900/20', text: 'text-cyan-700 dark:text-cyan-400', icon: 'fas fa-stethoscope' },
                 { bg: 'bg-indigo-600/10 dark:bg-indigo-900/20', text: 'text-indigo-600 dark:text-indigo-400', icon: 'fas fa-vial' },
-                { bg: 'bg-purple-600/10 dark:bg-purple-900/20', text: 'text-purple-600 dark:text-purple-400', icon: 'fas fa-clinic-medical' }
+                { bg: 'bg-emerald-600/10 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400', icon: 'fas fa-clinic-medical' }
               ];
 
               return allSections.map((section, idx) => {
@@ -2261,13 +2387,14 @@ function App() {
           {currentView === 'login' && (
             <Login 
               onLogin={handleLogin} 
+              onGoogleLogin={handleGoogleLogin}
               onNavigateToRegister={() => setCurrentView('register')} 
               onNavigateToForgotPassword={() => setCurrentView('forgot-password')}
             />
           )}
 
           {currentView === 'register' && (
-            <Register onRegister={handleRegister} onNavigateToLogin={() => setCurrentView('login')} />
+            <Register onRegister={handleRegister} onGoogleLogin={handleGoogleLogin} onNavigateToLogin={() => setCurrentView('login')} />
           )}
 
           {currentView === 'forgot-password' && (

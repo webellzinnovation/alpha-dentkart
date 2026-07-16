@@ -26,11 +26,11 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Global Error Handling: Handle 401 Unauthorized globally
+// Global Error Handling: Handle 401/403 Unauthorized globally
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             // Only log and redirect for protected pages — auth/me 401 is expected for guests
             const path = window.location.pathname;
             const cleanPath = path.replace(/\/+$/, '');
@@ -68,6 +68,11 @@ export const authAPI = {
 
     login: async (email: string, password: string) => {
         const response = await api.post('/auth/login', { email, password });
+        return response.data;
+    },
+
+    googleLogin: async (idToken: string) => {
+        const response = await api.post('/auth/google', { idToken });
         return response.data;
     },
 
@@ -361,6 +366,10 @@ export const wordpressSyncAPI = {
     updateBrandCounts: async () => {
         const response = await syncApi.post('/sync/brand-counts');
         return response.data;
+    },
+    resetLock: async () => {
+        const response = await syncApi.post('/sync/reset-lock');
+        return response.data;
     }
 };
 
@@ -471,6 +480,10 @@ export const settingsAPI = {
     update: async (data: any) => {
         const response = await api.put('/settings', data);
         return response.data;
+    },
+    sendTestEmail: async (data: { to: string; templateType: string; message: string }) => {
+        const response = await api.post('/settings/test-email', data);
+        return response.data;
     }
 };
 
@@ -480,6 +493,18 @@ export const aiAPI = {
         const response = await api.post('/ai/chat', { message, context });
         return response.data;
     },
+};
+
+// Payments API
+export const paymentsAPI = {
+    initiatePhonePe: async (data: { amount: number; customerMobile: string; customerEmail: string; orderId: string; redirectUrl: string }) => {
+        const response = await api.post('/payments/phonepe/initiate', data);
+        return response.data;
+    },
+    checkPhonePeStatus: async (orderId: string) => {
+        const response = await api.get(`/payments/phonepe/check/${orderId}`);
+        return response.data;
+    }
 };
 
 // Coupons API

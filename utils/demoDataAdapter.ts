@@ -226,7 +226,7 @@ export const adaptDemoData = (data: RawData) => {
         });
 
         return {
-            uid: u.id.toString(),
+            id: u.id.toString(),
             name: u.name || 'Customer',
             email: u.email,
             phone: u.billing_phone || '',

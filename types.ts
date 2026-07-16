@@ -23,7 +23,7 @@ export interface Product {
   reviews?: number;
   image: string;
   badge?: string;
-  badgeColor?: 'blue' | 'green' | 'red' | 'purple';
+  badgeColor?: 'blue' | 'green' | 'red' | 'orange';
   badgeId?: 'clinic-essential' | 'bundle-deal' | 'new-arrival'; // NEW: For homepage customization
   timer?: string;
   brand?: string;
@@ -157,7 +157,7 @@ export interface Address {
 }
 
 export interface OrderStatusUpdate {
-  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected';
+  status: 'Pending Payment' | 'Payment Failed' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected';
   timestamp: string;
   note?: string;
   updatedBy?: string;
@@ -167,7 +167,7 @@ export interface Order {
   id: string;
   userId?: string;
   date: string;
-  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected';
+  status: 'Pending Payment' | 'Payment Failed' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected';
   total: number;
   items: { productId: string | number; name: string; quantity: number; price: number }[];
   customerName?: string;
@@ -193,7 +193,7 @@ export interface Order {
 
 
 export interface User {
-  uid: string;
+  id: string;
   name: string;
   email: string;
   phone: string;

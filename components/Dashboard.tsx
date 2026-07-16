@@ -246,7 +246,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
     const [inlinePhone, setInlinePhone] = useState(user?.phone || '');
 
     useEffect(() => {
-        if (user) {
+        if (user && !isEditingInline) {
             setProfileFormData({
                 name: user.name || '',
                 phone: user.phone || '',
@@ -259,7 +259,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
             setInlinePhone(user.phone || '');
             setSelectedUserType(user.userType || 'regular');
         }
-    }, [user]);
+    }, [user?.id]);
 
     const statusColors: Record<string, string> = {
         Processing: 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -480,7 +480,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                     {activeTab === 'overview' && (
                         <div className="space-y-8 animate-fade-in">
                             {/* Welcome Banner */}
-                            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
+                            <div className="bg-gradient-to-r from-indigo-500 to-sky-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
                                 <div className="absolute right-0 top-0 h-full w-1/2 opacity-10 pointer-events-none">
                                     <i className="fas fa-tooth text-[12rem] absolute -right-10 -top-10 transform rotate-12"></i>
                                 </div>
@@ -526,7 +526,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
                                             <p className="text-gray-500 text-sm font-medium mb-1">Account Status</p>
                                             <h3 className="text-2xl font-black text-green-500">Active</h3>
                                         </div>
-                                        <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/30 text-purple-500 rounded-2xl flex items-center justify-center">
+                                        <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 rounded-2xl flex items-center justify-center">
                                             <i className="fas fa-user-check text-xl"></i>
                                         </div>
                                     </div>
