@@ -273,12 +273,8 @@ function App() {
       setDataLoadError(null);
       setLoadProgress(10);
       
-      // Fetch CSRF token first (required for POST requests)
-      try {
-        await fetch('/api/v1/csrf-token', { credentials: 'include' });
-      } catch (err) {
-        devWarn('CSRF token fetch warning (non-critical):', err);
-      }
+      // CSRF token: fire in parallel (non-blocking, only needed for POST requests later)
+      fetch('/api/v1/csrf-token', { credentials: 'include' }).catch(() => {});
       
       try {
         const api = await import('./utils/api');
@@ -837,7 +833,7 @@ function App() {
     } else if (path === '/') {
       setCurrentView('home');
     }
-  }, [location.pathname, products, brands, categories]);
+  }, [location.pathname, brands, categories]);
 
   // Update URL when view/product/brand/category changes
   useEffect(() => {
@@ -902,7 +898,7 @@ function App() {
     if (location.pathname !== newPath) {
       navigate(newPath);
     }
-  }, [currentView, selectedProduct, shopBrand, shopCategory, brands, categories]);
+  }, [currentView, selectedProduct, shopBrand, shopCategory]);
 
   // Global View Scroll to Top reset
   useEffect(() => {

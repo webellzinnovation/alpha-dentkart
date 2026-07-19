@@ -42,20 +42,19 @@ export async function getAllProducts(req: Request, res: Response) {
             }
         }
 
-        // Count with aggregation for accurate total
-        const countQuery = productsRef;
-        const countResult = await withTimeout(countQuery.count().get());
-        const total = countResult.data().count;
-
         // Apply ordering + pagination
         const offset = (page - 1) * limit;
         if (limit < 1000) {
             productsRef = productsRef.orderBy('createdAt', 'desc');
         }
-        productsRef = productsRef.offset(offset).limit(limit);
+        const dataRef = productsRef.offset(offset).limit(limit);
 
-        // Fetch products with a generous 4-minute timeout for large catalogs
-        const snapshot = await withTimeout(productsRef.get(), 240000);
+        // Run count + data fetch in PARALLEL to halve latency
+        const [countResult, snapshot] = await Promise.all([
+            withTimeout(productsRef.count().get(), 30000),
+            withTimeout(dataRef.get(), 60000)
+        ]);
+        const total = countResult.data().count;
 
         // Map products — use denormalized categoryName/brandName fields
         const products = snapshot.docs.map((doc) => {

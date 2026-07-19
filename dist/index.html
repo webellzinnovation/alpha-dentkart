@@ -15,17 +15,20 @@
     <!-- Critical Resource Hints: preconnect to external domains so DNS + TLS is done before fetch -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://alphadentkart.com" />
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
 
     <!-- Preload LCP image (logo) so it doesn't block FCP -->
-    <link rel="preload" as="image" href="/Alpha-dentkart-logo-600p.png" />
+    <link rel="preload" as="image" href="/Alpha-dentkart-logo-600p.png" fetchpriority="high" />
     <link rel="preload" as="image" href="/Alpha-dentkart-logo-icon.png" />
 
-    <!-- Fonts: use display=swap for non-blocking render -->
+    <!-- Fonts: defer non-critical CSS to unblock render -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+        rel="stylesheet" media="print" onload="this.media='all'" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    </noscript>
     <style>
         /* Force font consistency */
         body,
@@ -90,7 +93,7 @@
     </style>
     <link rel="icon" type="image/png" href="/Alpha-dentkart-logo-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-  <script type="module" crossorigin src="/assets/index--beTtgq6.js"></script>
+  <script type="module" crossorigin src="/assets/index-BPJGduA-.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/vendor-react-5nKXiLSd.js">
   <link rel="modulepreload" crossorigin href="/assets/vendor-router-CkhQepUO.js">
   <link rel="modulepreload" crossorigin href="/assets/vendor-ui-CSE38T31.js">
