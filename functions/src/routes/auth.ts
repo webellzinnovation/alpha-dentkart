@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { register, login, logout, me, verifyEmail, resendVerification, resetPassword, forgotPassword, updateProfile } from '../controllers/authController';
+import { register, login, googleLogin, logout, me, verifyEmail, resendVerification, resetPassword, forgotPassword, updateProfile } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 import { authLimiter } from '../middleware/rateLimiter';
 import { sanitizeInput } from '../middleware/sanitize';
@@ -41,6 +41,7 @@ router.post('/admin/login', authLimiter, sanitizeInput, adminLogin as any);
 // Public routes with rate limiting (sanitized)
 router.post('/register', authLimiter, sanitizeInput, register);
 router.post('/login', authLimiter, sanitizeInput, login);
+router.post('/google', authLimiter, googleLogin);
 router.post('/forgot-password', authLimiter, sanitizeInput, forgotPassword);
 router.post('/reset-password', authLimiter, sanitizeInput, resetPassword);
 

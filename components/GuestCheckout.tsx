@@ -21,7 +21,7 @@ export const GuestCheckout: React.FC<GuestCheckoutProps> = ({ cart, onOrderSucce
     city: '',
     state: '',
     zip: '',
-    paymentMethod: 'cod' as 'cod' | 'razorpay'
+    paymentMethod: 'cod' as 'cod' | 'razorpay' | 'phonepe'
   });
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -49,6 +49,57 @@ export const GuestCheckout: React.FC<GuestCheckoutProps> = ({ cart, onOrderSucce
       if (!sid) {
         setError('Failed to create checkout session. Please try again.');
         setLoading(false);
+        return;
+      }
+
+      if (formData.paymentMethod === 'phonepe') {
+        const orderRes = await api.post('/guest/order/create', {
+          sessionId: sid,
+          customerName: formData.name,
+          customerEmail: formData.email,
+          customerPhone: formData.phone,
+          items: cart.map(item => ({
+            productId: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          shippingAddress: {
+            name: formData.name,
+            street: formData.street,
+            city: formData.city,
+            state: formData.state,
+            zip: formData.zip,
+            phone: formData.phone
+          },
+          paymentMethod: 'phonepe',
+          total
+        });
+
+        const createdOrder = orderRes.data.order;
+        if (!createdOrder?.id) {
+          setError('Failed to create guest order. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        const baseUrl = window.location.origin;
+        const returnUrl = `${baseUrl}/?gateway=phonepe&orderId=${createdOrder.id}`;
+
+        const { paymentsAPI } = await import('../utils/api');
+        const payResponse = await paymentsAPI.initiatePhonePe({
+          amount: total,
+          customerMobile: formData.phone || '',
+          customerEmail: formData.email || '',
+          orderId: createdOrder.id,
+          redirectUrl: returnUrl
+        });
+
+        if (payResponse.success && payResponse.redirectUrl) {
+          window.location.href = payResponse.redirectUrl;
+        } else {
+          setError('Failed to initiate PhonePe payment. Please try again.');
+        }
         return;
       }
 
@@ -204,6 +255,16 @@ export const GuestCheckout: React.FC<GuestCheckoutProps> = ({ cart, onOrderSucce
                   <div>
                     <p className="font-medium text-gray-800 dark:text-white">Razorpay (Online)</p>
                     <p className="text-xs text-gray-500">Cards, UPI, NetBanking</p>
+                  </div>
+                </label>
+                <label className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${formData.paymentMethod === 'phonepe' ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
+                  <input type="radio" name="payment" checked={formData.paymentMethod === 'phonepe'} onChange={() => updateField('paymentMethod', 'phonepe')} className="text-primary" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center text-purple-600">
+                    <i className="fas fa-wallet"></i>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-white">PhonePe (UPI/Cards)</p>
+                    <p className="text-xs text-gray-500">Fast secure checkout</p>
                   </div>
                 </label>
               </div>

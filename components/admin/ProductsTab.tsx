@@ -518,7 +518,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                                 <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
-                                            <img src={resolveProductImage(product.image)} className="w-12 h-12 object-contain rounded-lg border bg-white p-1" alt="" />
+                                            <img src={resolveProductImage(product.image)} className="w-12 h-12 object-contain rounded-lg border bg-white p-1" alt={product.name} />
                                             <span className="font-bold text-gray-900 dark:text-white">{product.name}</span>
                                         </div>
                                     </td>
@@ -680,7 +680,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                                             <div className="w-24 h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden group relative">
                                                 {productFormData.image ? (
                                                     <>
-                                                        <img src={resolveProductImage(productFormData.image)} className="w-full h-full object-contain p-2" alt="" />
+                                                        <img src={resolveProductImage(productFormData.image)} className="w-full h-full object-contain p-2" alt={productFormData.name || "Product main image"} />
                                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                             <button type="button" onClick={() => setProductFormData({ ...productFormData, image: '' })} className="text-white hover:text-red-400">
                                                                 <i className="fas fa-trash"></i>
@@ -705,7 +705,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                                         <div className="grid grid-cols-4 gap-3">
                                             {productFormData.images.map((img: string, idx: number) => (
                                                 <div key={idx} className="aspect-square border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 relative group overflow-hidden">
-                                                    <img src={resolveProductImage(img)} className="w-full h-full object-contain p-1" alt="" />
+                                                    <img src={resolveProductImage(img)} className="w-full h-full object-contain p-1" alt={`${productFormData.name || "Product"} gallery image ${idx + 1}`} />
                                                     <button
                                                         type="button"
                                                         onClick={() => removeGalleryImage(idx)}

@@ -2,16 +2,32 @@ import { Request, Response } from 'express';
 import { db, admin } from '../config/firebase';
 import logger from '../utils/logger';
 
-function getWooConfig() {
+async function getWooConfig() {
+    try {
+        const doc = await db.collection('settings').doc('wordpress_sync').get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data?.siteUrl && data?.consumerKey && data?.consumerSecret) {
+                return {
+                    siteUrl: data.siteUrl,
+                    consumerKey: data.consumerKey,
+                    consumerSecret: data.consumerSecret
+                };
+            }
+        }
+    } catch (err) {
+        logger.error('Failed to get WooCommerce config from Firestore', { error: err });
+    }
+
     return {
         siteUrl: process.env.WC_SITE_URL || '',
-        consumerKey: process.env.WC_CONSUMER_KEY || '',
-        consumerSecret: process.env.WC_CONSUMER_SECRET || '',
+        consumerKey: process.env.WC_CONSUMER_KEY || process.env.WP_CONSUMER_KEY || '',
+        consumerSecret: process.env.WC_CONSUMER_SECRET || process.env.WP_CONSUMER_SECRET || '',
     };
 }
 
 async function fetchWooPaginated(endpoint: string, params: Record<string, any> = {}): Promise<any[]> {
-    const { siteUrl, consumerKey, consumerSecret } = getWooConfig();
+    const { siteUrl, consumerKey, consumerSecret } = await getWooConfig();
     if (!siteUrl) throw new Error('WordPress site URL not configured');
     const baseUrl = siteUrl.replace(/\/$/, '') + '/wp-json/wc/v3/' + endpoint.replace(/^\//, '');
     const allResults: any[] = [];

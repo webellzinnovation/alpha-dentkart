@@ -10,12 +10,13 @@ class CacheService {
     this.initializeRedis();
   }
 
-  private async initializeRedis() {
+  private initializeRedis() {
     try {
       if (process.env.REDIS_URL) {
         this.redis = new Redis(process.env.REDIS_URL, {
           maxRetriesPerRequest: 3,
-          lazyConnect: true
+          enableOfflineQueue: false,
+          connectTimeout: 2000,
         });
 
         this.redis.on('connect', () => {
@@ -27,8 +28,6 @@ class CacheService {
           logger.warn('Redis connection failed, using memory cache', { error: err.message });
           this.isRedisConnected = false;
         });
-
-        await this.redis.connect();
       }
     } catch (error) {
       logger.warn('Redis not available, using memory cache fallback');

@@ -18,11 +18,11 @@ interface ProductCardProps {
   currentUserName?: string; // For subscribing
 }
 
-const badgeColors = {
+const badgeColors: Record<string, string> = {
   blue: "bg-blue-500",
   green: "bg-green-500",
   red: "bg-red-500",
-  purple: "bg-purple-500",
+  orange: "bg-orange-500",
 };
 
 const ProductCardComponent: React.FC<ProductCardProps> = ({

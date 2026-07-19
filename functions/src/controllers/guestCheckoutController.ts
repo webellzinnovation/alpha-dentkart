@@ -158,8 +158,13 @@ export const createGuestOrder = async (req: Request, res: Response) => {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
+        // Use client-provided orderId or generate a new friendly one
+        const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+        const randomDigits = Math.floor(10000 + Math.random() * 90000);
+        const friendlyOrderId = req.body.orderId || `ADK${dateStr}${randomDigits}`;
 
-        const orderRef = await db.collection('orders').add(orderData);
+        const orderRef = db.collection('orders').doc(friendlyOrderId);
+        await orderRef.set(orderData);
 
         // Update Session with contact info if provided
         if ((shippingAddress.email || shippingAddress.phone) && (!session.email || !session.phone)) {
@@ -174,7 +179,7 @@ export const createGuestOrder = async (req: Request, res: Response) => {
             success: true,
             message: 'Guest order created successfully',
             data: {
-                orderId: orderRef.id,
+                orderId: friendlyOrderId,
                 customerName: orderData.customerName,
                 status: orderData.status,
                 total: orderData.total,
@@ -198,6 +203,10 @@ export const getGuestOrder = async (req: Request, res: Response) => {
         const { orderId } = req.params;
         const { email } = req.query as { email?: string };
 
+        if (!email) {
+            return res.status(401).json({ success: false, error: 'Email query parameter is required' });
+        }
+
         const orderDoc = await db.collection('orders').doc(String(orderId)).get();
 
         if (!orderDoc.exists) {
@@ -205,7 +214,7 @@ export const getGuestOrder = async (req: Request, res: Response) => {
         }
         const order = { id: orderDoc.id, ...orderDoc.data() } as any;
 
-        if (email && order.guestEmail !== email) {
+        if (order.guestEmail !== email && order.email !== email) {
             return res.status(403).json({ success: false, error: 'Unauthorized to view this order' });
         }
 
@@ -220,10 +229,24 @@ export const getGuestOrder = async (req: Request, res: Response) => {
 export const updateGuestOrder = async (req: Request, res: Response) => {
     try {
         const { orderId } = req.params;
+        const { email } = req.body;
         const updateData = req.body;
 
         if (!orderId) {
             return res.status(400).json({ success: false, message: 'Order ID is required' });
+        }
+
+        if (!email) {
+            return res.status(401).json({ success: false, message: 'Email is required to update guest order' });
+        }
+
+        const orderDoc = await db.collection('orders').doc(String(orderId)).get();
+        if (!orderDoc.exists) {
+            return res.status(404).json({ success: false, error: 'Order not found' });
+        }
+        const orderData = orderDoc.data();
+        if (orderData?.guestEmail !== email && orderData?.email !== email) {
+            return res.status(403).json({ success: false, error: 'Unauthorized to update this order' });
         }
 
         const allowedFields = ['status', 'paymentStatus', 'paymentId', 'transactionId'];

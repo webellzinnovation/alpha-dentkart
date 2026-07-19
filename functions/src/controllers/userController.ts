@@ -135,3 +135,58 @@ export async function getAllUsers(req: Request, res: Response) {
         return res.status(500).json({ error: 'Internal server error while fetching users' });
     }
 }
+
+// Update User by Email
+export async function updateUserByEmail(req: Request, res: Response) {
+    try {
+        const { email, ...updates } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const validatedData = userUpdateSchema.parse(updates);
+        const userUpdates: any = { ...validatedData };
+
+        // Exclude restricted fields
+        delete userUpdates.password;
+        delete userUpdates.email;
+
+        userUpdates.updatedAt = new Date().toISOString();
+
+        // Find all documents in 'users' collection with this email
+        const snapshot = await db.collection('users').where('email', '==', email).get();
+
+        if (snapshot.empty) {
+            // Generate a safe document ID
+            const docId = `guest-${email.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            const newUser = {
+                email,
+                ...userUpdates,
+                createdAt: new Date().toISOString(),
+                registrationDate: new Date().toISOString(),
+                source: 'admin_created',
+                isVerified: false,
+                verificationStatus: 'pending'
+            };
+            await db.collection('users').doc(docId).set(newUser);
+            return res.json({ message: 'User created and updated successfully', user: { id: docId, ...newUser } });
+        }
+
+        // Update all matching user documents
+        const batch = db.batch();
+        snapshot.docs.forEach(doc => {
+            batch.update(doc.ref, userUpdates);
+        });
+        await batch.commit();
+
+        logger.info('User(s) updated by email', { email });
+        res.json({ message: 'User updated successfully' });
+    } catch (error: any) {
+        if (error.name === 'ZodError') {
+            return res.status(400).json({ error: 'Invalid input data', details: error.errors });
+        }
+        logger.error('Error updating user by email', { error, email: req.body?.email });
+        res.status(500).json({ error: 'Failed to update user by email' });
+    }
+}

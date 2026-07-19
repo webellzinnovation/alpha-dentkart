@@ -239,10 +239,10 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                         </div>
                     </div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg shadow-purple-500/30">
+                <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-6 text-white shadow-lg shadow-indigo-500/30">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-purple-100 text-sm font-medium mb-1">Promotions</p>
+                            <p className="text-indigo-100 text-sm font-medium mb-1">Promotions</p>
                             <h3 className="text-3xl font-bold">{promotionalTiles.filter(t => t.isActive).length}/3</h3>
                         </div>
                         <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -354,7 +354,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Slide Image</label>
                                         <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:bg-gray-50" onClick={() => document.getElementById('slide-upload')?.click()}>
-                                            {slideFormData.image ? <img src={slideFormData.image} className="h-32 mx-auto object-contain" /> : <div className="text-gray-400"><i className="fas fa-cloud-upload-alt text-2xl mb-2"></i><p>Click to upload image</p></div>}
+                                            {slideFormData.image ? <img src={slideFormData.image} alt="Slide preview" className="h-32 mx-auto object-contain" /> : <div className="text-gray-400"><i className="fas fa-cloud-upload-alt text-2xl mb-2"></i><p>Click to upload image</p></div>}
                                             <input id="slide-upload" type="file" className="hidden" accept="image/*" onChange={handleSlideImageUpload} />
                                         </div>
                                     </div>
@@ -426,7 +426,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                             {brands.map(brand => (
                                 <div key={brand.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 transition-all">
                                     <input type="checkbox" checked={!!brand.isFeatured} onChange={(e) => onToggleBrandFeatured(brand.id, e.target.checked)} className="w-5 h-5 rounded text-primary focus:ring-primary cursor-pointer" />
-                                    <img src={brand.logo} className="w-10 h-10 object-contain p-1 border rounded bg-white" />
+                                    <img src={brand.logo} alt={brand.name} className="w-10 h-10 object-contain p-1 border rounded bg-white" />
                                     <div className="flex-1">
                                         <p className="font-bold text-sm">{brand.name}</p>
                                         <p className="text-xs text-gray-500">{brand.productCount} products</p>
@@ -463,7 +463,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                                                         <i className="fas fa-grip-vertical"></i>
                                                     </div>
                                                     <span className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded text-xs font-bold text-gray-500">#{index + 1}</span>
-                                                    <img src={brand.logo} className="w-10 h-10 object-contain p-1 border rounded" />
+                                                    <img src={brand.logo} alt={brand.name} className="w-10 h-10 object-contain p-1 border rounded" />
                                                     <p className="font-bold text-sm flex-1">{brand.name}</p>
                                                     <button onClick={() => onToggleBrandFeatured(brand.id, false)} className="text-red-500 hover:bg-red-50 p-2 rounded"><i className="fas fa-times"></i></button>
                                                 </SortableItem>
@@ -511,7 +511,7 @@ export const HomepageTab: React.FC<HomepageTabProps> = ({
                                         className="w-5 h-5 rounded text-primary focus:ring-primary cursor-pointer"
                                     />
                                     {cat.image ? (
-                                        <img src={cat.image} className="w-10 h-10 object-cover rounded bg-gray-100" />
+                                        <img src={cat.image} alt={cat.name} className="w-10 h-10 object-cover rounded bg-gray-100" />
                                     ) : (
                                         <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400">
                                             <i className="fas fa-th-large text-sm"></i>

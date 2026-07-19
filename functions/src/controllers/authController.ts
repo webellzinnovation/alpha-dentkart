@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { db, withTimeout } from '../config/firebase'; // Firestore
+import { db, auth, withTimeout } from '../config/firebase'; // Firestore
 import { generateToken } from '../utils/jwt';
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from '../utils/validation';
 import logger from '../utils/logger';
@@ -148,6 +148,14 @@ export async function login(req: Request, res: Response) {
                 phone: user.phone,
                 avatar: user.avatar,
                 isVerified: user.isVerified ?? false,
+                addresses: user.addresses || [],
+                userType: user.userType || 'regular',
+                verificationStatus: user.verificationStatus || null,
+                whatsappOptIn: user.whatsappOptIn ?? false,
+                dentalDoctorInfo: user.dentalDoctorInfo || null,
+                dentalStudentInfo: user.dentalStudentInfo || null,
+                dentalBusinessInfo: user.dentalBusinessInfo || null,
+                recentlyViewed: user.recentlyViewed || [],
             },
         });
     } catch (error: any) {
@@ -265,6 +273,14 @@ export async function me(req: any, res: Response) {
             phone: userData?.phone,
             avatar: userData?.avatar,
             isVerified: userData?.isVerified ?? false,
+            addresses: userData?.addresses || [],
+            userType: userData?.userType || 'regular',
+            verificationStatus: userData?.verificationStatus || null,
+            whatsappOptIn: userData?.whatsappOptIn ?? false,
+            dentalDoctorInfo: userData?.dentalDoctorInfo || null,
+            dentalStudentInfo: userData?.dentalStudentInfo || null,
+            dentalBusinessInfo: userData?.dentalBusinessInfo || null,
+            recentlyViewed: userData?.recentlyViewed || [],
         };
 
         return res.json({ user });
@@ -440,6 +456,107 @@ export async function resendVerification(req: any, res: Response) {
     } catch (error) {
         logger.error('Resend verification error', { error, userId: req.user?.id });
         return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+export async function googleLogin(req: Request, res: Response) {
+    try {
+        const { idToken } = req.body;
+        if (!idToken) {
+            return res.status(400).json({ error: 'Google ID token is required' });
+        }
+
+        // Verify the Google ID Token
+        const decodedToken = await auth.verifyIdToken(idToken);
+        const { email, name, picture, email_verified } = decodedToken;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email not provided by Google account' });
+        }
+
+        // Search for user in Firestore
+        const usersRef = db.collection('users');
+        const snapshot = await withTimeout(usersRef.where('email', '==', email).limit(1).get());
+
+        let user: any;
+        let userId: string;
+
+        if (snapshot.empty) {
+            // User does not exist, auto-register them
+            const newUser = {
+                email,
+                name: name || email.split('@')[0],
+                phone: null,
+                userType: 'regular',
+                role: 'user', // Default customer role
+                avatar: picture || '',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                isVerified: email_verified || true
+            };
+
+            const docRef = await withTimeout(usersRef.add(newUser));
+            user = newUser;
+            userId = docRef.id;
+
+            // Send welcome email (async)
+            emailService.sendWelcomeEmail(email, user.name).catch((err) => {
+                logger.error('Failed to send welcome email for Google user', { error: err, userId });
+            });
+        } else {
+            // User exists, retrieve their info
+            const userDoc = snapshot.docs[0];
+            user = userDoc.data();
+            userId = userDoc.id;
+
+            // Optionally update avatar if it changed
+            if (picture && user.avatar !== picture) {
+                await withTimeout(userDoc.ref.update({ avatar: picture, updatedAt: new Date().toISOString() }));
+                user.avatar = picture;
+            }
+        }
+
+        // Generate JWT token
+        const token = generateToken({
+            id: userId,
+            role: user.role,
+            email: user.email,
+        });
+
+        // Set HTTP-only cookie
+        const isProd = process.env.NODE_ENV === 'production';
+        res.cookie('__session', token, {
+            httpOnly: true,
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/'
+        });
+
+        // Return user data
+        return res.json({
+            success: true,
+            token,
+            user: {
+                id: userId,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                phone: user.phone || '',
+                avatar: user.avatar || '',
+                userType: user.userType || 'regular',
+                addresses: user.addresses || [],
+                verificationStatus: user.verificationStatus || null,
+                whatsappOptIn: user.whatsappOptIn ?? false,
+                dentalDoctorInfo: user.dentalDoctorInfo || null,
+                dentalStudentInfo: user.dentalStudentInfo || null,
+                dentalBusinessInfo: user.dentalBusinessInfo || null,
+                recentlyViewed: user.recentlyViewed || [],
+            }
+        });
+    } catch (error: any) {
+        logger.error('Google Login verification error', { error });
+        return res.status(401).json({ error: 'Invalid Google ID token' });
     }
 }
 

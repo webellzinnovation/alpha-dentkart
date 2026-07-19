@@ -57,8 +57,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onAdminLogin, onNavigate
 
       // Check if it's a network error (backend not running)
       if (!err.response) {
-        // Backend not available, but allow hardcoded credentials anyway
-        setError('Server unavailable. Use test credentials: admin@alphadentkart.com / admin123');
+        setError('Server is unavailable. Please try again later.');
         return;
       }
 
@@ -147,7 +146,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onAdminLogin, onNavigate
                 </p>
                 <button
                   type="button"
-                  onClick={() => window.location.hash = '#/admin-dashboard'}
+                  onClick={() => onAdminLogin(user)}
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-pink-600 transition-colors"
                 >
                   Go to Admin Dashboard

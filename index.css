@@ -6,12 +6,12 @@
 
 @layer base {
   :root {
-    --primary: #0ea5e9;
-    /* Sleek sky blue */
-    --primary-dark: #0284c7;
-    --accent: #d946ef;
-    /* Vibrant magenta */
-    --accent-dark: #c026d3;
+    --primary: #DD3B5F;
+    /* Brand pink/red */
+    --primary-dark: #be185d;
+    --accent: #10b981;
+    /* Premium emerald */
+    --accent-dark: #059669;
     --background: #f8fafc;
     /* Soft architectural gray */
     --surface: #ffffff;

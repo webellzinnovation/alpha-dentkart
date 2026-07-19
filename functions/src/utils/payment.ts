@@ -23,5 +23,16 @@ export const verifyRazorpaySignature = (
     hmac.update(orderId + '|' + paymentId);
     const generatedSignature = hmac.digest('hex');
 
-    return generatedSignature === signature;
+    try {
+        const generatedBuffer = Buffer.from(generatedSignature, 'utf8');
+        const signatureBuffer = Buffer.from(signature, 'utf8');
+        
+        if (generatedBuffer.length !== signatureBuffer.length) {
+            return false;
+        }
+        
+        return crypto.timingSafeEqual(generatedBuffer, signatureBuffer);
+    } catch (error) {
+        return false;
+    }
 };

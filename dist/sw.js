@@ -60,15 +60,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip all /api/ and /api/v1/ requests - always go directly to network
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(request));
-    return;
-  }
-
   // Handle API requests with network-first strategy
   if (API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
     event.respondWith(networkFirstStrategy(request));
+    return;
+  }
+
+  // Skip all other /api/ and /api/v1/ requests - always go directly to network
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(request));
     return;
   }
 

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import { aiAPI } from '../utils/api';
 import { Product } from '../types';
 
 interface AIChatProps {
@@ -41,52 +40,13 @@ export const AIChat: React.FC<AIChatProps> = ({
   // Initialize Chat
   useEffect(() => {
     if (isOpen && !chatSession && isLoggedIn && userName) {
-      const initChat = async () => {
-        try {
-          // Create a condensed context string to save tokens but provide enough info
-          const productContext = products.map(p =>
-            `ID:${p.id} | ${p.name} | ₹${p.price} | ${p.category} | ${p.brand}`
-          ).join('\n');
-
-          const systemInstruction = `You are "Alphadentbot", a helpful and professional dental sales assistant for Alpha Dentkart. 
-            You are chatting with a dentist named ${userName}.
-            
-            Your goal is to understand their clinical needs and recommend products from the following catalog:
-            ---
-            ${productContext}
-            ---
-            
-            Rules:
-            1. Be concise, polite, and helpful.
-            2. If you recommend a product, you MUST format it using this specific markdown link style: [Product Name](product:ID). 
-               Example: "I highly recommend the [3M Filtek Z250](product:1) for that procedure."
-            3. Only recommend products listed in the catalog above.
-            4. If the user asks about something unrelated to dentistry or your products, politely steer them back to dental supplies.
-            5. If the user asks for a price, quote the price from the catalog.
-            `;
-
-          const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
-          const chat = ai.chats.create({
-            model: 'gemini-2.5-flash',
-            config: {
-              systemInstruction: systemInstruction,
-            }
-          });
-          setChatSession(chat);
-
-          // Add initial greeting
-          setMessages([{
-            role: 'model',
-            text: `Hello Dr. ${userName.split(' ')[0]}! I'm Alphadentbot. How can I assist you with your dental supplies today?`
-          }]);
-        } catch (e) {
-          console.error("Failed to init chat", e);
-          setMessages([{ role: 'model', text: "System: Unable to connect to AI service. Please check your API key." }]);
-        }
-      };
-      initChat();
+      setMessages([{
+        role: 'model',
+        text: `Hello Dr. ${userName.split(' ')[0]}! I'm Alphadentbot. How can I assist you with your dental supplies today?`
+      }]);
+      setChatSession(true);
     }
-  }, [isOpen, products, userName, chatSession, isLoggedIn]);
+  }, [isOpen, userName, chatSession, isLoggedIn]);
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -97,14 +57,30 @@ export const AIChat: React.FC<AIChatProps> = ({
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
 
-    if (!chatSession) {
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const result = await chatSession.sendMessage({ message: userMsg });
-      const text = result.text;
+      const productContext = products.map(p =>
+        `ID:${p.id} | ${p.name} | ₹${p.price} | ${p.category} | ${p.brand}`
+      ).join('\n');
+
+      const systemInstruction = `You are "Alphadentbot", a helpful and professional dental sales assistant for Alpha Dentkart. 
+        You are chatting with a dentist named ${userName}.
+        
+        Your goal is to understand their clinical needs and recommend products from the following catalog:
+        ---
+        ${productContext}
+        ---
+        
+        Rules:
+        1. Be concise, polite, and helpful.
+        2. If you recommend a product, you MUST format it using this specific markdown link style: [Product Name](product:ID). 
+           Example: "I highly recommend the [3M Filtek Z250](product:1) for that procedure."
+        3. Only recommend products listed in the catalog above.
+        4. If the user asks about something unrelated to dentistry or your products, politely steer them back to dental supplies.
+        5. If the user asks for a price, quote the price from the catalog.
+        `;
+
+      const result = await aiAPI.chat(userMsg, systemInstruction);
+      const text = result.response;
       setMessages(prev => [...prev, { role: 'model', text: text }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'model', text: "I apologize, but I'm having trouble retrieving a response right now." }]);

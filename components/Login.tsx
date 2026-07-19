@@ -1,17 +1,39 @@
-
 import React, { useState } from 'react';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '../src/services/firebase';
 
 interface LoginProps {
   onLogin: (email?: string, password?: string) => void;
+  onGoogleLogin?: (idToken: string) => void;
   onNavigateToRegister?: () => void;
   onNavigateToForgotPassword?: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister, onNavigateToForgotPassword }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, onGoogleLogin, onNavigateToRegister, onNavigateToForgotPassword }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    if (!onGoogleLogin) return;
+    setError('');
+    setIsLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      await onGoogleLogin(idToken);
+    } catch (err: any) {
+      console.error(err);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message || 'Google Sign-In failed');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +66,26 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onNavigateToRegister, onN
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900/20 p-2 rounded">{error}</div>}
+
+          {onGoogleLogin && (
+            <div>
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-semibold text-gray-700 dark:text-white bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" className="w-5 h-5" />
+                Continue with Google
+              </button>
+              
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200 dark:border-gray-700"></div></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-surface-dark px-3 text-gray-500">Or email login</span></div>
+              </div>
+            </div>
+          )}
+
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email-address" className="sr-only">Email address</label>

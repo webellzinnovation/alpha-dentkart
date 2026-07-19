@@ -30,28 +30,28 @@ const FooterComponent: React.FC = () => {
           <div>
             <h5 className="font-bold text-lg mb-4">Information</h5>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><a className="hover:text-primary transition-colors cursor-pointer">About Alpha Dentkart</a></li>
-              <li><a className="hover:text-primary transition-colors cursor-pointer">Shipping Policy</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors cursor-pointer">About Alpha Dentkart</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors cursor-pointer">Shipping Policy</a></li>
               <li><a href="/privacy-policy" className="hover:text-primary transition-colors cursor-pointer">Privacy Policy</a></li>
               <li><a href="/terms-of-service" className="hover:text-primary transition-colors cursor-pointer">Terms of Service</a></li>
-              <li><a className="hover:text-primary transition-colors cursor-pointer">Contact Support</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors cursor-pointer">Contact Support</a></li>
             </ul>
           </div>
           <div>
             <h5 className="font-bold text-lg mb-4">Account</h5>
             <ul className="space-y-2 text-gray-400 text-sm">
-              <li><a className="hover:text-primary transition-colors cursor-pointer">My Dashboard</a></li>
-              <li><a className="hover:text-primary transition-colors cursor-pointer">Order History</a></li>
-              <li><a className="hover:text-primary transition-colors cursor-pointer">Track Order</a></li>
-              <li><a className="hover:text-primary transition-colors cursor-pointer">Wish List</a></li>
-              <li><a className="hover:text-primary transition-colors cursor-pointer">Return Policy</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors cursor-pointer">My Dashboard</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors cursor-pointer">Order History</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors cursor-pointer">Track Order</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors cursor-pointer">Wish List</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors cursor-pointer">Return Policy</a></li>
             </ul>
           </div>
           <div>
             <h5 className="font-bold text-lg mb-4">Top Brands</h5>
             <div className="flex flex-wrap gap-2">
               {['3M', 'Dentsply', 'GC', 'Kerr', 'Woodpecker', 'Shofu', 'Ivoclar', 'Coltene'].map(brand => (
-                <a key={brand} className="bg-gray-700 hover:bg-primary transition-colors text-xs px-2 py-1 rounded cursor-pointer">{brand}</a>
+                <a key={brand} href="#" className="bg-gray-700 hover:bg-primary transition-colors text-xs px-2 py-1 rounded cursor-pointer">{brand}</a>
               ))}
             </div>
           </div>

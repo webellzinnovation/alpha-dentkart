@@ -515,7 +515,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             <nav className="flex flex-col gap-1">
               {[
                 { label: 'Home', action: () => onNavigate('home'), icon: 'fas fa-home', color: 'from-blue-500 to-blue-600' },
-                { label: 'Shop Products', action: () => onNavigate('shop'), icon: 'fas fa-store', color: 'from-purple-500 to-purple-600' },
+                { label: 'Shop Products', action: () => onNavigate('shop'), icon: 'fas fa-store', color: 'from-indigo-500 to-indigo-600' },
                 { label: 'Categories', action: () => onNavigate('categories'), icon: 'fas fa-th-large', color: 'from-green-500 to-green-600' },
                 { label: 'Brands', action: () => onNavigate('brands'), icon: 'fas fa-tags', color: 'from-orange-500 to-orange-600' },
               ].map((item, idx) => (

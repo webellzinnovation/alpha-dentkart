@@ -30,7 +30,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         { name: 'Dental Care', icon: 'fa-tooth', bg: 'var(--t3-pink)' },
         { name: 'Skin Care', icon: 'fa-spa', bg: 'var(--t3-peach)' },
         { name: 'Equipment', icon: 'fa-stethoscope', bg: 'var(--t3-blue)' },
-        { name: 'Supplies', icon: 'fa-pills', bg: 'var(--t3-purple)' },
+        { name: 'Supplies', icon: 'fa-pills', bg: 'var(--t3-cyan)' },
         { name: 'Instruments', icon: 'fa-syringe', bg: 'var(--t3-yellow)' },
         { name: 'Safety', icon: 'fa-shield-alt', bg: 'var(--t3-green)' }
     ];

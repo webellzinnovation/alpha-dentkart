@@ -33,7 +33,7 @@ export const Checkout: React.FC<CheckoutProps> = ({
     const [couponCode, setCouponCode] = useState('');
     const [isApplying, setIsApplying] = useState(false);
     const [couponError, setCouponError] = useState('');
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'razorpay' | 'phonepe' | 'cod'>('razorpay');
 
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
         user.addresses?.find(a => a.isDefault)?.id || (user.addresses?.length > 0 ? user.addresses[0].id : null)
@@ -253,6 +253,32 @@ export const Checkout: React.FC<CheckoutProps> = ({
                 return;
             }
 
+            if (selectedPaymentMethod === 'phonepe') {
+                const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, ''); // e.g. "260712"
+                const randomDigits = Math.floor(10000 + Math.random() * 90000); // 5 random digits
+                const friendlyOrderId = `ADK${dateStr}${randomDigits}`;
+                const baseUrl = window.location.origin;
+                const returnUrl = `${baseUrl}/?gateway=phonepe&orderId=${friendlyOrderId}`;
+
+                const { paymentsAPI } = await import('../utils/api');
+                const response = await paymentsAPI.initiatePhonePe({
+                    amount: total,
+                    customerMobile: user.phone || '',
+                    customerEmail: user.email || '',
+                    orderId: friendlyOrderId,
+                    redirectUrl: returnUrl
+                });
+
+                if (response.success && response.redirectUrl) {
+                    await onPlaceOrder('phonepe_pending', friendlyOrderId, undefined, 'phonepe', friendlyOrderId);
+                    window.location.href = response.redirectUrl;
+                } else {
+                    alert('Failed to initiate PhonePe payment. Please try again.');
+                    setIsProcessing(false);
+                }
+                return;
+            }
+
             const orderId = createRazorpayOrder(total);
             const keyToUse = razorpayKey || getRazorpayKey();
             if (!keyToUse) {
@@ -385,6 +411,17 @@ export const Checkout: React.FC<CheckoutProps> = ({
                                 </div>
                                 <span className="text-xs text-gray-500">Supports UPI, NetBanking, Cards & Wallets (Powered by Razorpay)</span>
                             </label>
+
+                            {/* PhonePe Secure */}
+                            {settings?.payment?.phonepe?.enabled && (
+                                <label className={`flex flex-col p-4 border rounded-xl cursor-pointer transition-all ${selectedPaymentMethod === 'phonepe' ? 'border-primary bg-pink-50/5 dark:bg-pink-950/5' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-dark hover:border-gray-300'}`}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-bold text-sm text-gray-800 dark:text-white">Pay with PhonePe</span>
+                                        <input type="radio" name="paymentMethod" checked={selectedPaymentMethod === 'phonepe'} onChange={() => setSelectedPaymentMethod('phonepe')} className="text-primary focus:ring-primary h-4 w-4" />
+                                    </div>
+                                    <span className="text-xs text-gray-500">Fast checkout via PhonePe (UPI, GPay, Cards, Netbanking)</span>
+                                </label>
+                            )}
 
                             {/* Cash on Delivery */}
                             {settings?.payment?.cod?.enabled && (() => {

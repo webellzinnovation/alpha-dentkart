@@ -15,17 +15,9 @@ export const useCart = (user: User | null, isAdmin: boolean, products: Product[]
   const [isCartOpen, setIsCartOpen] = useState(false);
   const cartRef = useRef(cart);
   cartRef.current = cart;
-
+  
+  const prevUserIdRef = useRef<string | null>(null);
   const userId = user?.id ?? null;
-
-  // Reset on user change — clear stale data from previous user
-  useEffect(() => {
-    if (userId) {
-      localStorage.removeItem('alpha_cart');
-      setCart([]);
-      setHasLoadedRemote(false);
-    }
-  }, [userId]);
 
   // Persist to LocalStorage
   useEffect(() => {
@@ -51,9 +43,27 @@ export const useCart = (user: User | null, isAdmin: boolean, products: Product[]
     }
   }, [cart, userId, isAdmin, products.length, hasLoadedRemote]);
 
-  // Load from backend on login
+  // Load from backend on login & tab focus
   useEffect(() => {
-    if (!user || isAdmin || products.length === 0) return;
+    if (isAdmin || products.length === 0) return;
+
+    // Handle logout or user switch cleanup
+    if (!userId) {
+      if (prevUserIdRef.current !== null) {
+        setCart([]);
+        localStorage.removeItem('alpha_cart');
+        setHasLoadedRemote(false);
+        prevUserIdRef.current = null;
+      }
+      return;
+    }
+
+    // If switching between different authenticated users, don't merge - just reset first
+    if (prevUserIdRef.current && prevUserIdRef.current !== userId) {
+      setCart([]);
+      localStorage.removeItem('alpha_cart');
+      setHasLoadedRemote(false);
+    }
 
     let cancelled = false;
     const loadRemoteCart = async () => {
@@ -61,45 +71,87 @@ export const useCart = (user: User | null, isAdmin: boolean, products: Product[]
         const remoteCart = await cartAPI.get().catch(() => ({ items: [] }));
         if (cancelled) return;
 
-        if (remoteCart.items?.length > 0) {
-          const cartItems = remoteCart.items.map((ri: any) => {
-            const product = products.find(p => String(p.id) === String(ri.productId));
-            if (!product) return null;
+        const localCart = cartRef.current;
+        const remoteItems = remoteCart.items || [];
+        const remoteCartMapped = remoteItems.map((ri: any) => {
+          const product = products.find(p => String(p.id) === String(ri.productId));
+          if (!product) return null;
 
-            return {
-              ...product,
-              quantity: ri.quantity,
-              cartItemId: ri.cartItemId || `${product.id}-`,
-              selectedAttributes: ri.selectedAttributes || {}
-            };
-          }).filter(Boolean);
+          return {
+            ...product,
+            quantity: ri.quantity,
+            cartItemId: ri.cartItemId || `${product.id}-`,
+            selectedAttributes: ri.selectedAttributes || {}
+          };
+        }).filter(Boolean);
 
-          if (!cancelled) {
-            setCart(prevCart => {
-              const merged = [...prevCart];
-              cartItems.forEach((ri: any) => {
-                if (!ri) return;
-                const idx = merged.findIndex(item => item.cartItemId === ri.cartItemId);
-                if (idx > -1) {
-                  merged[idx].quantity = Math.max(merged[idx].quantity, ri.quantity);
-                } else {
-                  merged.push(ri);
-                }
-              });
-              return merged;
-            });
-          }
+        let merged = [...remoteCartMapped];
+
+        // Transitioning from guest (null) to logged-in user: merge local guest items
+        if (!prevUserIdRef.current && localCart.length > 0) {
+          localCart.forEach((lc) => {
+            const idx = merged.findIndex(item => item.cartItemId === lc.cartItemId);
+            if (idx > -1) {
+              merged[idx].quantity = Math.max(merged[idx].quantity, lc.quantity);
+            } else {
+              merged.push(lc);
+            }
+          });
+
+          // Sync merged cart to server immediately
+          await cartAPI.sync(merged.map(item => ({
+            productId: item.id,
+            quantity: item.quantity,
+            cartItemId: item.cartItemId,
+            selectedAttributes: item.selectedAttributes
+          }))).catch(err => console.error('Merged cart sync failed:', err));
+        }
+
+        if (!cancelled) {
+          setCart(merged);
+          setHasLoadedRemote(true);
+          prevUserIdRef.current = userId;
         }
       } catch (error) {
         console.error('Failed to load remote cart:', error);
-      } finally {
-        if (!cancelled) setHasLoadedRemote(true);
       }
     };
     loadRemoteCart();
 
     return () => { cancelled = true; };
-  }, [userId, isAdmin, products.length > 0]);
+  }, [userId, isAdmin, products.length]);
+
+  // Re-fetch remote cart when tab regains focus (cross-device sync)
+  useEffect(() => {
+    if (!userId || isAdmin) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible' || products.length === 0) return;
+
+      try {
+        const remoteCart = await cartAPI.get().catch(() => ({ items: [] }));
+        const remoteItems = remoteCart.items || [];
+        const remoteCartMapped = remoteItems.map((ri: any) => {
+          const product = products.find(p => String(p.id) === String(ri.productId));
+          if (!product) return null;
+
+          return {
+            ...product,
+            quantity: ri.quantity,
+            cartItemId: ri.cartItemId || `${product.id}-`,
+            selectedAttributes: ri.selectedAttributes || {}
+          };
+        }).filter(Boolean);
+
+        setCart(remoteCartMapped);
+      } catch (error) {
+        console.error('Background cart re-fetch failed:', error);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [userId, isAdmin, products.length]);
 
   const addToCart = useCallback((product: Product, selectedAttributes?: Record<string, string>) => {
     const attrString = selectedAttributes

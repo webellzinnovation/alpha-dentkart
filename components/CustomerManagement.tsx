@@ -11,6 +11,7 @@ interface CustomerManagementProps {
     searchTerm: string;
     userTypeFilter: 'all' | 'dental-doctor' | 'dental-student' | 'dental-business' | 'regular' | 'hidden';
     onViewOrder?: (order: Order) => void;
+    onEditCustomer?: (user: User) => void;
     settings?: any; // SMTP and other settings from admin
     itemsPerPage?: number;
     // External pagination props for server-side loading
@@ -29,6 +30,7 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
     searchTerm,
     userTypeFilter,
     onViewOrder,
+    onEditCustomer,
     settings,
     itemsPerPage,
     externalCurrentPage,
@@ -105,7 +107,7 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
         const badges = {
             'dental-doctor': { label: 'Dental Doctor', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
             'dental-student': { label: 'Student', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
-            'dental-business': { label: 'Business / Clinic', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
+            'dental-business': { label: 'Business / Clinic', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' },
             'regular': { label: 'Regular', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }
         };
         return badges[userType] || badges.regular;
@@ -122,9 +124,13 @@ export const CustomerManagement: React.FC<CustomerManagementProps> = ({
     };
 
     const handleEditCustomer = (user: User) => {
-        setSelectedCustomer(user);
-        setEditFormData(user);
-        setIsEditModalOpen(true);
+        if (onEditCustomer) {
+            onEditCustomer(user);
+        } else {
+            setSelectedCustomer(user);
+            setEditFormData(user);
+            setIsEditModalOpen(true);
+        }
     };
 
     const handleSaveCustomer = () => {

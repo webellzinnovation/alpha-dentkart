@@ -1,21 +1,44 @@
 import React, { useState } from 'react';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '../src/services/firebase';
 import { authSchema } from '../utils/schemas';
 import { z } from 'zod';
 
 interface RegisterProps {
   onRegister: (data: any) => void;
+  onGoogleLogin?: (idToken: string) => void;
   onNavigateToLogin: () => void;
 }
 
 type UserType = 'dental-doctor' | 'dental-student' | 'dental-business' | 'regular';
 
-export const Register: React.FC<RegisterProps> = ({ onRegister, onNavigateToLogin }) => {
+export const Register: React.FC<RegisterProps> = ({ onRegister, onGoogleLogin, onNavigateToLogin }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [userType, setUserType] = useState<UserType>('regular');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    if (!onGoogleLogin) return;
+    setError('');
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      await onGoogleLogin(idToken);
+    } catch (err: any) {
+      console.error(err);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message || 'Google Sign-In failed');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Conditional fields
   const [licenseId, setLicenseId] = useState('');
@@ -87,6 +110,25 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onNavigateToLogi
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+
+          {onGoogleLogin && (
+            <div>
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-semibold text-gray-700 dark:text-white bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" className="w-5 h-5" />
+                Continue with Google
+              </button>
+              
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200 dark:border-gray-700"></div></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-surface-dark px-3 text-gray-500">Or email signup</span></div>
+              </div>
+            </div>
+          )}
           
           <div className="space-y-4">
             <div>

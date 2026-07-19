@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
 import { DeliveryEstimator } from './DeliveryEstimator';
@@ -47,10 +47,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   onCategoryClick,
   onQuickView
 }) => {
-  console.log("Rendering ProductDetail for:", product?.name, product?.id);
-
   if (!product) {
-    console.error("ProductDetail rendered without product!");
+    if (import.meta.env.DEV) console.error("ProductDetail rendered without product!");
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <div className="max-w-md mx-auto">
@@ -69,6 +67,15 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const thumbnailContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollThumbnails = (direction: 'left' | 'right') => {
+    if (thumbnailContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -150 : 150;
+      thumbnailContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   // Attribute State
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
@@ -111,7 +118,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     }, 100);
 
     return () => clearTimeout(scrollTimeout);
-  }, [product]);
+  }, [product.id]);
 
   const fetchReviews = async () => {
     if (!product.id) return;
@@ -220,11 +227,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     }
   };
 
-  const badgeColors = {
+  const badgeColors: Record<string, string> = {
     blue: "bg-blue-500",
     green: "bg-green-500",
     red: "bg-red-500",
-    purple: "bg-purple-500",
+    orange: "bg-orange-500",
   };
 
   return (
@@ -292,8 +299,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
             <OptimizedImageMemo
               src={selectedImage}
               alt={product.name}
-              onClick={() => setIsLightboxOpen(true)}
-              className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500 cursor-pointer"
+              onClick={() => {
+                setIsLightboxOpen(true);
+              }}
+              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-500 cursor-pointer"
               width={600}
               height={600}
               priority={true}
@@ -326,19 +335,42 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
               </>
             )}
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-            {images.map((img, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setSelectedImage(img);
-                  setCurrentImageIndex(idx);
-                }}
-                className={`w-20 h-20 flex-shrink-0 bg-white dark:bg-surface-dark border rounded-xl p-2 flex items-center justify-center transition-all ${currentImageIndex === idx ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200 dark:border-gray-700 hover:border-primary'}`}
-              >
-                <OptimizedImageMemo src={img} alt={`View ${idx + 1}`} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" width={100} height={100} />
-              </button>
-            ))}
+          <div className="relative group/thumbs flex items-center">
+            {images.length > 5 && (
+              <>
+                <button
+                  onClick={() => scrollThumbnails('left')}
+                  className="absolute -left-4 w-8 h-8 bg-white/95 dark:bg-gray-800/95 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary transition-all shadow-md z-10"
+                  aria-label="Scroll thumbnails left"
+                >
+                  <i className="fas fa-chevron-left text-xs"></i>
+                </button>
+                <button
+                  onClick={() => scrollThumbnails('right')}
+                  className="absolute -right-4 w-8 h-8 bg-white/95 dark:bg-gray-800/95 border border-gray-200 dark:border-gray-700 rounded-full flex items-center justify-center text-gray-800 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-primary transition-all shadow-md z-10"
+                  aria-label="Scroll thumbnails right"
+                >
+                  <i className="fas fa-chevron-right text-xs"></i>
+                </button>
+              </>
+            )}
+            <div 
+              ref={thumbnailContainerRef}
+              className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide scroll-smooth w-full px-2"
+            >
+              {images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setSelectedImage(img);
+                    setCurrentImageIndex(idx);
+                  }}
+                  className={`w-20 h-20 flex-shrink-0 bg-white dark:bg-surface-dark border rounded-xl p-2 flex items-center justify-center transition-all ${currentImageIndex === idx ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200 dark:border-gray-700 hover:border-primary'}`}
+                >
+                  <OptimizedImageMemo src={img} alt={`View ${idx + 1}`} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" width={100} height={100} />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -630,7 +662,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
             <OptimizedImageMemo
               src={selectedImage}
               alt={product.name}
-              className="max-w-full max-h-[90vh] object-contain"
+              className="w-[90vw] h-[85vh] max-w-5xl object-contain"
               width={1200}
               height={1200}
             />

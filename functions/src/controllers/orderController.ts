@@ -46,11 +46,13 @@ export async function createOrder(req: Request, res: Response) {
             paymentId: req.body.paymentId || null,
             razorpay_order_id: req.body.razorpay_order_id || null,
             paymentStatus: validatedData.paymentMethod === 'razorpay' ? 'paid' : 'pending',
-            status: 'Processing',
+            status: validatedData.paymentMethod === 'phonepe' ? 'Pending Payment' : 'Processing',
             statusHistory: [{
-                status: 'Processing',
+                status: validatedData.paymentMethod === 'phonepe' ? 'Pending Payment' : 'Processing',
                 timestamp: new Date().toISOString(),
-                note: 'Order placed and confirmed.'
+                note: validatedData.paymentMethod === 'phonepe' 
+                    ? 'Order created, awaiting PhonePe payment confirmation.' 
+                    : 'Order placed and confirmed.'
             }],
             couponId: validatedData.couponId || null,
             couponDiscount: validatedData.couponDiscount || 0,
@@ -59,8 +61,14 @@ export async function createOrder(req: Request, res: Response) {
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         };
 
-        const orderRef = await withTimeout(db.collection('orders').add(orderData));
-        const orderResponse = { id: orderRef.id, ...orderData, createdAt: new Date().toISOString() };
+        // Use client-provided orderId or generate a new friendly one
+        const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+        const randomDigits = Math.floor(10000 + Math.random() * 90000);
+        const friendlyOrderId = req.body.orderId || `ADK${dateStr}${randomDigits}`;
+
+        const orderRef = db.collection('orders').doc(friendlyOrderId);
+        await withTimeout(orderRef.set(orderData));
+        const orderResponse = { id: friendlyOrderId, ...orderData, createdAt: new Date().toISOString() };
 
         // Record coupon usage
         if (validatedData.couponId) {
@@ -83,20 +91,22 @@ export async function createOrder(req: Request, res: Response) {
         }
 
         // Push notification (non-blocking)
-        try {
-            const { NotificationService } = await import('../services/NotificationService');
-            await NotificationService.sendToUser(
-                userId,
-                'Order Placed Successfully! 🦷📦',
-                `Your order #${orderRef.id.slice(0, 8)} is being processed.`,
-                { orderId: orderRef.id }
-            );
-        } catch (pushErr) {
-            logger.error('Failed to send order push notification', { error: pushErr, orderId: orderRef.id });
+        if (orderData.paymentMethod !== 'phonepe') {
+            try {
+                const { NotificationService } = await import('../services/NotificationService');
+                await NotificationService.sendToUser(
+                    userId,
+                    'Order Placed Successfully! 🦷📦',
+                    `Your order #${orderRef.id.slice(0, 8)} is being processed.`,
+                    { orderId: orderRef.id }
+                );
+            } catch (pushErr) {
+                logger.error('Failed to send order push notification', { error: pushErr, orderId: orderRef.id });
+            }
         }
 
         // Send order confirmation email (non-blocking)
-        if (orderData.customerEmail) {
+        if (orderData.customerEmail && orderData.paymentMethod !== 'phonepe') {
             emailService.sendOrderConfirmationEmail(orderData.customerEmail, orderResponse).catch(emailErr => {
                 logger.error('Failed to send order confirmation email', { error: emailErr, orderId: orderRef.id });
             });
@@ -166,32 +176,35 @@ export async function createRazorpayOrder(req: Request, res: Response) {
 export async function getMyOrders(req: Request, res: Response) {
     try {
         const userId = (req as any).user?.id;
+        const email = (req as any).user?.email;
 
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
 
-        let snapshot;
-        try {
-            snapshot = await db.collection('orders')
-                .where('userId', '==', userId)
-                .orderBy('createdAt', 'desc')
-                .get();
-        } catch (idxError) {
-            logger.warn('Failed ordered getMyOrders query, falling back to unordered query and sorting in-memory', { error: idxError, userId });
-            snapshot = await db.collection('orders')
-                .where('userId', '==', userId)
-                .get();
+        // Run both queries in parallel to support WooCommerce matching by email and new orders by userId
+        const queries = [
+            db.collection('orders').where('userId', '==', userId).get()
+        ];
+        if (email) {
+            queries.push(db.collection('orders').where('customerEmail', '==', email).get());
         }
 
-        const orders = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                ...data,
-                createdAt: (data.createdAt as any)?.toDate ? (data.createdAt as any).toDate() : data.createdAt,
-            };
-        });
+        const snapshots = await Promise.all(queries);
+        const uniqueOrdersMap = new Map<string, any>();
+
+        for (const snap of snapshots) {
+            for (const doc of snap.docs) {
+                const data = doc.data();
+                uniqueOrdersMap.set(doc.id, {
+                    id: doc.id,
+                    ...data,
+                    createdAt: (data.createdAt as any)?.toDate ? (data.createdAt as any).toDate() : data.createdAt,
+                });
+            }
+        }
+
+        const orders = Array.from(uniqueOrdersMap.values());
 
         // Safe in-memory sorting by createdAt descending (newest first)
         orders.sort((a: any, b: any) => {
@@ -271,7 +284,7 @@ export async function updateOrderStatus(req: Request, res: Response) {
         }
 
         const validStatuses = [
-            'Processing', 'Shipped', 'Delivered', 'Cancelled', 
+            'Pending Payment', 'Payment Failed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 
             'Return Initiated', 'Return Approved', 'Return Completed', 'Return Rejected'
         ];
         

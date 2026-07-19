@@ -16,6 +16,7 @@ build/
 firebase-service-account.json
 service-account-file.json
 alphadentkart-*-firebase-adminsdk-*.json
+cookies.txt
 
 # Firebase logs and cache
 firebase-debug.log
@@ -56,4 +57,7 @@ functions/lib/
 .opencode/
 .playwright-mcp/
 
-
+# Reserved name files
+nul
+*.png
+*.jpg

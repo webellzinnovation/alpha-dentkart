@@ -50,7 +50,7 @@ export async function getWooClient() {
     });
 }
 
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 50;
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 async function fetchAll(api: any, endpoint: string, params: Record<string, any> = {}): Promise<any[]> {
@@ -102,6 +102,32 @@ async function updateLastSyncTime(type: string, time: Date = new Date()) {
     } catch (e) {
         logger.error(`Failed to update last sync time for ${type}`, { error: e });
     }
+}
+
+async function isSyncInProgress(): Promise<boolean> {
+    try {
+        const statusDoc = await db.collection('settings').doc('sync_status').get();
+        if (statusDoc.exists) {
+            const data = statusDoc.data();
+            if (data?.inProgress) {
+                if (data.startedAt) {
+                    const startedAt = typeof data.startedAt.toDate === 'function' ? data.startedAt.toDate() : new Date(data.startedAt);
+                    const now = new Date();
+                    const diffMinutes = (now.getTime() - startedAt.getTime()) / (1000 * 60);
+                    // Lock timeout: 15 minutes. If it started > 15 minutes ago, consider lock expired.
+                    if (diffMinutes > 15) {
+                        logger.warn(`WooCommerce sync lock timed out (${diffMinutes.toFixed(1)} mins ago). Automatically releasing lock.`);
+                        await db.collection('settings').doc('sync_status').set({ inProgress: false }, { merge: true });
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+    } catch (e) {
+        logger.error('Error checking sync status lock:', e);
+    }
+    return false;
 }
 
 export async function syncProducts(api: any, forceFull = false): Promise<number> {
@@ -898,19 +924,73 @@ router.get('/status', apiLimiter, authenticateToken, requireAdmin, async (req: R
     }
 });
 
+router.post('/reset-lock', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        await db.collection('settings').doc('sync_status').set({
+            inProgress: false,
+            currentStep: 'Lock cleared by administrator',
+            lastSyncError: null
+        }, { merge: true });
+        res.json({ success: true, message: "Synchronization lock successfully cleared." });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.post('/products', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
     try {
         const forceFull = req.query.force === 'true';
-        logger.info(`Starting product sync (forceFull: ${forceFull})...`);
-        const api = await getWooClient();
-        const synced = await syncProducts(api, forceFull);
-        // Invalidate products cache
-        await cacheService.invalidateProductsCache();
-        res.json({ success: true, synced, message: `Synced ${synced} products from WordPress` });
+        logger.info(`Starting product sync in background (forceFull: ${forceFull})...`);
+
+        // Check if sync already in progress with auto-timeout check
+        const inProgress = await isSyncInProgress();
+        if (inProgress) {
+            return res.status(409).json({
+                success: false,
+                error: "Another synchronization is currently running in the background. Please wait for it to complete."
+            });
+        }
+
+        // Set status to in progress
+        await db.collection('settings').doc('sync_status').set({
+            inProgress: true,
+            startedAt: admin.firestore.Timestamp.fromDate(new Date()),
+            currentStep: 'Syncing products in background...'
+        }, { merge: true });
+
+        // Respond immediately
+        res.json({
+            success: true,
+            message: "Products synchronization started in the background. Please monitor progress on this panel."
+        });
+
+        // Run actual products sync in background
+        (async () => {
+            try {
+                const api = await getWooClient();
+                const synced = await syncProducts(api, forceFull);
+                await cacheService.invalidateProductsCache();
+                
+                await db.collection('settings').doc('sync_status').set({
+                    inProgress: false,
+                    currentStep: 'Complete',
+                    lastProductSync: admin.firestore.Timestamp.fromDate(new Date()),
+                    lastSyncSuccess: admin.firestore.Timestamp.fromDate(new Date()),
+                    lastProductSyncCount: synced
+                }, { merge: true });
+                logger.info(`Background product sync completed: ${synced} products synced`);
+            } catch (err: any) {
+                logger.error('Background product sync failed', { error: err });
+                await db.collection('settings').doc('sync_status').set({
+                    inProgress: false,
+                    currentStep: 'Failed',
+                    lastSyncError: err?.message || String(err)
+                }, { merge: true });
+            }
+        })();
     } catch (error: any) {
-        logger.error('Product sync error', { error });
-        const errMsg = error?.response?.data?.message || error?.message || String(error);
-        res.status(500).json({ success: false, error: errMsg });
+        logger.error('Product sync endpoint error', { error });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -985,78 +1065,129 @@ router.post('/brand-counts', apiLimiter, authenticateToken, requireAdmin, async 
 });
 
 router.post('/full', apiLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
-    const results: any = { categories: 0, brands: 0, products: 0, orders: 0, users: 0 };
-    const errors: string[] = [];
-    
+    const forceFull = req.query.force === 'true';
+    logger.info(`Starting full sync in background (forceFull: ${forceFull})...`);
+
     try {
-        const forceFull = req.query.force === 'true';
-        logger.info(`Starting full sync (forceFull: ${forceFull})...`);
-        const api = await getWooClient();
-        
-        try {
-            results.categories = await syncCategories(api);
-        } catch (e: any) {
-            errors.push('categories: ' + (e?.message || 'unknown'));
-            logger.error('Category sync failed', { error: e });
+        // Check if sync already in progress with auto-timeout check
+        const inProgress = await isSyncInProgress();
+        if (inProgress) {
+            return res.status(409).json({
+                success: false,
+                error: "Another synchronization is currently running in the background. Please wait for it to complete."
+            });
         }
 
-        try {
-            results.brands = await syncBrands(api);
-        } catch (e: any) {
-            errors.push('brands: ' + (e?.message || 'unknown'));
-            logger.error('Brand sync failed', { error: e });
-        }
-        
-        try {
-            logger.info("Starting products sync...");
-            results.products = await syncProducts(api, forceFull);
-        } catch (e: any) {
-            errors.push('products: ' + (e?.message || 'unknown'));
-            logger.error('Product sync failed', { error: e });
-        }
-        
-        try {
-            logger.info("Starting orders and users sync...");
-            const [ordersSynced, usersSynced] = await Promise.all([
-                syncOrders(api, forceFull).catch(e => { errors.push('orders: ' + (e?.message || 'unknown')); return 0; }),
-                syncUsers(api, forceFull).catch(e => { errors.push('users: ' + (e?.message || 'unknown')); return 0; })
-            ]);
-            results.orders = ordersSynced;
-            results.users = usersSynced;
-        } catch (e: any) {
-            errors.push('orders/users: ' + (e?.message || 'unknown'));
-        }
+        // Set status to in progress
+        await db.collection('settings').doc('sync_status').set({
+            inProgress: true,
+            startedAt: admin.firestore.Timestamp.fromDate(new Date()),
+            currentStep: 'Starting full sync in background...'
+        }, { merge: true });
 
-        // Invalidate all caches
-        try {
-            await Promise.all([
-                cacheService.invalidateProductsCache(),
-                cacheService.invalidateCategoriesCache(),
-                cacheService.invalidateBrandsCache()
-            ]);
-        } catch (e) {
-            logger.warn('Cache invalidation failed', { error: e });
-        }
-
-        // Recalculate brand product counts from actual products
-        try {
-            results.brandCountsUpdated = await updateBrandProductCounts();
-        } catch (e) {
-            logger.warn('Brand product count update failed', { error: e });
-        }
-
+        // Respond immediately
         res.json({
             success: true,
-            ...results,
-            errors: errors.length > 0 ? errors : undefined,
-            message: errors.length > 0 
-                ? `Sync completed with ${errors.length} errors` 
-                : 'Full sync completed successfully'
+            message: "Full synchronization started in the background. It will take 1-3 minutes. Please monitor progress on this panel."
         });
+
+        // Run actual full sync in background
+        (async () => {
+            const results: any = { categories: 0, brands: 0, products: 0, orders: 0, users: 0 };
+            const errors: string[] = [];
+            
+            try {
+                const api = await getWooClient();
+                
+                await db.collection('settings').doc('sync_status').set({ currentStep: 'Syncing categories...' }, { merge: true });
+                try {
+                    results.categories = await syncCategories(api);
+                } catch (e: any) {
+                    errors.push('categories: ' + (e?.message || 'unknown'));
+                    logger.error('Category sync failed', { error: e });
+                }
+
+                await db.collection('settings').doc('sync_status').set({ currentStep: 'Syncing brands...' }, { merge: true });
+                try {
+                    results.brands = await syncBrands(api);
+                } catch (e: any) {
+                    errors.push('brands: ' + (e?.message || 'unknown'));
+                    logger.error('Brand sync failed', { error: e });
+                }
+                
+                await db.collection('settings').doc('sync_status').set({ currentStep: 'Syncing products (this may take a while)...' }, { merge: true });
+                try {
+                    results.products = await syncProducts(api, forceFull);
+                } catch (e: any) {
+                    errors.push('products: ' + (e?.message || 'unknown'));
+                    logger.error('Product sync failed', { error: e });
+                }
+                
+                await db.collection('settings').doc('sync_status').set({ currentStep: 'Syncing orders...' }, { merge: true });
+                try {
+                    results.orders = await syncOrders(api, forceFull);
+                } catch (e: any) {
+                    errors.push('orders: ' + (e?.message || 'unknown'));
+                    logger.error('Order sync failed', { error: e });
+                }
+
+                await sleep(1000); // 1-second cooldown
+
+                await db.collection('settings').doc('sync_status').set({ currentStep: 'Syncing customers...' }, { merge: true });
+                try {
+                    results.users = await syncUsers(api, forceFull);
+                } catch (e: any) {
+                    errors.push('users: ' + (e?.message || 'unknown'));
+                    logger.error('User sync failed', { error: e });
+                }
+
+                // Invalidate all caches
+                await db.collection('settings').doc('sync_status').set({ currentStep: 'Invalidating cache...' }, { merge: true });
+                try {
+                    await Promise.all([
+                        cacheService.invalidateProductsCache(),
+                        cacheService.invalidateCategoriesCache(),
+                        cacheService.invalidateBrandsCache()
+                    ]);
+                } catch (e) {
+                    logger.warn('Cache invalidation failed', { error: e });
+                }
+
+                // Recalculate brand product counts from actual products
+                await db.collection('settings').doc('sync_status').set({ currentStep: 'Updating brand product counts...' }, { merge: true });
+                try {
+                    results.brandCountsUpdated = await updateBrandProductCounts();
+                } catch (e) {
+                    logger.warn('Brand product count update failed', { error: e });
+                }
+
+                // Update status to complete
+                await db.collection('settings').doc('sync_status').set({
+                    inProgress: false,
+                    currentStep: 'Complete',
+                    lastFullSync: admin.firestore.Timestamp.fromDate(new Date()),
+                    lastProductSync: admin.firestore.Timestamp.fromDate(new Date()),
+                    lastOrderSync: admin.firestore.Timestamp.fromDate(new Date()),
+                    lastUserSync: admin.firestore.Timestamp.fromDate(new Date()),
+                    lastSyncSuccess: admin.firestore.Timestamp.fromDate(new Date()),
+                    results,
+                    errors: errors.length > 0 ? errors : null
+                }, { merge: true });
+
+                logger.info('Background full sync completed successfully', { results });
+            } catch (err: any) {
+                logger.error('Background full sync failed catastrophically', { error: err });
+                await db.collection('settings').doc('sync_status').set({
+                    inProgress: false,
+                    currentStep: 'Failed',
+                    lastSyncError: err?.message || 'Catastrophic error',
+                    errors: [...errors, err?.message || 'Catastrophic error']
+                }, { merge: true });
+            }
+        })();
     } catch (error: any) {
-        logger.error('Full sync error', { error });
-        const errMsg = error?.response?.data?.message || error?.message || String(error);
-        res.status(500).json({ success: false, error: errMsg, results, errors });
+        logger.error('Full sync endpoint error', { error });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

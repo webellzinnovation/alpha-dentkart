@@ -33,6 +33,7 @@ import seoRoutes from './routes/seo';
 import syncRoutes from './routes/sync';
 import wishlistRoutes from './routes/wishlist';
 import cartRoutes from './routes/cart';
+import phonepeRoutes from './routes/phonepe';
 // import { authLimiter } from '../middleware/rateLimiter'; // specific one
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
@@ -124,10 +125,11 @@ app.use(cors({
 
         const isAllowed = 
             ALLOWED_ORIGINS.includes(origin) || 
-            origin.endsWith('.vercel.app') || 
-            origin.endsWith('.web.app') || 
-            origin.endsWith('.firebaseapp.com') ||
-            origin.includes('alphadentkart');
+            origin === 'https://alphadentkart-001.web.app' || 
+            origin === 'https://alphadentkart-001.firebaseapp.com' ||
+            origin === 'https://alphadentkart.com' ||
+            origin === 'https://www.alphadentkart.com' ||
+            /^https:\/\/[a-zA-Z0-9-]+\.alphadentkart\.com$/.test(origin);
 
         if (isAllowed) {
             callback(null, true);
@@ -146,7 +148,7 @@ app.use(cookieParser());
 // CSRF protection - generate token on GET, validate on mutating requests
 // Skip CSRF for sync routes (already protected by admin auth)
 app.use((req, res, next) => {
-    if (req.path.startsWith('/api/v1/sync')) {
+    if (req.path.startsWith('/api/v1/sync') || req.path.startsWith('/api/v1/payments/phonepe/callback') || req.path.startsWith('/v1/payments/phonepe/callback')) {
         return next();
     }
     csrfProtection(req, res, next);
@@ -160,6 +162,7 @@ errorTracker.init();
 
 // Apply rate limiting to all API routes
 app.use('/api', apiLimiter);
+app.use('/v1', apiLimiter);
 
 // SEO Routes (Sitemap, Robots.txt)
 app.use('/', seoRoutes);
@@ -225,6 +228,7 @@ v1Router.use('/whatsapp', whatsappRoutes);
 v1Router.use('/sync', syncRoutes);
 v1Router.use('/wishlist', wishlistRoutes);
 v1Router.use('/cart', cartRoutes);
+v1Router.use('/payments/phonepe', phonepeRoutes);
 
 // Mount the v1 router
 app.use('/api/v1', v1Router);

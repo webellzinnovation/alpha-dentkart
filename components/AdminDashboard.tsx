@@ -277,17 +277,22 @@ const AnimatedGraph = ({ data, labels, colorHex, heightClass = "h-48" }: { data:
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    if (!data || data.length === 0) {
+        return (
+            <div className={`w-full ${heightClass} flex items-center justify-center bg-gray-50/50 dark:bg-gray-800/10 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700`}>
+                <span className="text-sm text-gray-400">No data available</span>
+            </div>
+        );
+    }
+
     const max = Math.max(...data) || 1;
     // Dimensions for SVG coordinate system (fixed aspect ratio, scaled via CSS)
     const width = 1000;
     const height = 400;
-    const padding = 20;
-    const graphWidth = width - padding * 2;
-    const graphHeight = height - padding * 2;
 
     const points = data.map((val, i) => ({
-        x: padding + (i / (data.length - 1)) * graphWidth,
-        y: height - padding - (val / max) * graphHeight
+        x: data.length > 1 ? (i / (data.length - 1)) * width : width / 2,
+        y: (1 - (val / max)) * height
     }));
 
     // Generate smooth path (Catmull-Rom like tension)
@@ -306,6 +311,7 @@ const AnimatedGraph = ({ data, labels, colorHex, heightClass = "h-48" }: { data:
         pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
     }
 
+    const isAllZero = data.every(v => v === 0);
     const areaD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -323,7 +329,7 @@ const AnimatedGraph = ({ data, labels, colorHex, heightClass = "h-48" }: { data:
     };
 
     return (
-        <div className="w-full flex flex-col items-center">
+        <div className="w-full flex flex-col">
             {/* Inline styles for graph animation keyframes */}
             <style>{`
                 @keyframes drawPath {
@@ -342,89 +348,135 @@ const AnimatedGraph = ({ data, labels, colorHex, heightClass = "h-48" }: { data:
                 }
             `}</style>
 
-            <div
-                className={`relative w-full ${heightClass} cursor-crosshair touch-none`}
-                ref={containerRef}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-            >
-                {/* Tooltip */}
-                {hoveredIndex !== null && (
-                    <div
-                        className="absolute top-0 transform -translate-x-1/2 -translate-y-full mb-2 pointer-events-none z-20 transition-all duration-150 ease-out"
-                        style={{ left: `${(hoveredIndex / (data.length - 1)) * 100}%` }}
-                    >
-                        <div className="bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-gray-700 relative">
-                            {(data[hoveredIndex] ?? 0).toLocaleString('en-IN')}
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45 border-b border-r border-gray-700"></div>
-                        </div>
+            {/* Main Chart Section: Y-Axis + Graph Canvas */}
+            <div className="w-full flex items-stretch">
+                {/* Y-Axis Labels Column (HTML - Avoids SVG aspect ratio squeezing) */}
+                {!isAllZero && (
+                    <div className="flex flex-col justify-between text-right pr-3 select-none text-[11px] text-gray-400 dark:text-gray-500 font-semibold w-16 py-1">
+                        {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => (
+                            <span key={idx}>
+                                {Math.round(max - pct * max).toLocaleString('en-IN')}
+                            </span>
+                        ))}
                     </div>
                 )}
 
-                {/* Graph */}
-                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
-                    <defs>
-                        <linearGradient id={`gradient-${colorHex.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={colorHex} stopOpacity="0.4" />
-                            <stop offset="100%" stopColor={colorHex} stopOpacity="0" />
-                        </linearGradient>
-                    </defs>
-
-                    {/* Area Fill */}
-                    <path
-                        d={areaD}
-                        fill={`url(#gradient-${colorHex.replace('#', '')})`}
-                        className="opacity-0 animate-area"
-                        style={{ animationDelay: '0.2s' }}
-                    />
-
-                    {/* Line Stroke */}
-                    <path
-                        d={pathD}
-                        fill="none"
-                        stroke={colorHex}
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="animate-draw"
-                        strokeDasharray="3000"
-                        strokeDashoffset="3000"
-                    />
-
-                    {/* Points (visible on hover) */}
-                    {points.map((p, i) => (
-                        <circle
-                            key={i}
-                            cx={p.x}
-                            cy={p.y}
-                            r={hoveredIndex === i ? 6 : 0}
-                            fill={colorHex}
-                            stroke="white"
-                            strokeWidth="3"
-                            className="transition-all duration-200"
-                        />
-                    ))}
-
-                    {/* Vertical Guide Line */}
-                    {hoveredIndex !== null && (
-                        <line
-                            x1={points[hoveredIndex].x}
-                            y1={points[hoveredIndex].y}
-                            x2={points[hoveredIndex].x}
-                            y2={height}
-                            stroke={colorHex}
-                            strokeWidth="1"
-                            strokeDasharray="5,5"
-                            className="opacity-50 pointer-events-none"
-                        />
+                {/* Graph Canvas Container */}
+                <div
+                    className={`flex-1 relative ${heightClass} cursor-crosshair touch-none`}
+                    ref={containerRef}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                >
+                    {/* Empty State */}
+                    {isAllZero && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                            <i className="fas fa-chart-line text-3xl text-gray-300 dark:text-gray-600 mb-2"></i>
+                            <p className="text-xs text-gray-400 font-medium">No sales data recorded for this period</p>
+                        </div>
                     )}
-                </svg>
+                    {/* Tooltip */}
+                    {hoveredIndex !== null && (
+                        <div
+                            className="absolute top-0 transform -translate-x-1/2 -translate-y-full mb-2 pointer-events-none z-20 transition-all duration-150 ease-out"
+                            style={{ left: `${(hoveredIndex / (data.length - 1)) * 100}%` }}
+                        >
+                            <div className="bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-gray-700 relative">
+                                ₹{(data[hoveredIndex] ?? 0).toLocaleString('en-IN')}
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45 border-b border-r border-gray-700"></div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Graph */}
+                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id={`gradient-${colorHex.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={colorHex} stopOpacity="0.4" />
+                                <stop offset="100%" stopColor={colorHex} stopOpacity="0" />
+                            </linearGradient>
+                        </defs>
+
+                        {/* Grid lines */}
+                        {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => {
+                            const y = pct * height;
+                            return (
+                                <line
+                                    key={idx}
+                                    x1="0"
+                                    y1={y}
+                                    x2={width}
+                                    y2={y}
+                                    stroke="currentColor"
+                                    className="text-gray-100 dark:text-gray-800/20"
+                                    strokeWidth="1.5"
+                                    strokeDasharray="5,5"
+                                />
+                            );
+                        })}
+
+                        {/* Area Fill */}
+                        <path
+                            d={areaD}
+                            fill={`url(#gradient-${colorHex.replace('#', '')})`}
+                            className="opacity-0 animate-area"
+                            style={{ animationDelay: '0.2s' }}
+                        />
+
+                        {/* Line Stroke */}
+                        <path
+                            d={pathD}
+                            fill="none"
+                            stroke={colorHex}
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="animate-draw"
+                            strokeDasharray="3000"
+                            strokeDashoffset="3000"
+                        />
+
+                        {/* Points (visible on hover) */}
+                        {points.map((p, i) => (
+                            <circle
+                                key={i}
+                                cx={p.x}
+                                cy={p.y}
+                                r={hoveredIndex === i ? 6 : 0}
+                                fill={colorHex}
+                                stroke="white"
+                                strokeWidth="3"
+                                className="transition-all duration-200"
+                            />
+                        ))}
+
+                        {/* Vertical Guide Line */}
+                        {hoveredIndex !== null && (
+                            <line
+                                x1={points[hoveredIndex].x}
+                                y1={points[hoveredIndex].y}
+                                x2={points[hoveredIndex].x}
+                                y2={height}
+                                stroke={colorHex}
+                                strokeWidth="1"
+                                strokeDasharray="5,5"
+                                className="opacity-50 pointer-events-none"
+                            />
+                        )}
+                    </svg>
+                </div>
             </div>
 
-            {/* X-Axis Labels */}
-            <div className="w-full flex justify-between mt-4 px-2">
+            {/* X-Axis Labels Row (HTML - Avoids SVG aspect ratio stretching) */}
+            <div
+                className="w-full flex justify-between mt-3 text-[11px] font-semibold text-gray-400 dark:text-gray-500 select-none"
+                style={{ paddingLeft: isAllZero ? '0' : '64px' }} // w-16 = 64px offset for Y-Axis labels
+            >
                 {labels.map((label, i) => (
-                    <span key={i} className={`text-[10px] sm:text-xs font-medium transition-all duration-200 ${hoveredIndex === i ? 'text-gray-900 dark:text-white font-bold scale-110 -translate-y-1' : 'text-gray-400'}`}>
+                    <span
+                        key={i}
+                        className={`transition-all duration-200 ${hoveredIndex === i ? 'text-gray-900 dark:text-white font-bold scale-105' : ''}`}
+                    >
                         {label}
                     </span>
                 ))}
@@ -566,6 +618,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
     };
 
+    const mapFreshProducts = (fresh: any[]): Product[] => {
+        if (!Array.isArray(fresh)) return [];
+        return fresh.map((p: any) => ({
+            id: p.id,
+            name: p.name || 'Unknown Product',
+            category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
+            price: p.price || 0,
+            originalPrice: p.originalPrice || p.price,
+            rating: p.rating || 0,
+            reviews: p.reviews || 0,
+            image: p.image || p.images?.[0] || '/placeholder.png',
+            badge: p.badge,
+            badgeColor: p.badgeColor,
+            badgeId: p.badgeId,
+            timer: p.timer,
+            brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
+            description: p.description,
+            features: p.features || [],
+            specs: p.specs || {},
+            images: p.images || [p.image],
+            attributes: p.attributes || [],
+            variations: p.variations || [],
+            shortDescription: p.shortDescription,
+            weight: p.weight,
+            seoTitle: p.seoTitle,
+            seoDescription: p.seoDescription,
+            seoKeywords: p.seoKeywords,
+            stock: p.stock ?? 10,
+            slug: p.slug,
+            type: p.type,
+            sku: p.sku,
+        }));
+    };
+
     const handleSyncProducts = async () => {
         setIsLoading(true);
         try {
@@ -588,37 +674,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
 
             if (freshProducts.length > 0) {
-                const transformed: Product[] = freshProducts.map((p: any) => ({
-                    id: p.id,
-                    name: p.name || 'Unknown Product',
-                    category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
-                    price: p.price || 0,
-                    originalPrice: p.originalPrice || p.price,
-                    rating: p.rating || 0,
-                    reviews: p.reviews || 0,
-                    image: p.image || p.images?.[0] || '/placeholder.png',
-                    badge: p.badge,
-                    badgeColor: p.badgeColor,
-                    badgeId: p.badgeId,
-                    timer: p.timer,
-                    brand: (p.brand && typeof p.brand === 'object') ? p.brand.name : (typeof p.brand === 'string' ? p.brand : ''),
-                    description: p.description,
-                    features: p.features || [],
-                    specs: p.specs || {},
-                    images: p.images || [p.image],
-                    attributes: p.attributes || [],
-                    variations: p.variations || [],
-                    shortDescription: p.shortDescription,
-                    weight: p.weight,
-                    seoTitle: p.seoTitle,
-                    seoDescription: p.seoDescription,
-                    seoKeywords: p.seoKeywords,
-                    stock: p.stock ?? 10,
-                    slug: p.slug,
-                    type: p.type,
-                    sku: p.sku,
-                }));
-                setProducts(transformed);
+                setProducts(mapFreshProducts(freshProducts));
             }
         } catch (err) {
             console.error("❌ Failed to sync products:", err);
@@ -728,33 +784,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     // Real Analytics Data - calculated from actual orders
     const analyticsData = useMemo(() => {
-        // Calculate weekly revenue (last 7 days)
+        const now = new Date();
+
+        // Calculate dynamic weekly revenue (last 7 days rolling)
         const weeklyRevenue = new Array(7).fill(0);
         const weeklyOrders = new Array(7).fill(0);
-        const weeklyLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const weeklyLabels: string[] = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(now.getDate() - i);
+            weeklyLabels.push(daysOfWeek[d.getDay()]);
+        }
 
-        // Calculate monthly revenue (last 12 months)
+        // Calculate dynamic monthly revenue (last 12 months rolling)
         const monthlyRevenue = new Array(12).fill(0);
         const monthlyOrders = new Array(12).fill(0);
-        const monthlyLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthlyLabels: string[] = [];
+
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            monthlyLabels.push(monthNames[d.getMonth()]);
+        }
 
         // Process orders to calculate revenue
         orders.forEach(order => {
             try {
                 const orderDate = parseOrderDate(order);
-                const now = new Date();
 
-                // Weekly calculation (last 7 days)
+                // Weekly calculation (last 7 days rolling)
                 const daysDiff = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
                 if (daysDiff >= 0 && daysDiff < 7) {
-                    const dayIndex = 6 - daysDiff; // Most recent is Sunday (index 6)
+                    const dayIndex = 6 - daysDiff;
                     weeklyRevenue[dayIndex] += order.total || 0;
                     weeklyOrders[dayIndex] += 1;
                 }
 
-                // Monthly calculation (current year)
-                if (orderDate.getFullYear() === now.getFullYear()) {
-                    const monthIndex = orderDate.getMonth();
+                // Monthly calculation (last 12 months rolling)
+                const yearDiff = now.getFullYear() - orderDate.getFullYear();
+                const monthDiff = now.getMonth() - orderDate.getMonth() + (yearDiff * 12);
+                if (monthDiff >= 0 && monthDiff < 12) {
+                    const monthIndex = 11 - monthDiff;
                     monthlyRevenue[monthIndex] += order.total || 0;
                     monthlyOrders[monthIndex] += 1;
                 }
@@ -810,7 +882,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     // Search States
     // Search States with Persistence
     const [orderSearchTerm, setOrderSearchTerm] = useState(() => localStorage.getItem('admin_order_search') || '');
-    const [orderStatusFilter, setOrderStatusFilter] = useState<'All' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected'>(() => (localStorage.getItem('admin_order_status_filter') as any) || 'All');
+    const [orderStatusFilter, setOrderStatusFilter] = useState<'All' | 'Pending Payment' | 'Payment Failed' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Return Initiated' | 'Return Approved' | 'Return Completed' | 'Return Rejected'>(() => (localStorage.getItem('admin_order_status_filter') as any) || 'All');
     const [orderFilterMonth, setOrderFilterMonth] = useState<string>(() => localStorage.getItem('admin_order_month_filter') || 'all'); 
     const [categorySearchTerm, setCategorySearchTerm] = useState('');
     const [categoryPage, setCategoryPage] = useState(1);
@@ -902,6 +974,98 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [customerDetailModal, setCustomerDetailModal] = useState<User | null>(null);
     const [editCustomerData, setEditCustomerData] = useState<User | null>(null);
 
+    const enrichedUsers = useMemo(() => {
+        // 1. Enrich existing users with orders matching by uid or customerEmail
+        const enrichedRealUsers = users.map(user => {
+            const customerOrders = orders.filter(order => {
+                const orderEmail = (order.customerEmail || order.email || '').toLowerCase();
+                const userEmail = (user.email || '').toLowerCase();
+                
+                return (order.userId && user.id && order.userId === user.id) || 
+                       (orderEmail && userEmail && orderEmail === userEmail);
+            });
+            const totalSpent = customerOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+            
+            // Verification logic: true / approved if they have placed at least one order
+            const hasOrdered = customerOrders.length > 0;
+            const isVerified = hasOrdered;
+            const verificationStatus = hasOrdered ? 'approved' : 'pending';
+
+            return {
+                ...user,
+                orders: customerOrders,
+                ordersList: customerOrders,
+                orderCount: customerOrders.length,
+                spent: totalSpent,
+                isVerified,
+                verificationStatus
+            };
+        });
+
+        // 2. Identify guest orders whose emails do not match any existing real user profile
+        const realUserEmails = new Set(users.map(u => (u.email || '').toLowerCase()).filter(Boolean));
+        const virtualUsersMap = new Map<string, any>();
+
+        orders.forEach(order => {
+            const orderEmail = (order.customerEmail || order.email || '').toLowerCase();
+            if (!orderEmail || realUserEmails.has(orderEmail)) return;
+
+            // Use the most recent order to construct user profile
+            const existingVirtual = virtualUsersMap.get(orderEmail);
+            const orderDate = new Date(order.date || order.createdAt || 0);
+
+            if (!existingVirtual || new Date(existingVirtual._orderDate) < orderDate) {
+                virtualUsersMap.set(orderEmail, {
+                    uid: `guest-${orderEmail.replace(/[^a-zA-Z0-9]/g, '_')}`,
+                    name: order.customerName || 'Guest Customer',
+                    email: orderEmail,
+                    phone: order.customerPhone || order.phone || '',
+                    addresses: order.shippingAddress ? [{
+                        id: 1,
+                        type: 'Home',
+                        name: order.customerName || '',
+                        street: `${order.shippingAddress.address1 || ''} ${order.shippingAddress.address2 || ''}`.trim(),
+                        city: order.shippingAddress.city || '',
+                        state: order.shippingAddress.state || '',
+                        zip: order.shippingAddress.postcode || '',
+                        phone: order.customerPhone || order.phone || '',
+                        isDefault: true
+                    }] : [],
+                    userType: 'regular',
+                    isVerified: true, // Guest users have at least 1 order, so verified by default
+                    verificationStatus: 'approved',
+                    registrationDate: order.date || order.createdAt || new Date().toISOString(),
+                    _orderDate: order.date || order.createdAt
+                });
+            }
+        });
+
+        // 3. Enrich virtual users with all their orders
+        const virtualUsers = Array.from(virtualUsersMap.values()).map(vUser => {
+            const customerOrders = orders.filter(order => {
+                const orderEmail = (order.customerEmail || order.email || '').toLowerCase();
+                return orderEmail === vUser.email;
+            });
+            const totalSpent = customerOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+            
+            const hasOrdered = customerOrders.length > 0;
+            const isVerified = hasOrdered;
+            const verificationStatus = hasOrdered ? 'approved' : 'pending';
+
+            return {
+                ...vUser,
+                orders: customerOrders,
+                ordersList: customerOrders,
+                orderCount: customerOrders.length,
+                spent: totalSpent,
+                isVerified,
+                verificationStatus
+            };
+        });
+
+        return [...enrichedRealUsers, ...virtualUsers];
+    }, [users, orders]);
+
     // Fetch a specific user by email (to update local state after save)
     const fetchUserByEmail = async (email: string) => {
         try {
@@ -923,6 +1087,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [wpConsumerSecret, setWpConsumerSecret] = useState('');
     const [isTestingConnection, setIsTestingConnection] = useState(false);
     const [isSyncingAll, setIsSyncingAll] = useState(false);
+    const [isResettingLock, setIsResettingLock] = useState(false);
     const [isSyncingProducts, setIsSyncingProducts] = useState(false);
     const [isSyncingOrders, setIsSyncingOrders] = useState(false);
     const [isSyncingUsers, setIsSyncingUsers] = useState(false);
@@ -931,6 +1096,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [forceFullSyncUsers, setForceFullSyncUsers] = useState(false);
     const [syncLogs, setSyncLogs] = useState<string[]>(['📺 WordPress Sync Console ready...']);
     const [syncStatus, setSyncStatus] = useState<any>(null);
+    const [testEmailAddresses, setTestEmailAddresses] = useState<Record<string, string>>({});
+    const [isSendingTestEmail, setIsSendingTestEmail] = useState<Record<string, boolean>>({});
+
+    const handleSendTestEmail = async (templateType: string, messageBody: string) => {
+        const email = testEmailAddresses[templateType] || '';
+        if (!email) {
+            toast.error('Please enter a recipient email address.');
+            return;
+        }
+        setIsSendingTestEmail(prev => ({ ...prev, [templateType]: true }));
+        try {
+            const { settingsAPI } = await import('../utils/api');
+            await settingsAPI.sendTestEmail({
+                to: email,
+                templateType,
+                message: messageBody
+            });
+            toast.success(`Test email sent successfully to ${email}!`);
+        } catch (err: any) {
+            console.error('Send test email error:', err);
+            toast.error(err?.response?.data?.error || err?.message || 'Failed to send test email.');
+        } finally {
+            setIsSendingTestEmail(prev => ({ ...prev, [templateType]: false }));
+        }
+    };
 
     const addLog = (msg: string) => {
         const timestamp = new Date().toLocaleTimeString();
@@ -1037,15 +1227,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 if (productsRes) {
                     const fresh = productsRes.products || productsRes;
                     if (Array.isArray(fresh)) {
-                        setProducts(fresh.map((p: any) => ({
-                            id: p.id,
-                            name: p.name || 'Unknown Product',
-                            category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
-                            price: p.price || 0,
-                            stock: p.stock ?? 0,
-                            image: p.image || '',
-                            sku: p.sku
-                        })));
+                        setProducts(mapFreshProducts(fresh));
                     }
                 }
                 
@@ -1132,7 +1314,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             const res = await wordpressSyncAPI.syncAll(force);
             if (res?.success) {
                 toast.success('Full WooCommerce synchronization completed successfully!', { id: toastId });
-                addLog(`✅ Full Sync complete: Categories: ${res.categories}, Brands: ${res.brands}, Products: ${res.products}, Orders: ${res.orders}, Customers: ${res.users}.`);
+                const results = res.results || {};
+                addLog(`✅ Full Sync complete: Categories: ${results.categories ?? 0}, Brands: ${results.brands ?? 0}, Products: ${results.products ?? 0}, Orders: ${results.orders ?? 0}, Customers: ${results.users ?? 0}.`);
                 
                 // Refresh all datasets
                 const { productsAPI, ordersAPI, usersAPI } = await import('../utils/api');
@@ -1144,18 +1327,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 if (pRes) {
                     const fresh = pRes.products || pRes;
                     if (Array.isArray(fresh)) {
-                        setProducts(fresh.map((p: any) => ({
-                            id: p.id,
-                            name: p.name || 'Unknown Product',
-                            category: (p.category && typeof p.category === 'object') ? p.category.name : (typeof p.category === 'string' ? p.category : 'General'),
-                            price: p.price || 0,
-                            stock: p.stock ?? 0,
-                            image: p.image || '',
-                            sku: p.sku
-                        })));
+                        setProducts(mapFreshProducts(fresh));
                     }
                 }
-                if (oRes) setOrders(oRes);
+                if (oRes) setOrders(oRes.orders || oRes);
                 if (uRes) setUsers(uRes.users || uRes);
                 
                 // Refresh status
@@ -1169,6 +1344,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             addLog(`❌ Full sync failed: ${errMsg}`);
         } finally {
             setIsSyncingAll(false);
+        }
+    };
+
+    const handleResetSyncLock = async () => {
+        setIsResettingLock(true);
+        const toastId = toast.loading('Clearing stuck WooCommerce sync lock...');
+        try {
+            const { wordpressSyncAPI } = await import('../utils/api');
+            const res = await wordpressSyncAPI.resetLock();
+            if (res?.success) {
+                toast.success('WooCommerce sync lock successfully cleared!', { id: toastId });
+                addLog('⚠️ WooCommerce synchronization lock manually reset by administrator.');
+                // Refresh status
+                const statusRes = await wordpressSyncAPI.getStatus();
+                if (statusRes?.success && statusRes.status) setSyncStatus(statusRes.status);
+            } else {
+                toast.error(res?.message || 'Failed to clear sync lock.', { id: toastId });
+            }
+        } catch (err: any) {
+            console.error('Reset sync lock error:', err);
+            const errMsg = err?.response?.data?.error || err?.message || 'Failed to clear sync lock.';
+            toast.error(errMsg, { id: toastId });
+        } finally {
+            setIsResettingLock(false);
         }
     };
 
@@ -2157,11 +2356,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
 
     const statusBadgeColors: Record<Order['status'], string> = {
+        'Pending Payment': 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-yellow-900/30',
+        'Payment Failed': 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/30',
         Processing: 'bg-amber-100 text-amber-800 border-amber-200',
         Shipped: 'bg-blue-100 text-blue-800 border-blue-200',
         Delivered: 'bg-emerald-100 text-emerald-800 border-emerald-200',
         Cancelled: 'bg-red-100 text-red-800 border-red-200',
-        'Return Initiated': 'bg-purple-100 text-purple-800 border-purple-200',
+        'Return Initiated': 'bg-pink-100 text-pink-800 border-pink-200',
         'Return Approved': 'bg-indigo-100 text-indigo-800 border-indigo-200',
         'Return Completed': 'bg-cyan-100 text-cyan-800 border-cyan-200',
         'Return Rejected': 'bg-rose-100 text-rose-800 border-rose-200'
@@ -2281,7 +2482,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             { id: 'orders', icon: 'fas fa-shopping-bag', label: 'Orders', badge: newOrdersCount > 0 ? newOrdersCount : undefined },
                             { id: 'inventory', icon: 'fas fa-warehouse', label: 'Inventory', badge: products.filter(p => p.stock <= 5).length || undefined },
                             { id: 'products', icon: 'fas fa-box', label: 'Products' },
-                            { id: 'customers', icon: 'fas fa-users', label: 'Customers', badge: users.filter(u => u.verificationStatus === 'pending').length || undefined },
+                            { id: 'customers', icon: 'fas fa-users', label: 'Customers', badge: enrichedUsers.filter(u => u.verificationStatus === 'pending').length || undefined },
                             { id: 'chat-support', icon: 'fas fa-comments', label: 'Chat Support' },
                             { id: 'reviews', icon: 'fas fa-star', label: 'Reviews' },
                             { id: 'categories', icon: 'fas fa-layer-group', label: 'Categories' },
@@ -2437,7 +2638,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <div className="animate-fade-in space-y-8">
                                 {/* Interactive Stat Cards - Click to Navigate */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <StatCard onClick={() => setActiveTab('orders')} title="Total Revenue" value={`₹${orders.reduce((acc, o) => acc + (o.total || 0), 0).toLocaleString('en-IN')}`} icon="fas fa-wallet" colorClass="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" trend="12.5%" trendUp={true} />
+                                    <StatCard onClick={() => setActiveTab('orders')} title="Total Revenue" value={`₹${orders.reduce((acc, o) => acc + (o.total || 0), 0).toLocaleString('en-IN')}`} icon="fas fa-wallet" colorClass="bg-gradient-to-br from-indigo-500 via-cyan-500 to-pink-500" trend="12.5%" trendUp={true} />
                                     <StatCard onClick={() => setActiveTab('orders')} title="Total Orders" value={orders.length.toString()} icon="fas fa-shopping-cart" colorClass="bg-gradient-to-br from-blue-400 to-cyan-600" trend="8.2%" trendUp={true} />
                                     <StatCard onClick={() => setActiveTab('products')} title="Total Products" value={products.length.toString()} icon="fas fa-box-open" colorClass="bg-gradient-to-br from-emerald-400 to-teal-600" trend="2.1%" trendUp={true} />
                                     <StatCard onClick={() => setActiveTab('analytics')} title="Total Visitors" value="12,340" icon="fas fa-chart-line" colorClass="bg-gradient-to-br from-orange-400 to-red-500" trend="5.4%" trendUp={true} />
@@ -2660,7 +2861,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                             onChange={(e) => setOrderStatusFilter(e.target.value as any)}
                                             className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
                                         >
-                                            <option value="All">All Status</option>
+                                            <option value="All">All Statuses</option>
+                                            <option value="Pending Payment">Pending Payment</option>
+                                            <option value="Payment Failed">Payment Failed</option>
                                             <option value="Processing">Processing</option>
                                             <option value="Shipped">Shipped</option>
                                             <option value="Delivered">Delivered</option>
@@ -2878,7 +3081,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     </div>
                                 </div>
                                 <CustomerManagement 
-                                    users={users}
+                                    users={enrichedUsers}
                                     onUpdateUser={handleUpdateUser}
                                     onDeleteUser={handleDeleteUser}
                                     onResetPassword={handleSendResetEmail}
@@ -2887,6 +3090,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     onViewOrder={(order) => {
                                         setSelectedOrder(order);
                                         setIsOrderModalOpen(true);
+                                    }}
+                                    onEditCustomer={(user) => {
+                                        const enrichedUser = enrichedUsers.find(u => u.email?.toLowerCase() === user.email?.toLowerCase()) || user;
+                                        setCustomerDetailModal(enrichedUser);
+                                        setEditCustomerData(JSON.parse(JSON.stringify(enrichedUser)));
                                     }}
                                     settings={settings}
                                     itemsPerPage={10}
@@ -3490,7 +3698,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
                                                         <div className="flex justify-between items-center mb-4">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-bold">Pe</div>
+                                                                <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">Pe</div>
                                                                 <h4 className="font-bold text-gray-800 dark:text-white">PhonePe</h4>
                                                             </div>
                                                             <label className="relative inline-flex items-center cursor-pointer">
@@ -3857,7 +4065,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             </label>
                                                         </div>
                                                         {settings.notifications.orderConfirmation && (
-                                                            <textarea rows={3} value={settings.notifications.orderConfirmationMessage} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderConfirmationMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                            <div className="space-y-3">
+                                                                <textarea rows={3} value={settings.notifications.orderConfirmationMessage} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderConfirmationMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                                <div className="flex gap-2 items-center pt-3 border-t border-gray-100 dark:border-gray-800">
+                                                                    <input 
+                                                                        type="email" 
+                                                                        value={testEmailAddresses['orderConfirmation'] || ''} 
+                                                                        onChange={(e) => setTestEmailAddresses({ ...testEmailAddresses, orderConfirmation: e.target.value })} 
+                                                                        placeholder="Test email address..." 
+                                                                        className="flex-1 max-w-xs rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-xs px-3 py-1.5 focus:ring-primary focus:border-primary"
+                                                                    />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        disabled={isSendingTestEmail['orderConfirmation']} 
+                                                                        onClick={() => handleSendTestEmail('orderConfirmation', settings.notifications.orderConfirmationMessage)} 
+                                                                        className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all disabled:opacity-50"
+                                                                    >
+                                                                        {isSendingTestEmail['orderConfirmation'] ? (
+                                                                            <><i className="fas fa-spinner fa-spin mr-1"></i> Sending...</>
+                                                                        ) : (
+                                                                            <><i className="fas fa-paper-plane mr-1"></i> Send Test</>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                         )}
                                                     </div>
 
@@ -3871,7 +4102,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             </label>
                                                         </div>
                                                         {settings.notifications.orderShipped && (
-                                                            <textarea rows={3} value={settings.notifications.orderShippedMessage} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderShippedMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                            <div className="space-y-3">
+                                                                <textarea rows={3} value={settings.notifications.orderShippedMessage} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderShippedMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                                <div className="flex gap-2 items-center pt-3 border-t border-gray-100 dark:border-gray-800">
+                                                                    <input 
+                                                                        type="email" 
+                                                                        value={testEmailAddresses['orderShipped'] || ''} 
+                                                                        onChange={(e) => setTestEmailAddresses({ ...testEmailAddresses, orderShipped: e.target.value })} 
+                                                                        placeholder="Test email address..." 
+                                                                        className="flex-1 max-w-xs rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-xs px-3 py-1.5 focus:ring-primary focus:border-primary"
+                                                                    />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        disabled={isSendingTestEmail['orderShipped']} 
+                                                                        onClick={() => handleSendTestEmail('orderShipped', settings.notifications.orderShippedMessage)} 
+                                                                        className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all disabled:opacity-50"
+                                                                    >
+                                                                        {isSendingTestEmail['orderShipped'] ? (
+                                                                            <><i className="fas fa-spinner fa-spin mr-1"></i> Sending...</>
+                                                                        ) : (
+                                                                            <><i className="fas fa-paper-plane mr-1"></i> Send Test</>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                         )}
                                                     </div>
 
@@ -3888,7 +4142,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             </label>
                                                         </div>
                                                         {settings.notifications.orderDelivered && (
-                                                            <textarea rows={3} value={settings.notifications.orderDeliveredMessage || 'Great news! Your order has been delivered successfully. Thank you for shopping with us!'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderDeliveredMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                            <div className="space-y-3">
+                                                                <textarea rows={3} value={settings.notifications.orderDeliveredMessage || 'Great news! Your order has been delivered successfully. Thank you for shopping with us!'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderDeliveredMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                                <div className="flex gap-2 items-center pt-3 border-t border-gray-100 dark:border-gray-800">
+                                                                    <input 
+                                                                        type="email" 
+                                                                        value={testEmailAddresses['orderDelivered'] || ''} 
+                                                                        onChange={(e) => setTestEmailAddresses({ ...testEmailAddresses, orderDelivered: e.target.value })} 
+                                                                        placeholder="Test email address..." 
+                                                                        className="flex-1 max-w-xs rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-xs px-3 py-1.5 focus:ring-primary focus:border-primary"
+                                                                    />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        disabled={isSendingTestEmail['orderDelivered']} 
+                                                                        onClick={() => handleSendTestEmail('orderDelivered', settings.notifications.orderDeliveredMessage || 'Great news! Your order has been delivered successfully. Thank you for shopping with us!')} 
+                                                                        className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all disabled:opacity-50"
+                                                                    >
+                                                                        {isSendingTestEmail['orderDelivered'] ? (
+                                                                            <><i className="fas fa-spinner fa-spin mr-1"></i> Sending...</>
+                                                                        ) : (
+                                                                            <><i className="fas fa-paper-plane mr-1"></i> Send Test</>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                         )}
                                                     </div>
 
@@ -3905,7 +4182,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                             </label>
                                                         </div>
                                                         {settings.notifications.orderCancelled && (
-                                                            <textarea rows={3} value={settings.notifications.orderCancelledMessage || 'Your order has been cancelled as requested. If you have any questions, please contact our support team.'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderCancelledMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                            <div className="space-y-3">
+                                                                <textarea rows={3} value={settings.notifications.orderCancelledMessage || 'Your order has been cancelled as requested. If you have any questions, please contact our support team.'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, orderCancelledMessage: e.target.value } })} className="w-full rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-primary focus:border-primary text-sm" placeholder="Message body..." />
+                                                                <div className="flex gap-2 items-center pt-3 border-t border-gray-100 dark:border-gray-800">
+                                                                    <input 
+                                                                        type="email" 
+                                                                        value={testEmailAddresses['orderCancelled'] || ''} 
+                                                                        onChange={(e) => setTestEmailAddresses({ ...testEmailAddresses, orderCancelled: e.target.value })} 
+                                                                        placeholder="Test email address..." 
+                                                                        className="flex-1 max-w-xs rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-xs px-3 py-1.5 focus:ring-primary focus:border-primary"
+                                                                    />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        disabled={isSendingTestEmail['orderCancelled']} 
+                                                                        onClick={() => handleSendTestEmail('orderCancelled', settings.notifications.orderCancelledMessage || 'Your order has been cancelled as requested. If you have any questions, please contact our support team.')} 
+                                                                        className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all disabled:opacity-50"
+                                                                    >
+                                                                        {isSendingTestEmail['orderCancelled'] ? (
+                                                                            <><i className="fas fa-spinner fa-spin mr-1"></i> Sending...</>
+                                                                        ) : (
+                                                                            <><i className="fas fa-paper-plane mr-1"></i> Send Test</>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                         )}
                                                     </div>
 
@@ -3927,6 +4227,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                 <div className="grid grid-cols-2 gap-3">
                                                                     <input type="text" value={settings.notifications.welcomeCouponCode || 'WELCOME15'} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, welcomeCouponCode: e.target.value } })} className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Coupon Code" />
                                                                     <input type="number" value={settings.notifications.welcomeDiscount || 15} onChange={(e) => setSettings({ ...settings, notifications: { ...settings.notifications, welcomeDiscount: parseInt(e.target.value) } })} className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm" placeholder="Discount %" />
+                                                                </div>
+                                                                <div className="flex gap-2 items-center pt-3 border-t border-gray-100 dark:border-gray-800">
+                                                                    <input 
+                                                                        type="email" 
+                                                                        value={testEmailAddresses['welcome'] || ''} 
+                                                                        onChange={(e) => setTestEmailAddresses({ ...testEmailAddresses, welcome: e.target.value })} 
+                                                                        placeholder="Test email address..." 
+                                                                        className="flex-1 max-w-xs rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-xs px-3 py-1.5 focus:ring-primary focus:border-primary"
+                                                                    />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        disabled={isSendingTestEmail['welcome']} 
+                                                                        onClick={() => handleSendTestEmail('welcome', settings.notifications.welcomeEmailMessage || 'Welcome to Alpha Dentkart! Get 15% OFF on your first order with code WELCOME15. Valid for 7 days.')} 
+                                                                        className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center transition-all disabled:opacity-50"
+                                                                    >
+                                                                        {isSendingTestEmail['welcome'] ? (
+                                                                            <><i className="fas fa-spinner fa-spin mr-1"></i> Sending...</>
+                                                                        ) : (
+                                                                            <><i className="fas fa-paper-plane mr-1"></i> Send Test</>
+                                                                        )}
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         )}
@@ -4215,12 +4536,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                                     <span className="w-3 h-3 rounded-full bg-green-500"></span>
                                                                     <span className="text-gray-400 font-mono text-xs ml-2">system-sync.log</span>
                                                                 </div>
-                                                                <button
-                                                                    onClick={() => setSyncLogs(['📺 WordPress Sync Console ready...'])}
-                                                                    className="text-gray-500 hover:text-gray-300 font-mono text-[10px] uppercase tracking-wider flex items-center gap-1"
-                                                                >
-                                                                    <i className="fas fa-trash"></i> Clear Console
-                                                                </button>
+                                                                 <div className="flex items-center gap-4">
+                                                                    <button
+                                                                        onClick={handleResetSyncLock}
+                                                                        disabled={isResettingLock}
+                                                                        className="text-red-400 hover:text-red-300 font-mono text-[10px] uppercase tracking-wider flex items-center gap-1 disabled:opacity-50"
+                                                                        title="Force clear the sync lock if synchronization gets stuck"
+                                                                    >
+                                                                        <i className="fas fa-unlock"></i> {isResettingLock ? 'Resetting...' : 'Reset Sync Lock'}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setSyncLogs(['📺 WordPress Sync Console ready...'])}
+                                                                        className="text-gray-500 hover:text-gray-300 font-mono text-[10px] uppercase tracking-wider flex items-center gap-1"
+                                                                    >
+                                                                        <i className="fas fa-trash"></i> Clear Console
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                             <div
                                                                 id="sync-console-box"
@@ -4558,7 +4889,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     type="button"
                                                     onClick={generateSEO}
                                                     disabled={isGeneratingSEO || !apiKey}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
                                                 >
                                                     {isGeneratingSEO ? (
                                                         <>
@@ -4618,7 +4949,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <div className="flex gap-4 items-center">
                                         <div className="w-16 h-16 border rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
                                             {categoryFormData.image ? (
-                                                <img src={resolveProductImage(categoryFormData.image)} className="w-full h-full object-contain" />
+                                                <img src={resolveProductImage(categoryFormData.image)} alt={categoryFormData.name || "Category Preview"} className="w-full h-full object-contain" />
                                             ) : (
                                                 <i className={`${categoryFormData.iconClass || 'fas fa-tooth'} text-gray-400`}></i>
                                             )}
@@ -4656,7 +4987,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <label className="block text-xs font-medium text-gray-500 mb-1">Logo</label>
                                     <div className="flex gap-4 items-center">
                                         <div className="w-16 h-16 border rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                                            {brandFormData.logo ? <img src={resolveProductImage(brandFormData.logo)} className="w-full h-full object-contain" /> : <span className="text-xs text-gray-400">No Img</span>}
+                                            {brandFormData.logo ? <img src={resolveProductImage(brandFormData.logo)} alt={brandFormData.name || "Brand Logo"} className="w-full h-full object-contain" /> : <span className="text-xs text-gray-400">No Img</span>}
                                         </div>
                                         <input type="file" onChange={handleBrandLogoUpload} className="text-xs text-gray-500" />
                                     </div>
@@ -4689,7 +5020,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             {isViewCustomerMode ? (
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-4">
-                                        <img src={selectedCustomer.avatar} className="w-16 h-16 rounded-full border border-gray-200" alt="" />
+                                        <img src={selectedCustomer.avatar} className="w-16 h-16 rounded-full border border-gray-200" alt={selectedCustomer.name || "Customer Avatar"} />
                                         <div>
                                             <h4 className="text-lg font-bold text-gray-900 dark:text-white">{selectedCustomer.name}</h4>
                                             <p className="text-gray-500 dark:text-gray-400">{selectedCustomer.email}</p>
@@ -4843,6 +5174,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         onChange={(e) => handleStatusChangeWithTracking(selectedOrder.id, e.target.value as Order['status'])}
                                         className="w-full rounded-lg border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm mb-2"
                                     >
+                                        <option value="Pending Payment">Pending Payment</option>
+                                        <option value="Payment Failed">Payment Failed</option>
                                         <option value="Processing">Processing</option>
                                         <option value="Shipped">Shipped</option>
                                         <option value="Delivered">Delivered</option>
@@ -5106,21 +5439,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Verification Status</label>
                                         <select
+                                            disabled={true}
                                             value={editCustomerData?.verificationStatus || 'pending'}
-                                            onChange={(e) => {
-                                                const newData = { ...editCustomerData!, verificationStatus: e.target.value as User['verificationStatus'] };
-                                                setEditCustomerData(newData);
-                                            }}
-                                            className={`w-full rounded-lg border focus:ring-primary focus:border-primary ${
+                                            className={`w-full rounded-lg border focus:ring-primary focus:border-primary cursor-not-allowed ${
                                                 editCustomerData?.verificationStatus === 'approved' ? 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700' :
                                                 editCustomerData?.verificationStatus === 'rejected' ? 'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-700' :
                                                 'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700'
                                             } dark:bg-gray-800 dark:text-white`}
                                         >
                                             <option value="pending">Pending</option>
-                                            <option value="approved">Approved</option>
+                                            <option value="approved">Approved (Verified)</option>
                                             <option value="rejected">Rejected</option>
                                         </select>
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Automatically set based on order history (Verified if ≥ 1 order exists, even if cancelled).
+                                        </p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Status</label>
@@ -5143,9 +5476,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                             {/* License Information */}
                             {(editCustomerData?.userType === 'dental-doctor' || customerDetailModal?.dentalDoctorInfo?.licenseId) && (
-                                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
+                                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-indigo-200 dark:border-indigo-800">
                                     <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                        <i className="fas fa-certificate text-purple-600"></i> Professional License Information
+                                        <i className="fas fa-certificate text-indigo-600"></i> Professional License Information
                                     </h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
@@ -5158,7 +5491,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     dentalDoctorInfo: { ...prev.dentalDoctorInfo, licenseId: e.target.value }
                                                 } : null)}
                                                 placeholder="Enter license number"
-                                                className="w-full px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-600 dark:bg-gray-800 dark:text-white focus:ring-purple-500 focus:border-purple-500"
+                                                className="w-full px-3 py-2 rounded-lg border border-indigo-300 dark:border-indigo-600 dark:bg-gray-800 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
                                         <div>
@@ -5171,7 +5504,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     dentalDoctorInfo: { ...prev.dentalDoctorInfo, licenseState: e.target.value }
                                                 } : null)}
                                                 placeholder="Enter state"
-                                                className="w-full px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-600 dark:bg-gray-800 dark:text-white focus:ring-purple-500 focus:border-purple-500"
+                                                className="w-full px-3 py-2 rounded-lg border border-indigo-300 dark:border-indigo-600 dark:bg-gray-800 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
                                         <div>
@@ -5184,7 +5517,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     dentalDoctorInfo: { ...prev.dentalDoctorInfo, specialization: e.target.value }
                                                 } : null)}
                                                 placeholder="e.g., Orthodontics"
-                                                className="w-full px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-600 dark:bg-gray-800 dark:text-white focus:ring-purple-500 focus:border-purple-500"
+                                                className="w-full px-3 py-2 rounded-lg border border-indigo-300 dark:border-indigo-600 dark:bg-gray-800 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
                                         <div>
@@ -5197,7 +5530,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                                     dentalDoctorInfo: { ...prev.dentalDoctorInfo, clinicName: e.target.value }
                                                 } : null)}
                                                 placeholder="Enter clinic name"
-                                                className="w-full px-3 py-2 rounded-lg border border-purple-300 dark:border-purple-600 dark:bg-gray-800 dark:text-white focus:ring-purple-500 focus:border-purple-500"
+                                                className="w-full px-3 py-2 rounded-lg border border-indigo-300 dark:border-indigo-600 dark:bg-gray-800 dark:text-white focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
                                     </div>
@@ -5834,7 +6167,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                         <option value="bg-pink-50 dark:bg-gray-800">Pink</option>
                                         <option value="bg-blue-50 dark:bg-gray-800">Blue</option>
                                         <option value="bg-green-50 dark:bg-gray-800">Green</option>
-                                        <option value="bg-purple-50 dark:bg-gray-800">Purple</option>
+                                        <option value="bg-indigo-50 dark:bg-gray-800">Indigo</option>
                                         <option value="bg-orange-50 dark:bg-gray-800">Orange</option>
                                     </select>
                                 </div>

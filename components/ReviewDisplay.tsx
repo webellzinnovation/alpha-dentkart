@@ -276,6 +276,7 @@ const ReviewDisplay: React.FC<ReviewDisplayProps> = ({
               setFilter(e.target.value as any);
               setRatingFilter(null);
             }}
+            aria-label="Filter Reviews"
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
           >
             <option value="all">All Reviews</option>
@@ -287,6 +288,7 @@ const ReviewDisplay: React.FC<ReviewDisplayProps> = ({
             <select
               value={ratingFilter || ''}
               onChange={(e) => setRatingFilter(e.target.value ? parseInt(e.target.value) : null)}
+              aria-label="Filter by Star Rating"
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             >
               <option value="">All Ratings</option>

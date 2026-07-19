@@ -400,6 +400,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUpdateUs
     };
 
 
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh] text-gray-500">
+                <i className="fas fa-spinner fa-spin mr-2"></i> Loading profile...
+            </div>
+        );
+    }
+
     const latestOrder = user.orders?.[0];
 
     return (

@@ -16,7 +16,7 @@ export const csrfProtection = csrf({
 
 // Expose token to client on safe GET requests
 export function sendCsrfToken(req: Request, res: Response, next: NextFunction) {
-  if (req.method === 'GET') {
+  if (req.method === 'GET' && typeof (req as any).csrfToken === 'function') {
     res.cookie('csrf-token', (req as any).csrfToken(), {
       httpOnly: false,
       sameSite: isProd ? 'strict' : 'lax',

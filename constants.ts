@@ -442,7 +442,7 @@ export const EQUIPMENT_PRODUCTS: Product[] = [
     rating: 4.5,
     reviews: 156,
     badge: "Popular",
-    badgeColor: "purple",
+    badgeColor: "orange",
     image: "https://placehold.co/300x300/e2e8f0/DD3B5F?text=Curing+Light",
     attributes: [
       { name: "Color", options: ["Silver", "Black"] }

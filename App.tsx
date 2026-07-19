@@ -709,14 +709,14 @@ function App() {
 
   // Sync URL with state for all pages (Listen to location.pathname changes)
   useEffect(() => {
-    // Wait for data to load before syncing URL
-    if (products.length === 0) return;
-
     const path = location.pathname;
 
     // Product detail: /product/colgate-periogard-toothbrush-38243
     const productMatch = path.match(/^\/product\/(.+)$/);
     if (productMatch) {
+      // Wait for catalog data to load before matching product details
+      if (products.length === 0) return;
+
       const slug = productMatch[1];
       const productId = extractIdFromSlug(slug);
       if (productId) {
@@ -847,13 +847,14 @@ function App() {
       return;
     }
 
-    // Also wait for data to load to prevent race condition
-    if (products.length === 0) return;
-
     let newPath = '/';
 
-    if (currentView === 'product-detail' && selectedProduct) {
-      newPath = `/product/${createUniqueSlug(selectedProduct.name, selectedProduct.id)}`;
+    if (currentView === 'product-detail') {
+      // Also wait for products catalog to load before trying to build product path details
+      if (products.length === 0) return;
+      if (selectedProduct) {
+        newPath = `/product/${createUniqueSlug(selectedProduct.name, selectedProduct.id)}`;
+      }
     } else if (currentView === 'shop') {
       if (shopBrand) {
         const brand = brands.find(b => b.name === shopBrand);

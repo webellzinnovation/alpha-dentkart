@@ -63,7 +63,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                         : 'border-gray-200'
                                     }`}
                             >
-                                <img src={img} alt="" className="w-full h-full object-cover" />
+                                <img src={img} alt={`${product.name} gallery thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
                             </button>
                         ))}
                     </div>

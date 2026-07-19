@@ -44,7 +44,7 @@ function saveStockNotifications(notifications: StockNotification[]): void {
  * Subscribe user to product stock notifications
  */
 export function subscribeToProduct(
-    productId: number,
+    productId: string,
     productName: string,
     userEmail: string,
     userName: string
@@ -94,7 +94,7 @@ export function subscribeToProduct(
  * Unsubscribe user from product stock notifications
  */
 export function unsubscribeFromProduct(
-    productId: number,
+    productId: string,
     userEmail: string
 ): { success: boolean; message: string } {
     try {
@@ -128,7 +128,7 @@ export function unsubscribeFromProduct(
 /**
  * Check if user is subscribed to a product
  */
-export function isSubscribedToProduct(productId: number, userEmail: string): boolean {
+export function isSubscribedToProduct(productId: string, userEmail: string): boolean {
     const notifications = getAllStockNotifications();
     return notifications.some(
         n => n.productId === productId && n.userEmail === userEmail && !n.notified
@@ -138,7 +138,7 @@ export function isSubscribedToProduct(productId: number, userEmail: string): boo
 /**
  * Get all subscribers for a specific product
  */
-export function getSubscribersForProduct(productId: number): StockNotification[] {
+export function getSubscribersForProduct(productId: string): StockNotification[] {
     const notifications = getAllStockNotifications();
     return notifications.filter(n => n.productId === productId && !n.notified);
 }
@@ -146,14 +146,14 @@ export function getSubscribersForProduct(productId: number): StockNotification[]
 /**
  * Get subscriber count for a product
  */
-export function getSubscriberCount(productId: number): number {
+export function getSubscriberCount(productId: string): number {
     return getSubscribersForProduct(productId).length;
 }
 
 /**
  * Mark notifications as sent for a product
  */
-export function markNotificationsAsSent(productId: number): void {
+export function markNotificationsAsSent(productId: string): void {
     const notifications = getAllStockNotifications();
     const updated = notifications.map(n =>
         n.productId === productId ? { ...n, notified: true } : n
@@ -201,7 +201,7 @@ export async function notifyAllSubscribers(
     product: Product,
     smtpSettings: SMTPSettings
 ): Promise<{ success: boolean; sent: number; failed: number }> {
-    const subscribers = getSubscribersForProduct(product.id);
+    const subscribers = getSubscribersForProduct(product.id.toString());
     let sent = 0;
     let failed = 0;
 
@@ -216,7 +216,7 @@ export async function notifyAllSubscribers(
 
     // Mark all as notified
     if (sent > 0) {
-        markNotificationsAsSent(product.id);
+        markNotificationsAsSent(product.id.toString());
     }
 
     return { success: sent > 0, sent, failed };

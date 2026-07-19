@@ -110,15 +110,18 @@ class UXAuditor:
         
         self.files_checked += 1
         filename = os.path.basename(filepath)
+        ext = os.path.splitext(filepath)[1].lower()
+        is_html_or_jsx = ext in ['.html', '.htm', '.jsx', '.tsx', '.vue', '.svelte']
 
         # Pre-calculate common flags
         has_long_text = bool(re.search(r'<p|<div.*class=.*text|article|<span.*text', content, re.IGNORECASE))
-        has_form = bool(re.search(r'<form|<input|password|credit|card|payment', content, re.IGNORECASE))
+        has_form = bool(re.search(r'<form\b|<input\b|<select\b|<textarea\b', content, re.IGNORECASE))
         complex_elements = len(re.findall(r'<input|<select|<textarea|<option', content, re.IGNORECASE))
 
         # --- 1. PSYCHOLOGY LAWS ---
         # Hick's Law
-        nav_items = len(re.findall(r'<NavLink|<Link|<a\s+href|nav-item', content, re.IGNORECASE))
+        # Match <NavLink, <Link, <a href (case sensitive for React components, case insensitive for <a> or classes)
+        nav_items = len(re.findall(r'<NavLink\b|<Link\b', content)) + len(re.findall(r'<a\s+href|nav-item', content, re.IGNORECASE))
         if nav_items > 7:
             self.issues.append(f"[Hick's Law] {filename}: {nav_items} nav items (Max 7)")
         
@@ -208,7 +211,7 @@ class UXAuditor:
             self.warnings.append(f"[Cognitive Load] {filename}: High visual noise detected. Many colors and borders increase cognitive load.")
 
         # Familiar patterns
-        if has_form:
+        if is_html_or_jsx and has_form:
             has_standard_labels = bool(re.search(r'<label|placeholder|aria-label', content, re.IGNORECASE))
             if not has_standard_labels:
                 self.issues.append(f"[Cognitive Load] {filename}: Form inputs without labels. Use <label> for accessibility and clarity.")
@@ -668,13 +671,13 @@ class UXAuditor:
                 self.warnings.append(f"[Motion] {filename}: Many animations ({total_animations}). Ensure majority serve functional purpose (feedback, guidance), not decoration.")
 
         # --- 7. ACCESSIBILITY ---
-        if re.search(r'<img(?![^>]*alt=)[^>]*>', content):
+        if is_html_or_jsx and re.search(r'<img(?![^>]*alt=)[^>]*>', content):
             self.issues.append(f"[Accessibility] {filename}: Missing img alt text")
 
     def audit_directory(self, directory: str) -> None:
         extensions = {'.tsx', '.jsx', '.html', '.vue', '.svelte', '.css'}
         for root, dirs, files in os.walk(directory):
-            dirs[:] = [d for d in dirs if d not in {'node_modules', '.git', 'dist', 'build', '.next'}]
+            dirs[:] = [d for d in dirs if d not in {'node_modules', '.git', 'dist', 'build', '.next', 'android', 'ios'}]
             for file in files:
                 if Path(file).suffix in extensions:
                     self.audit_file(os.path.join(root, file))

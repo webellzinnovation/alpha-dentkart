@@ -13,19 +13,8 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
   wishlistRef.current = wishlist;
 
   const lastSyncedRef = useRef<string>('');
-
-  // Use uid (from User type), not id
+  const prevUserIdRef = useRef<string | null>(null);
   const userId = user?.id ?? null;
-
-  // Reset on user change — clear stale data from previous user
-  useEffect(() => {
-    if (userId) {
-      localStorage.removeItem('alpha_wishlist');
-      setWishlist([]);
-      setHasLoadedRemote(false);
-      lastSyncedRef.current = '';
-    }
-  }, [userId]);
 
   // Persist to LocalStorage on every change
   useEffect(() => {
@@ -46,9 +35,29 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
     }
   }, [user, isAdmin, hasLoadedRemote]);
 
-  // Load from backend on login
+  // Load from backend on login & tab focus
   useEffect(() => {
-    if (!user || isAdmin || products.length === 0) return;
+    if (isAdmin || products.length === 0) return;
+
+    // Handle logout or user switch cleanup
+    if (!userId) {
+      if (prevUserIdRef.current !== null) {
+        setWishlist([]);
+        localStorage.removeItem('alpha_wishlist');
+        setHasLoadedRemote(false);
+        lastSyncedRef.current = '';
+        prevUserIdRef.current = null;
+      }
+      return;
+    }
+
+    // If switching between different authenticated users, don't merge - just reset first
+    if (prevUserIdRef.current && prevUserIdRef.current !== userId) {
+      setWishlist([]);
+      localStorage.removeItem('alpha_wishlist');
+      setHasLoadedRemote(false);
+      lastSyncedRef.current = '';
+    }
 
     let cancelled = false;
     const loadRemoteWishlist = async () => {
@@ -57,26 +66,42 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
         if (cancelled) return;
         const remoteItems = remoteWishlist.items || [];
         const remoteIds = new Set(remoteItems);
+        const localWishlist = wishlistRef.current;
 
-        setWishlist(prevWishlist => {
-          const remoteProducts = products.filter(p => remoteIds.has(p.id));
-          const localOnly = prevWishlist.filter(p => !remoteIds.has(p.id));
-          return [...remoteProducts, ...localOnly];
-        });
+        const remoteProducts = products.filter(p => remoteIds.has(p.id));
+        let merged = [...remoteProducts];
+
+        // Transitioning from guest (null) to logged-in user: merge local guest items
+        if (!prevUserIdRef.current && localWishlist.length > 0) {
+          localWishlist.forEach((lp) => {
+            if (!remoteIds.has(lp.id)) {
+              merged.push(lp);
+            }
+          });
+
+          // Sync merged wishlist to server immediately
+          const mergedIds = merged.map(p => p.id);
+          await wishlistAPI.sync(mergedIds).catch(err => console.error('Merged wishlist sync failed:', err));
+          lastSyncedRef.current = mergedIds.sort().join(',');
+        }
+
+        if (!cancelled) {
+          setWishlist(merged);
+          setHasLoadedRemote(true);
+          prevUserIdRef.current = userId;
+        }
       } catch (error) {
         console.error('Failed to load remote wishlist:', error);
-      } finally {
-        if (!cancelled) setHasLoadedRemote(true);
       }
     };
     loadRemoteWishlist();
 
     return () => { cancelled = true; };
-  }, [userId, isAdmin, products.length > 0]);
+  }, [userId, isAdmin, products.length]);
 
   // Re-fetch remote wishlist when tab regains focus (cross-device sync)
   useEffect(() => {
-    if (!user || isAdmin) return;
+    if (!userId || isAdmin) return;
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState !== 'visible' || products.length === 0) return;
