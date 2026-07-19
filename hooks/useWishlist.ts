@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { toast } from 'sonner';
 import { Product, User } from '../types';
 import { wishlistAPI } from '../utils/api';
 
@@ -37,7 +38,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
 
   // Load from backend on login & tab focus
   useEffect(() => {
-    if (isAdmin || products.length === 0) return;
+    if (isAdmin) return;
 
     // Handle logout or user switch cleanup
     if (!userId) {
@@ -67,6 +68,33 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
         const remoteItems = remoteWishlist.items || [];
         const remoteIds = new Set(remoteItems.map(String));
         const localWishlist = wishlistRef.current;
+
+        // If products haven't loaded yet, store raw IDs and resolve later
+        if (products.length === 0) {
+          if (!cancelled) {
+            // Store remote IDs as placeholder products so they survive until products load
+            const placeholderProducts = remoteItems.map((id: string | number) => ({
+              id: Number(id) || 0,
+              name: 'Loading...',
+              price: 0,
+              originalPrice: 0,
+              image: '',
+              images: [],
+              category: '',
+              brand: '',
+              stock: 0,
+              rating: 0,
+              reviews: 0,
+              description: '',
+              features: [],
+              specifications: {},
+            } as Product));
+            setWishlist(placeholderProducts);
+            setHasLoadedRemote(true);
+            prevUserIdRef.current = userId;
+          }
+          return;
+        }
 
         const remoteProducts = products.filter(p => remoteIds.has(String(p.id)));
         let merged = [...remoteProducts];
@@ -115,7 +143,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
     if (!userId || isAdmin) return;
 
     const handleVisibilityChange = async () => {
-      if (document.visibilityState !== 'visible' || products.length === 0) return;
+      if (document.visibilityState !== 'visible') return;
 
       try {
         const remoteWishlist = await wishlistAPI.get().catch(() => ({ items: [] }));
@@ -154,6 +182,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
   // Toggle wishlist item
   const toggleWishlist = useCallback(async (product: Product) => {
     const exists = wishlistRef.current.some(item => String(item.id) === String(product.id));
+    const previousWishlist = wishlistRef.current;
 
     // Update local state immediately (optimistic)
     setWishlist(prev => {
@@ -163,7 +192,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
       return [...prev, product];
     });
 
-    // Persist to backend immediately
+    // Persist to backend immediately — rollback on failure
     try {
       if (exists) {
         await wishlistAPI.remove(product.id);
@@ -172,6 +201,10 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
       }
     } catch (error) {
       console.error('Wishlist API call failed:', error);
+      // Rollback to previous state
+      setWishlist(previousWishlist);
+      toast.error('Failed to update wishlist. Please try again.');
+      return;
     }
 
     // Mark as needing re-sync so next visibility change picks it up

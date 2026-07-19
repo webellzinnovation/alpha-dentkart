@@ -1365,6 +1365,23 @@ function App() {
       setIsAdmin(user.role === 'admin');
       localStorage.setItem('isAdmin', user.role === 'admin' ? 'true' : 'false');
 
+      // Explicitly fetch wishlist from backend after login
+      // (useWishlist hook also handles this, but this ensures it fires immediately)
+      try {
+        const { wishlistAPI: wpAPI } = await import('./utils/api');
+        const remoteWishlist = await wpAPI.get().catch(() => ({ items: [] }));
+        const remoteItems = remoteWishlist.items || [];
+        if (remoteItems.length > 0 && products.length > 0) {
+          const remoteIds = new Set(remoteItems.map(String));
+          const remoteProducts = products.filter(p => remoteIds.has(String(p.id)));
+          if (remoteProducts.length > 0) {
+            setWishlist(remoteProducts);
+          }
+        }
+      } catch {
+        // Silently fail — useWishlist hook will handle the load
+      }
+
       // Navigate to appropriate dashboard
       if (user.role === 'admin') {
         setCurrentView('admin-dashboard');
