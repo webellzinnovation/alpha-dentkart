@@ -74,7 +74,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
         // Transitioning from guest (null) to logged-in user: merge local guest items
         if (!prevUserIdRef.current && localWishlist.length > 0) {
           localWishlist.forEach((lp) => {
-            if (!remoteIds.has(lp.id)) {
+            if (!remoteIds.has(String(lp.id))) {
               merged.push(lp);
             }
           });
@@ -85,8 +85,19 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
           lastSyncedRef.current = mergedIds.sort().join(',');
         }
 
+        // Enforce strict uniqueness by product ID
+        const uniqueMerged = [];
+        const seenIds = new Set();
+        for (const item of merged) {
+          const idStr = String(item.id);
+          if (!seenIds.has(idStr)) {
+            seenIds.add(idStr);
+            uniqueMerged.push(item);
+          }
+        }
+
         if (!cancelled) {
-          setWishlist(merged);
+          setWishlist(uniqueMerged);
           setHasLoadedRemote(true);
           prevUserIdRef.current = userId;
         }
@@ -114,7 +125,19 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
         setWishlist(prevWishlist => {
           const remoteProducts = products.filter(p => remoteIds.has(String(p.id)));
           const localOnly = prevWishlist.filter(p => !remoteIds.has(String(p.id)));
-          return [...remoteProducts, ...localOnly];
+          const combined = [...remoteProducts, ...localOnly];
+          
+          // Enforce strict uniqueness by product ID
+          const uniqueCombined = [];
+          const seenIds = new Set();
+          for (const item of combined) {
+            const idStr = String(item.id);
+            if (!seenIds.has(idStr)) {
+              seenIds.add(idStr);
+              uniqueCombined.push(item);
+            }
+          }
+          return uniqueCombined;
         });
 
         // Flush pending sync
@@ -130,12 +153,12 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
 
   // Toggle wishlist item
   const toggleWishlist = useCallback(async (product: Product) => {
-    const exists = wishlistRef.current.some(item => item.id === product.id);
+    const exists = wishlistRef.current.some(item => String(item.id) === String(product.id));
 
     // Update local state immediately (optimistic)
     setWishlist(prev => {
       if (exists) {
-        return prev.filter(item => item.id !== product.id);
+        return prev.filter(item => String(item.id) !== String(product.id));
       }
       return [...prev, product];
     });

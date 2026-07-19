@@ -51,13 +51,17 @@ export async function addToWishlist(req: AuthRequest, res: Response) {
       items = doc.data()?.items || [];
     }
 
+    // Convert everything to strings to prevent string-vs-number duplicate co-existence
+    const itemsStr = items.map(String);
+    const productIdStr = String(productId);
+
     // Check if product already in wishlist
-    if (!items.includes(productId)) {
-      items.push(productId);
-      await wishlistRef.set({ items, updatedAt: new Date().toISOString() }, { merge: true });
+    if (!itemsStr.includes(productIdStr)) {
+      itemsStr.push(productIdStr);
+      await wishlistRef.set({ items: itemsStr, updatedAt: new Date().toISOString() }, { merge: true });
     }
 
-    res.json({ message: 'Added to wishlist', items });
+    res.json({ message: 'Added to wishlist', items: itemsStr });
   } catch (error: any) {
     logger.error('Error adding to wishlist:', error);
     res.status(500).json({ error: 'Failed to add to wishlist: ' + error.message });
@@ -81,11 +85,13 @@ export async function removeFromWishlist(req: AuthRequest, res: Response) {
     }
 
     let items = doc.data()?.items || [];
-    items = items.filter((id: string) => id !== productId);
+    const itemsStr = items.map(String);
+    const productIdStr = String(productId);
+    const filteredItems = itemsStr.filter((id: string) => id !== productIdStr);
 
-    await wishlistRef.update({ items, updatedAt: new Date().toISOString() });
+    await wishlistRef.update({ items: filteredItems, updatedAt: new Date().toISOString() });
 
-    res.json({ message: 'Removed from wishlist', items });
+    res.json({ message: 'Removed from wishlist', items: filteredItems });
   } catch (error: any) {
     logger.error('Error removing from wishlist:', error);
     res.status(500).json({ error: 'Failed to remove from wishlist: ' + error.message });
@@ -105,13 +111,15 @@ export async function syncWishlist(req: AuthRequest, res: Response) {
       return res.status(400).json({ error: 'Items must be an array of product IDs' });
     }
 
+    // Deduplicate and convert to unique string array
+    const cleanItems = Array.from(new Set(items.map(String)));
     const wishlistRef = db.collection('wishlists').doc(userId);
     await wishlistRef.set({ 
-      items, 
+      items: cleanItems, 
       updatedAt: new Date().toISOString() 
     }, { merge: true });
 
-    res.json({ message: 'Wishlist synced successfully', items });
+    res.json({ message: 'Wishlist synced successfully', items: cleanItems });
   } catch (error: any) {
     logger.error('Error syncing wishlist:', error);
     res.status(500).json({ error: 'Failed to sync wishlist: ' + error.message });
