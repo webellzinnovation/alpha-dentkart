@@ -173,7 +173,7 @@ export async function createReview(req: AuthenticatedRequest, res: Response) {
         for (const doc of ordersSnapshot.docs) {
             const orderData = doc.data();
             const items = orderData.items || [];
-            if (items.some((item: any) => item.productId === productId)) {
+            if (items.some((item: any) => String(item.productId) === String(productId))) {
                 hasPurchased = true;
                 orderId = doc.id;
                 break;
