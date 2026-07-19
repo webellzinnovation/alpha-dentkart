@@ -58,7 +58,7 @@ export default tseslint.config(
     rules: {
       'no-undef': 'off',
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-require-imports': 'off',
@@ -74,7 +74,7 @@ export default tseslint.config(
       'no-cond-assign': 'off',
       'getter-return': 'off',
       'no-useless-escape': 'off',
-      'prefer-const': 'off'
+      'prefer-const': 'warn'
     }
   },
   {
@@ -84,8 +84,8 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      'react-hooks/rules-of-hooks': 'off',
-      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': 'off'
     }
   }

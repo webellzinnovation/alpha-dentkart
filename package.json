@@ -10,7 +10,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "vitest"
+    "lint:fix": "eslint . --fix",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit",
+    "test:backend": "cd functions && vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.2",
