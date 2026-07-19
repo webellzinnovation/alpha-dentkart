@@ -65,10 +65,10 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
         const remoteWishlist = await wishlistAPI.get().catch(() => ({ items: [] }));
         if (cancelled) return;
         const remoteItems = remoteWishlist.items || [];
-        const remoteIds = new Set(remoteItems);
+        const remoteIds = new Set(remoteItems.map(String));
         const localWishlist = wishlistRef.current;
 
-        const remoteProducts = products.filter(p => remoteIds.has(p.id));
+        const remoteProducts = products.filter(p => remoteIds.has(String(p.id)));
         let merged = [...remoteProducts];
 
         // Transitioning from guest (null) to logged-in user: merge local guest items
@@ -109,11 +109,11 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
       try {
         const remoteWishlist = await wishlistAPI.get().catch(() => ({ items: [] }));
         const remoteItems = remoteWishlist.items || [];
-        const remoteIds = new Set(remoteItems);
+        const remoteIds = new Set(remoteItems.map(String));
 
         setWishlist(prevWishlist => {
-          const remoteProducts = products.filter(p => remoteIds.has(p.id));
-          const localOnly = prevWishlist.filter(p => !remoteIds.has(p.id));
+          const remoteProducts = products.filter(p => remoteIds.has(String(p.id)));
+          const localOnly = prevWishlist.filter(p => !remoteIds.has(String(p.id)));
           return [...remoteProducts, ...localOnly];
         });
 
