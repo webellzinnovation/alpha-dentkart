@@ -721,6 +721,10 @@ function App() {
         if (product) {
           setSelectedProduct(product);
           setCurrentView('product-detail');
+          setRecentlyViewed(prev => {
+            const filtered = prev.filter(p => p.id !== product.id);
+            return [product, ...filtered].slice(0, 6);
+          });
           return;
         } else if (products.length > 0) {
           // Product not in loaded array - fetch it on-demand from API
@@ -762,6 +766,10 @@ function App() {
                 };
                 setSelectedProduct(transformedProduct);
                 setCurrentView('product-detail');
+                setRecentlyViewed(prev => {
+                  const filtered = prev.filter(p => p.id !== Number(productId));
+                  return [transformedProduct, ...filtered].slice(0, 6);
+                });
               } else {
                 navigate('/shop');
               }
@@ -1048,6 +1056,39 @@ function App() {
       return () => clearTimeout(syncTimeout);
     }
   }, [recentlyViewed, user?.id, isDataLoading]);
+
+  // Re-fetch recentlyViewed from server when tab regains focus (cross-device sync)
+  useEffect(() => {
+    if (!user || isAdmin || isDataLoading) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return;
+
+      try {
+        const { authAPI } = await import('./utils/api');
+        const response = await authAPI.me();
+        if (response.user?.recentlyViewed && Array.isArray(response.user.recentlyViewed)) {
+          setRecentlyViewed(prev => {
+            const serverItems = response.user.recentlyViewed;
+            const localOnly = prev.filter(p => !serverItems.some((s: any) => s.id === p.id));
+            const combined = [...serverItems, ...localOnly];
+            const seen = new Set();
+            const unique = combined.filter((item: any) => {
+              if (seen.has(item.id)) return false;
+              seen.add(item.id);
+              return true;
+            });
+            return unique.slice(0, 6);
+          });
+        }
+      } catch (error) {
+        console.error('Background recentlyViewed re-fetch failed:', error);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user?.id, isAdmin, isDataLoading]);
 
   // Sync orders to user (for customer dashboard)
   useEffect(() => {

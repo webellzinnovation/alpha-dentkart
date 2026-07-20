@@ -9,11 +9,9 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [hasLoadedRemote, setHasLoadedRemote] = useState(false);
   const wishlistRef = useRef(wishlist);
   wishlistRef.current = wishlist;
 
-  const lastSyncedRef = useRef<string>('');
   const prevUserIdRef = useRef<string | null>(null);
   const productsRef = useRef(products);
   productsRef.current = products;
@@ -24,21 +22,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
     localStorage.setItem('alpha_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
-  // Sync full wishlist to backend (only when list actually changed from user action)
-  const syncToBackend = useCallback(async () => {
-    if (!user || isAdmin || !hasLoadedRemote) return;
-    const currentIds = wishlistRef.current.map(p => p.id).sort().join(',');
-    if (currentIds === lastSyncedRef.current) return; // already synced
-    lastSyncedRef.current = currentIds;
-    try {
-      await wishlistAPI.sync(wishlistRef.current.map(p => p.id));
-    } catch (error) {
-      console.error('Wishlist background sync failed:', error);
-      lastSyncedRef.current = ''; // reset so next change retries
-    }
-  }, [user, isAdmin, hasLoadedRemote]);
-
-  // Load from backend on login & tab focus
+  // Load from backend on login
   useEffect(() => {
     if (isAdmin) return;
 
@@ -47,19 +31,15 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
       if (prevUserIdRef.current !== null) {
         setWishlist([]);
         localStorage.removeItem('alpha_wishlist');
-        setHasLoadedRemote(false);
-        lastSyncedRef.current = '';
         prevUserIdRef.current = null;
       }
       return;
     }
 
-    // If switching between different authenticated users, don't merge - just reset first
+    // If switching between different authenticated users, reset first
     if (prevUserIdRef.current && prevUserIdRef.current !== userId) {
       setWishlist([]);
       localStorage.removeItem('alpha_wishlist');
-      setHasLoadedRemote(false);
-      lastSyncedRef.current = '';
     }
 
     let cancelled = false;
@@ -71,10 +51,9 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
         const remoteIds = new Set(remoteItems.map(String));
         const localWishlist = wishlistRef.current;
 
-        // If products haven't loaded yet, store raw IDs and resolve later
-        if (products.length === 0) {
+        // If products haven't loaded yet, store raw IDs as placeholders
+        if (productsRef.current.length === 0) {
           if (!cancelled) {
-            // Store remote IDs as placeholder products so they survive until products load
             const placeholderProducts = remoteItems.map((id: string | number) => ({
               id: Number(id) || 0,
               name: 'Loading...',
@@ -92,9 +71,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
               specifications: {},
             } as Product));
             setWishlist(placeholderProducts);
-            setHasLoadedRemote(true);
             prevUserIdRef.current = userId;
-            lastSyncedRef.current = placeholderProducts.map(p => p.id).sort().join(',');
           }
           return;
         }
@@ -113,7 +90,6 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
           // Sync merged wishlist to server immediately
           const mergedIds = merged.map(p => p.id);
           await wishlistAPI.sync(mergedIds).catch(err => console.error('Merged wishlist sync failed:', err));
-          lastSyncedRef.current = mergedIds.sort().join(',');
         }
 
         // Enforce strict uniqueness by product ID
@@ -129,10 +105,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
 
         if (!cancelled) {
           setWishlist(uniqueMerged);
-          setHasLoadedRemote(true);
           prevUserIdRef.current = userId;
-          // Initialize lastSyncedRef so syncToBackend doesn't overwrite with stale data
-          lastSyncedRef.current = uniqueMerged.map(p => p.id).sort().join(',');
         }
       } catch (error) {
         console.error('Failed to load remote wishlist:', error);
@@ -159,7 +132,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
           const remoteProducts = productsRef.current.filter(p => remoteIds.has(String(p.id)));
           const localOnly = prevWishlist.filter(p => !remoteIds.has(String(p.id)));
           const combined = [...remoteProducts, ...localOnly];
-          
+
           // Enforce strict uniqueness by product ID
           const uniqueCombined = [];
           const seenIds = new Set();
@@ -172,11 +145,6 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
           }
           return uniqueCombined;
         });
-
-        // Individual add/remove calls in toggleWishlist already push changes to server.
-        // Do NOT call syncToBackend() here — wishlistRef.current is stale at this point
-        // (React hasn't re-rendered yet after setWishlist), so it would overwrite
-        // the server with stale local data, undoing the merge above.
       } catch (error) {
         console.error('Background wishlist re-fetch failed:', error);
       }
@@ -211,11 +179,7 @@ export const useWishlist = (user: User | null, isAdmin: boolean, products: Produ
       // Rollback to previous state
       setWishlist(previousWishlist);
       toast.error('Failed to update wishlist. Please try again.');
-      return;
     }
-
-    // Mark as needing re-sync so next visibility change picks it up
-    lastSyncedRef.current = '';
   }, []);
 
   const isInWishlist = useCallback((id: string | number) => {
