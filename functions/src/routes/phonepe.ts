@@ -1,10 +1,12 @@
 import { Router } from 'express';
+import { validateBody } from '../middleware/validate';
+import { phonepeInitSchema } from '../utils/validation';
 import { initiatePhonePePayment, handlePhonePeCallback, checkPhonePeCallback } from '../controllers/phonepeController';
 
 const router = Router();
 
 // Public / Authenticated: Initiate hosted checkout payment redirect
-router.post('/initiate', initiatePhonePePayment);
+router.post('/initiate', validateBody(phonepeInitSchema), initiatePhonePePayment);
 
 // Public Webhook: PhonePe payment verification callback
 router.post('/callback', handlePhonePeCallback);

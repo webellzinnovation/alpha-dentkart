@@ -1,4 +1,6 @@
 import express from 'express';
+import { validateBody } from '../middleware/validate';
+import { verificationSubmitSchema, verificationReviewSchema } from '../utils/validation';
 import {
   submitVerification,
   getUserVerifications,
@@ -17,7 +19,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 const router = express.Router();
 
 // User routes
-router.post('/submit', authenticateToken, uploadVerificationFile, submitVerification);
+router.post('/submit', authenticateToken, uploadVerificationFile, validateBody(verificationSubmitSchema), submitVerification);
 router.get('/my-verifications', authenticateToken, getUserVerifications);
 router.get('/:id', authenticateToken, getVerificationById);
 router.get('/:id/audit-logs', authenticateToken, getVerificationAuditLogs);
@@ -25,14 +27,14 @@ router.delete('/:id', authenticateToken, deleteVerification);
 
 // Frontend hook aliases
 router.get('/documents', authenticateToken, getUserVerifications);
-router.post('/documents', authenticateToken, uploadVerificationFile, submitVerification);
+router.post('/documents', authenticateToken, uploadVerificationFile, validateBody(verificationSubmitSchema), submitVerification);
 router.get('/documents/:id', authenticateToken, getVerificationById);
 router.delete('/documents/:id', authenticateToken, deleteVerification);
 
 // Admin routes
 router.get('/', authenticateToken, getAllVerifications);
 router.get('/user/:userId', authenticateToken, getVerificationsByUserId);
-router.put('/:id/status', authenticateToken, updateVerificationStatus);
+router.put('/:id/status', authenticateToken, validateBody(verificationReviewSchema), updateVerificationStatus);
 router.get('/admin/stats', authenticateToken, getVerificationStats);
 router.get('/admin/audit-logs', authenticateToken, getAllVerificationAuditLogs);
 

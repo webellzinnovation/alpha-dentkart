@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { validateBody } from '../middleware/validate';
+import { heroSlideSchema } from '../utils/validation';
 import {
     getAllHeroSlides,
     createHeroSlide,
@@ -14,8 +16,8 @@ const router = Router();
 router.get('/', getAllHeroSlides);
 
 // Admin routes
-router.post('/', authenticateToken, requireAdmin, createHeroSlide);
-router.patch('/:id', authenticateToken, requireAdmin, updateHeroSlide);
+router.post('/', authenticateToken, requireAdmin, validateBody(heroSlideSchema), createHeroSlide);
+router.patch('/:id', authenticateToken, requireAdmin, validateBody(heroSlideSchema), updateHeroSlide);
 router.delete('/:id', authenticateToken, requireAdmin, deleteHeroSlide);
 router.patch('/reorder/batch', authenticateToken, requireAdmin, reorderHeroSlides);
 

@@ -157,6 +157,17 @@ app.use(sendCsrfToken);
 app.use(sanitizeInput);
 app.use(requestLogger);
 
+// Health check endpoint
+app.get(['/health', '/api/health', '/api/v1/health'], (_req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        service: 'alpha-dentkart-api',
+        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env.NODE_ENV || 'production'
+    });
+});
+
 // Initialize error tracker
 errorTracker.init();
 
@@ -174,17 +185,6 @@ app.get('/', (req, res) => {
         version: 'v1',
         health: '/health',
         docs: '/api/docs'
-    });
-});
-
-// Health check
-app.get(['/health', '/api/health', '/api/v1/health'], (req, res) => {
-    res.json({
-        status: 'ok',
-        message: 'Secure backend is running',
-        environment: process.env.NODE_ENV,
-        database: 'Firebase Firestore',
-        apiVersion: 'v1',
     });
 });
 

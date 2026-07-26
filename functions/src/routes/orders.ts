@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { validateBody } from '../middleware/validate';
+import { updateOrderSchema } from '../utils/validation';
 import { createOrder, getMyOrders, getAllOrders, updateOrderStatus, deleteOrder, createRazorpayOrder } from '../controllers/orderController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { authLimiter } from '../middleware/rateLimiter';
@@ -15,7 +17,7 @@ router.post('/razorpay-order', authLimiter, sanitizeInput, authenticateToken, cr
 
 // Admin routes — all protected (rate limited, sanitized)
 router.get('/all', authenticateToken, requireAdmin, getAllOrders);
-router.patch('/:id/status', authLimiter, sanitizeInput, authenticateToken, requireAdmin, updateOrderStatus);
+router.patch('/:id/status', authLimiter, sanitizeInput, authenticateToken, requireAdmin, validateBody(updateOrderSchema), updateOrderStatus);
 router.delete('/:id', authLimiter, sanitizeInput, authenticateToken, requireAdmin, deleteOrder);
 
 export default router;

@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { validateBody } from '../middleware/validate';
+import { promotionalTileSchema } from '../utils/validation';
 import {
     getAllPromotionalTiles,
     createPromotionalTile,
@@ -14,8 +16,8 @@ const router = Router();
 router.get('/', getAllPromotionalTiles);
 
 // Admin routes
-router.post('/', authenticateToken, requireAdmin, createPromotionalTile);
-router.patch('/:id', authenticateToken, requireAdmin, updatePromotionalTile);
+router.post('/', authenticateToken, requireAdmin, validateBody(promotionalTileSchema), createPromotionalTile);
+router.patch('/:id', authenticateToken, requireAdmin, validateBody(promotionalTileSchema), updatePromotionalTile);
 router.delete('/:id', authenticateToken, requireAdmin, deletePromotionalTile);
 router.patch('/reorder/batch', authenticateToken, requireAdmin, reorderPromotionalTiles);
 

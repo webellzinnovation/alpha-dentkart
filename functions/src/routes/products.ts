@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { validateBody } from '../middleware/validate';
+import { createProductSchema, updateProductSchema } from '../utils/validation';
 import {
     getAllProducts,
     getProductById,
@@ -17,9 +19,9 @@ router.get('/', optionalAuth, getAllProducts);
 router.get('/:id', optionalAuth, getProductById);
 
 // Admin routes (rate limited, sanitized)
-router.post('/', authLimiter, sanitizeInput, authenticateToken, requireAdmin, createProduct);
-router.put('/:id', authLimiter, sanitizeInput, authenticateToken, requireAdmin, updateProduct);
-router.patch('/:id', authLimiter, sanitizeInput, authenticateToken, requireAdmin, updateProduct);
+router.post('/', authLimiter, sanitizeInput, authenticateToken, requireAdmin, validateBody(createProductSchema), createProduct);
+router.put('/:id', authLimiter, sanitizeInput, authenticateToken, requireAdmin, validateBody(updateProductSchema), updateProduct);
+router.patch('/:id', authLimiter, sanitizeInput, authenticateToken, requireAdmin, validateBody(updateProductSchema), updateProduct);
 router.delete('/:id', authLimiter, sanitizeInput, authenticateToken, requireAdmin, deleteProduct);
 
 export default router;
