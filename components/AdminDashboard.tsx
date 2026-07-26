@@ -1229,7 +1229,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
         } catch (err: any) {
             console.error('Products sync error:', err);
-            const errMsg = err?.response?.data?.error || err?.message || 'Products sync failed.';
+            const errMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Products sync failed.';
             toast.error(errMsg, { id: toastId });
             addLog(`❌ Products sync failed: ${errMsg}`);
         } finally {
@@ -1259,7 +1259,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
         } catch (err: any) {
             console.error('Orders sync error:', err);
-            const errMsg = err?.response?.data?.error || err?.message || 'Orders sync failed.';
+            const errMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Orders sync failed.';
             toast.error(errMsg, { id: toastId });
             addLog(`❌ Orders sync failed: ${errMsg}`);
         } finally {
@@ -1289,7 +1289,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
         } catch (err: any) {
             console.error('Customers sync error:', err);
-            const errMsg = err?.response?.data?.error || err?.message || 'Customers sync failed.';
+            const errMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Customers sync failed.';
             toast.error(errMsg, { id: toastId });
             addLog(`❌ Customers sync failed: ${errMsg}`);
         } finally {
@@ -1331,7 +1331,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             }
         } catch (err: any) {
             console.error('Full sync error:', err);
-            const errMsg = err?.response?.data?.error || err?.message || 'Full sync failed.';
+            const errMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Full sync failed.';
             toast.error(errMsg, { id: toastId });
             addLog(`❌ Full sync failed: ${errMsg}`);
         } finally {
