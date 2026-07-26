@@ -51,6 +51,11 @@ jobs:
       - name: Build frontend
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
+          VITE_API_URL: ${{ secrets.VITE_API_URL || '/api/v1' }}
+          VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
         run: npm run build
 
       - name: Archive production artifacts
@@ -81,6 +86,12 @@ jobs:
 
       - name: Run backend tests
         working-directory: ./functions
+        env:
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-minimum-64-characters-long-here
+          ADMIN_SECRET: test-admin-secret-for-ci
+          RAZORPAY_KEY_ID: rzp_test_ci
+          RAZORPAY_KEY_SECRET: ci_test_secret
+          NODE_ENV: test
         run: npm test
 
   deploy:

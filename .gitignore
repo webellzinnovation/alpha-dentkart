@@ -17,12 +17,16 @@ firebase-service-account.json
 service-account-file.json
 alphadentkart-*-firebase-adminsdk-*.json
 cookies.txt
+functions/.env
+functions/.env.local
 
 # Firebase logs and cache
 firebase-debug.log
 firebase-debug.*.log
 .firebase/
 .firebaserc
+*.bundle
+backup-*.bundle
 
 # IDEs
 .vscode/

@@ -194,6 +194,7 @@ export interface Order {
 
 export interface User {
   id: string;
+  uid?: string; // Alias for Firebase Auth UID compatibility
   name: string;
   email: string;
   phone: string;
@@ -242,6 +243,7 @@ export interface User {
   registrationDate: string;
   isVerified: boolean;
   verificationStatus: 'pending' | 'approved' | 'rejected';
+  recentlyViewed?: number[]; // Product IDs for cross-device sync
   notes?: string;
 }
 

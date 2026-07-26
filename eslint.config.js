@@ -59,20 +59,20 @@ export default tseslint.config(
       'no-undef': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'warn',
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/ban-ts-comment': 'warn',
       'no-use-before-define': 'off',
       '@typescript-eslint/no-use-before-define': 'off',
       'no-case-declarations': 'off',
       'no-useless-assignment': 'off',
-      'no-empty': 'off',
-      'no-prototype-builtins': 'off',
-      'no-unsafe-finally': 'off',
+      'no-empty': 'warn',
+      'no-prototype-builtins': 'warn',
+      'no-unsafe-finally': 'warn',
       'no-unexpected-multiline': 'off',
-      'no-cond-assign': 'off',
-      'getter-return': 'off',
+      'no-cond-assign': 'warn',
+      'getter-return': 'warn',
       'no-useless-escape': 'off',
       'prefer-const': 'warn'
     }
@@ -84,7 +84,7 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': 'off'
     }

@@ -717,6 +717,7 @@ export const ALL_PRODUCTS: Product[] = [
 ];
 
 export const MOCK_USER: User = {
+  id: "mock-user-123",
   uid: "mock-user-123",
   name: "Dr. Anjali Sharma",
   email: "anjali.sharma@example.com",

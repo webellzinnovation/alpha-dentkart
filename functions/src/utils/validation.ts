@@ -121,3 +121,193 @@ export const createOrderSchema = z.object({
     couponDiscount: z.number().optional(),
     whatsappOptIn: z.boolean().optional(),
 });
+
+// Product Schemas
+export const createProductSchema = z.object({
+    name: z.string().min(1, 'Product name is required'),
+    category: z.string().min(1, 'Category is required'),
+    price: z.number().min(0, 'Price must be non-negative'),
+    originalPrice: z.number().min(0).optional(),
+    brand: z.string().optional(),
+    description: z.string().optional(),
+    stock: z.number().int().min(0).optional(),
+    image: z.string().optional(),
+    images: z.array(z.string()).optional(),
+    features: z.array(z.string()).optional(),
+    weight: z.string().optional(),
+    seoTitle: z.string().max(60).optional(),
+    seoDescription: z.string().max(160).optional(),
+});
+
+export const updateProductSchema = createProductSchema.partial();
+
+// Category Schemas
+export const createCategorySchema = z.object({
+    name: z.string().min(1, 'Category name is required'),
+    slug: z.string().optional(),
+    image: z.string().optional(),
+    iconClass: z.string().optional(),
+});
+
+export const updateCategorySchema = createCategorySchema.partial();
+
+// Brand Schemas
+export const createBrandSchema = z.object({
+    name: z.string().min(1, 'Brand name is required'),
+    logo: z.string().optional(),
+    description: z.string().optional(),
+    isFeatured: z.boolean().optional(),
+    featuredOrder: z.number().int().optional(),
+});
+
+export const updateBrandSchema = createBrandSchema.partial();
+
+// Order Update Schema
+export const updateOrderSchema = z.object({
+    status: z.enum(['Pending Payment', 'Payment Failed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Initiated', 'Return Approved', 'Return Completed', 'Return Rejected']).optional(),
+    trackingNumber: z.string().optional(),
+    courierName: z.string().optional(),
+    estimatedDelivery: z.string().optional(),
+    notes: z.string().optional(),
+});
+
+// AI Schemas
+export const aiPromptSchema = z.object({
+    message: z.string().min(1, 'Message is required').max(5000, 'Message too long'),
+    sessionId: z.string().optional(),
+    context: z.string().optional(),
+});
+
+// PhonePe Schemas
+export const phonepeInitSchema = z.object({
+    orderId: z.string().min(1, 'Order ID is required'),
+    amount: z.number().min(1, 'Amount must be positive'),
+    customerPhone: z.string().optional(),
+    redirectUrl: z.string().url().optional(),
+});
+
+// Verification Schemas
+export const verificationSubmitSchema = z.object({
+    documentType: z.enum(['license', 'student_id', 'gst_certificate', 'business_registration']),
+    documentNumber: z.string().min(1, 'Document number is required'),
+    notes: z.string().optional(),
+});
+
+export const verificationReviewSchema = z.object({
+    status: z.enum(['approved', 'rejected']),
+    reviewNotes: z.string().optional(),
+});
+
+// Settings Schemas
+export const updateSettingsSchema = z.object({
+    storeName: z.string().optional(),
+    storeEmail: z.string().email().optional(),
+    storePhone: z.string().optional(),
+    storeLogo: z.string().optional(),
+    currency: z.string().optional(),
+    taxRate: z.number().min(0).max(100).optional(),
+    freeShippingThreshold: z.number().min(0).optional(),
+    payment: z.object({
+        razorpay: z.object({
+            keyId: z.string().optional(),
+            keySecret: z.string().optional(),
+            enabled: z.boolean().optional(),
+        }).optional(),
+        cod: z.object({
+            enabled: z.boolean().optional(),
+        }).optional(),
+    }).optional(),
+}).passthrough();
+
+// Quick Reorder Schema
+export const quickReorderSchema = z.object({
+    orderId: z.string().min(1, 'Order ID is required'),
+    items: z.array(z.object({
+        productId: z.union([z.string(), z.number()]),
+        quantity: z.number().int().min(1),
+    })).optional(),
+});
+
+// Saved Payment Schemas
+export const savePaymentMethodSchema = z.object({
+    type: z.enum(['card', 'upi', 'netbanking']),
+    token: z.string().min(1, 'Payment token is required'),
+    lastFour: z.string().length(4).optional(),
+    cardBrand: z.string().optional(),
+    upiId: z.string().optional(),
+    isDefault: z.boolean().optional(),
+});
+
+// Hero Slide Schemas
+export const heroSlideSchema = z.object({
+    badge: z.string().min(1, 'Badge text is required'),
+    title: z.string().min(1, 'Title is required'),
+    subtitle: z.string().min(1, 'Subtitle is required'),
+    image: z.string().min(1, 'Image is required'),
+    bgClass: z.string().optional().default(''),
+    gradientClass: z.string().optional().default(''),
+    link: z.object({
+        type: z.enum(['product', 'category', 'brand', 'url']),
+        value: z.union([z.string(), z.number()]),
+    }).optional(),
+    order: z.number().int().optional(),
+    isActive: z.boolean().optional().default(true),
+});
+
+// Promotional Tile Schemas
+export const promotionalTileSchema = z.object({
+    title: z.string().min(1, 'Title is required'),
+    subtitle: z.string().optional(),
+    category: z.string().min(1, 'Category is required'),
+    price: z.string().min(1, 'Price is required'),
+    image: z.string().min(1, 'Image is required'),
+    link: z.string().min(1, 'Link is required'),
+    badge: z.string().optional(),
+    badgeColor: z.string().optional(),
+    order: z.number().int().optional(),
+    isActive: z.boolean().optional().default(true),
+});
+
+// Delivery Estimation Schema
+export const deliveryEstimationSchema = z.object({
+    pincode: z.string().regex(/^[1-9][0-9]{5}$/, 'Invalid Indian pincode'),
+    productIds: z.array(z.union([z.string(), z.number()])).optional(),
+});
+
+// Chat Session Schemas
+export const createChatMessageSchema = z.object({
+    text: z.string().min(1, 'Message cannot be empty').max(5000),
+    sessionId: z.string().optional(),
+});
+
+// Notification Schemas
+export const sendNotificationSchema = z.object({
+    title: z.string().min(1, 'Title is required'),
+    body: z.string().min(1, 'Body is required'),
+    topic: z.string().optional(),
+    userId: z.string().optional(),
+    data: z.record(z.string(), z.string()).optional(),
+});
+
+// Shiprocket Schemas
+export const createShipmentSchema = z.object({
+    orderId: z.string().min(1, 'Order ID is required'),
+    length: z.number().min(0.1).optional(),
+    width: z.number().min(0.1).optional(),
+    height: z.number().min(0.1).optional(),
+    weight: z.number().min(0.1).optional(),
+});
+
+// Admin Stats Query Schema
+export const adminStatsQuerySchema = z.object({
+    period: z.enum(['today', 'week', 'month', 'year', 'all']).optional().default('month'),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+});
+
+// Shipping Rate Schema (used by shippingController)
+export const shippingRateRequestSchema = z.object({
+    pincode: z.string().regex(/^[1-9][0-9]{5}$/, 'Invalid Indian pincode'),
+    weight: z.number().min(0.01, 'Weight must be positive').optional(),
+    total: z.number().min(0).optional(),
+});

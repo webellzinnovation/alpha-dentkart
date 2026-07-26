@@ -14,20 +14,41 @@ const config: CapacitorConfig = {
     backgroundColor: '#DD3B5F'
   },
   plugins: {
-    /* plugins configure here if needed, the core plugins are auto-registered */
-    // '@capacitor/splash-screen',
-    // '@capacitor/status-bar',
-    // '@capacitor/geolocation',
-    // '@capacitor/network',
-    // '@capacitor/camera',
-    // '@capacitor/file-system',
-    // '@capacitor/local-notifications',
-    // '@capacitor/webview',
-    // '@capacitor/haptics',
-    // '@capacitor/share',
-    // '@capacitor/push-notifications',
-    // '@capacitor/keyboard',
-    // '@capacitor/app-launcher'
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: '#DD3B5F',
+      showSpinner: false,
+      androidScaleType: 'CENTER_CROP',
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+    StatusBar: {
+      style: 'LIGHT',
+      backgroundColor: '#DD3B5F',
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true,
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
+    LocalNotifications: {
+      smallIcon: 'ic_stat_icon_config_sample',
+      iconColor: '#DD3B5F',
+    },
+    Camera: {
+      // Used for verification document uploads
+    },
+    Network: {
+      // Auto-registered, no config needed
+    },
+    Share: {
+      // Auto-registered, no config needed
+    },
+    Haptics: {
+      // Auto-registered, no config needed
+    },
   }
 };
 

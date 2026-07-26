@@ -149,7 +149,12 @@ service cloud.firestore {
     // Guest Sessions
     match /guest_sessions/{sessionId} {
       allow read: if isAdmin();
-      allow create, update: if true; // Allow guest checkout and session updates
+      allow create: if request.resource.data.keys().hasAll(['items', 'createdAt'])
+                    && request.resource.data.items is list
+                    && request.resource.data.items.size() <= 50;
+      allow update: if resource.data.keys().hasAny(['items'])
+                    && request.resource.data.items is list
+                    && request.resource.data.items.size() <= 50;
       allow delete: if isAdmin();
     }
 

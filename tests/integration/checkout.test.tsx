@@ -23,6 +23,7 @@ vi.mock('../../utils/api', () => ({
 }));
 
 const mockUser: User = {
+  id: 'user_123',
   uid: 'user_123',
   email: 'test@example.com',
   name: 'Test User',

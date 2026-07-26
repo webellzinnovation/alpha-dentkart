@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Prevent committing .env files
+if git diff --cached --name-only | grep -qE '^\.env$|^functions/\.env$'; then
+  echo "\n🚨 ERROR: Attempting to commit .env file!"
+  echo "Remove it from staging: git reset HEAD .env functions/.env\n"
+  exit 1
+fi
+
+# Run lint-staged
+npx lint-staged

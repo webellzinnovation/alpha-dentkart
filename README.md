@@ -1,135 +1,183 @@
 # Alpha Dentkart
 
-A modern, full-featured e-commerce platform for dental supplies built with React, TypeScript, and Vite.
-
-## 🚀 Features
-
-- **Product Catalog**: Browse dental products by categories and brands
-- **Advanced Search & Filters**: Find products quickly with smart filtering
-- **Shopping Cart**: Add products to cart with quantity management
-- **Wishlist**: Save favorite products for later
-- **User Authentication**: Secure login and registration
-- **Admin Dashboard**: Complete management system for products, orders, and customers
-- **Order Management**: Track and manage customer orders
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
-- **Dark Mode**: Eye-friendly dark theme support
-- **SEO Optimized**: Built-in SEO features for better search visibility
+A full-stack e-commerce platform for dental supplies serving dental professionals, students, and businesses in India.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 19, TypeScript, Vite
-- **Styling**: TailwindCSS
-- **Icons**: Font Awesome
-- **Routing**: React Router
-- **State Management**: React Hooks
-- **Backend** (Coming Soon): Node.js, Express, MySQL
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React 18, TypeScript, Vite 6, TailwindCSS 3 |
+| **Backend** | Express 4, TypeScript, Firebase Cloud Functions |
+| **Database** | Firebase Firestore (NoSQL) |
+| **Authentication** | JWT + Firebase Auth |
+| **Payments** | Razorpay, PhonePe |
+| **Shipping** | Shiprocket API |
+| **AI** | Google Gemini (customer support chat) |
+| **Mobile** | Capacitor (iOS + Android) |
+| **Hosting** | Firebase Hosting + Cloud Functions |
+| **CI/CD** | GitHub Actions |
+| **Testing** | Vitest, React Testing Library, Playwright |
 
-## 📦 Installation
+## 🚀 Features
+
+### Customer
+- Product catalog with category/brand filtering and search
+- Shopping cart with quantity management
+- Wishlist with cross-device sync
+- Guest checkout support
+- Razorpay & PhonePe payment integration
+- Order tracking with status timeline
+- Product reviews and ratings
+- AI-powered customer support chat
+- Delivery estimation by pincode
+- Coupon system
+- Stock notifications
+
+### Admin
+- Dashboard with analytics
+- Product/category/brand CRUD management
+- Order management with status updates
+- Customer management with verification queue
+- Coupon management
+- Hero slider and promotional tile editor
+- Store settings configuration
+- WhatsApp notifications
+
+### Mobile
+- Capacitor-powered native apps (iOS + Android)
+- Push notifications
+- Camera access for verification documents
+- Offline-aware with network detection
+
+## 📦 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
+- Node.js 20+ and npm
+- Firebase CLI (`npm install -g firebase-tools`)
 
 ### Setup
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/alpha-dentkart.git
+git clone https://github.com/webellzinnovation/alpha-dentkart.git
 cd alpha-dentkart
 ```
 
 2. Install dependencies:
 ```bash
 npm install
+cd functions && npm install && cd ..
 ```
 
-3. Start the development server:
+3. Set up environment variables:
 ```bash
-npm run dev
+cp .env.example .env
+cp functions/.env.example functions/.env
+# Edit both files with your actual credentials
 ```
 
-4. Open your browser and navigate to `http://localhost:3001`
+4. Start the development server (frontend + backend):
+```bash
+npm start
+```
+This runs the Express backend on port 3001 and the Vite dev server on port 3000.
 
-## 🏗️ Project Structure
+## 📁 Project Structure
 
 ```
 alpha-dentkart/
-├── components/          # React components
+├── components/           # React UI components (57 files)
+│   ├── admin/            # Admin-specific components
 │   ├── Header.tsx
 │   ├── Hero.tsx
-│   ├── ProductCard.tsx
 │   ├── Shop.tsx
+│   ├── Checkout.tsx
 │   ├── AdminDashboard.tsx
 │   └── ...
-├── types.ts            # TypeScript type definitions
-├── constants.ts        # App constants and configuration
-├── utils/              # Utility functions
-├── public/             # Static assets
-└── App.tsx            # Main application component
+├── hooks/                # Custom React hooks (7)
+├── contexts/             # React contexts (ThemeContext)
+├── utils/                # Frontend utilities and services
+├── config/               # Theme configuration
+├── types.ts              # Shared TypeScript type definitions
+├── constants.ts          # App constants and demo data
+├── App.tsx               # Main application component
+├── functions/            # Backend (Express API)
+│   └── src/
+│       ├── server.ts     # Express app setup
+│       ├── routes/       # 31 route files
+│       ├── controllers/  # 29 controller files
+│       ├── middleware/   # Security & utility middleware
+│       ├── services/     # Email, notification, shipping services
+│       ├── utils/        # Validation, JWT, logging
+│       └── config/       # Firebase Admin SDK init
+├── android/              # Capacitor Android project
+├── ios/                  # Capacitor iOS project
+├── e2e/                  # Playwright E2E tests
+├── tests/                # Integration tests
+├── .github/workflows/    # CI/CD pipelines
+├── firebase.json         # Firebase hosting & functions config
+├── firestore.rules       # Firestore security rules
+└── storage.rules         # Cloud Storage security rules
 ```
 
-## 🎨 Key Features
+## 🧪 Testing
 
-### Customer Features
-- Product browsing with category and brand filters
-- Product quick view and detailed pages
-- Shopping cart with real-time updates
-- Wishlist management
-- User account and order history
-- Responsive mobile-friendly design
+```bash
+# Frontend unit tests
+npm run test:run
 
-### Admin Features
-- Dashboard with analytics
-- Product management (CRUD operations)
-- Order management and tracking
-- Customer management with password reset
-- Category and brand management
-- Inventory tracking
-- Hero slider management
-- Settings configuration
+# Backend tests
+cd functions && npm test
+
+# Coverage report
+npm run test:coverage
+
+# E2E tests
+npx playwright test
+
+# Lint
+npm run lint
+
+# Type check
+npm run typecheck
+```
 
 ## 🚀 Deployment
 
-### Build for Production
+### Firebase (Production)
+Push to `main` triggers automatic deployment via GitHub Actions:
+- Frontend → Firebase Hosting
+- Backend → Firebase Cloud Functions (asia-south1)
+
+### Manual deployment:
 ```bash
-npm run build
+firebase deploy --only hosting
+firebase deploy --only functions
 ```
 
-The build output will be in the `dist/` directory.
-
-### Deploy to Hostinger
-1. Build the project
-2. Upload `dist/` folder contents to `public_html/`
-3. Configure environment variables
-4. Set up MySQL database (when backend is ready)
+### Mobile Apps
+Built via GitHub Actions workflows:
+- `build-android.yml` — Capacitor Android APK
+- `build-ios.yml` — Capacitor iOS build
 
 ## 🔐 Environment Variables
 
-Create a `.env.local` file in the root directory:
+See `.env.example` and `functions/.env.example` for all required variables.
 
-```env
-# API Configuration (when backend is ready)
-VITE_API_URL=https://your-domain.com/api
-
-# Other configurations
-VITE_SITE_NAME=Alpha Dentkart
-```
+Key variables:
+| Variable | Description |
+|----------|-------------|
+| `JWT_SECRET` | JWT signing secret (min 64 chars) |
+| `ADMIN_SECRET` | Admin authentication secret |
+| `RAZORPAY_KEY_ID` | Razorpay API key |
+| `RAZORPAY_KEY_SECRET` | Razorpay secret key |
+| `VITE_API_URL` | API base URL (default: `/api/v1`) |
+| `SMTP_*` | Email service configuration |
 
 ## 📝 License
 
-This project is proprietary and confidential.
+Proprietary — © Webellz Innovation. All rights reserved.
 
 ## 👨‍💻 Author
 
-**Webellz Innovation**
-- Website: [Your Website]
-- Email: webellzinnovation@gmail.com
-
-## 🙏 Acknowledgments
-
-- Product data sourced from WooCommerce migration
-- Icons by Font Awesome
-- UI components built with TailwindCSS
-
----
-
-**Note**: This is currently a frontend-only application. Backend API with MySQL database integration is in development.
+**Webellz Innovation** — webellzinnovation@gmail.com

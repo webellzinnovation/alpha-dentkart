@@ -57,6 +57,16 @@ export function getOrderStatusEmailHTML(
 ): string {
     // Status-specific messages and colors
     const statusConfig: Record<Order['status'], { message: string; color: string; icon: string }> = {
+        'Pending Payment': {
+            message: 'Your order is awaiting payment confirmation.',
+            color: '#f59e0b',
+            icon: '⏳'
+        },
+        'Payment Failed': {
+            message: 'Payment for your order could not be processed.',
+            color: '#ef4444',
+            icon: '⚠️'
+        },
         'Processing': {
             message: 'Your order is being processed and will be shipped soon.',
             color: '#3b82f6',

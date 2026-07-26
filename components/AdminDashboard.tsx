@@ -277,21 +277,13 @@ const AnimatedGraph = ({ data, labels, colorHex, heightClass = "h-48" }: { data:
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    if (!data || data.length === 0) {
-        return (
-            <div className={`w-full ${heightClass} flex items-center justify-center bg-gray-50/50 dark:bg-gray-800/10 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700`}>
-                <span className="text-sm text-gray-400">No data available</span>
-            </div>
-        );
-    }
-
     const max = Math.max(...data) || 1;
     // Dimensions for SVG coordinate system (fixed aspect ratio, scaled via CSS)
     const width = 1000;
     const height = 400;
 
     const points = data.map((val, i) => ({
-        x: data.length > 1 ? (i / (data.length - 1)) * width : width / 2,
+        x: (i / (data.length - 1)) * width,
         y: (1 - (val / max)) * height
     }));
 
