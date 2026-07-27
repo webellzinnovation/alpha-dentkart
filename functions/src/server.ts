@@ -253,7 +253,13 @@ app.use((req, res, next) => {
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Notice: Firebase Functions (using onRequest) automatically binds the Express app to a port.
-// Therefore, we must NOT call app.listen() here.
+// Global Unhandled Rejection & Uncaught Exception Handlers (Reliability & Crash Safety)
+process.on('unhandledRejection', (reason: any) => {
+    logger.error('Unhandled Promise Rejection caught at process level', { reason });
+});
+
+process.on('uncaughtException', (error: Error) => {
+    logger.error('Uncaught Exception caught at process level', { error: error.message, stack: error.stack });
+});
 
 export default app;
