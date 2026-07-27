@@ -3,7 +3,7 @@
     "module": "commonjs",
     "outDir": "lib",
     "sourceMap": true,
-    "strict": false,
+    "strict": true,
     "target": "es2020",
     "esModuleInterop": true,
     "skipLibCheck": true,

@@ -35,12 +35,37 @@ export async function createOrder(req: Request, res: Response) {
             }
         }
 
+        // --- Server-side Total Recalculation (Price Manipulation Fix) ---
+        let calculatedTotal = 0;
+        const verifiedItems = [];
+        for (const item of validatedData.items) {
+            let itemPrice = item.price;
+            if (item.productId) {
+                try {
+                    const prodDoc = await withTimeout(db.collection('products').doc(item.productId).get());
+                    if (prodDoc.exists) {
+                        const prodData = prodDoc.data();
+                        if (prodData && typeof prodData.price === 'number') {
+                            itemPrice = prodData.price;
+                        }
+                    }
+                } catch (e) {
+                    logger.warn('Failed to verify item price against Firestore, fallback to item.price', { productId: item.productId });
+                }
+            }
+            calculatedTotal += itemPrice * (item.quantity || 1);
+            verifiedItems.push({ ...item, price: itemPrice });
+        }
+
+        const couponDiscount = validatedData.couponDiscount || 0;
+        const finalTotal = Math.max(0, calculatedTotal - couponDiscount);
+
         const orderData = {
             userId: userId || null,
             customerName: validatedData.shippingAddress?.name || 'Guest',
             customerEmail: validatedData.shippingAddress?.email || validatedData.customerEmail || null,
-            total: validatedData.total,
-            items: validatedData.items,
+            total: finalTotal,
+            items: verifiedItems,
             shippingAddress: validatedData.shippingAddress || null,
             paymentMethod: validatedData.paymentMethod || 'cod',
             paymentId: req.body.paymentId || null,
@@ -55,7 +80,7 @@ export async function createOrder(req: Request, res: Response) {
                     : 'Order placed and confirmed.'
             }],
             couponId: validatedData.couponId || null,
-            couponDiscount: validatedData.couponDiscount || 0,
+            couponDiscount: couponDiscount,
             date: new Date().toISOString(),
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
