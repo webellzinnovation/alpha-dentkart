@@ -6,4 +6,4 @@ Disallow: /admin
 Disallow: /_/
 
 # Sitemap
-Sitemap: https://alphadentkart.com/sitemap.xml
+Sitemap: https://alphadentkart-001.web.app/sitemap.xml
