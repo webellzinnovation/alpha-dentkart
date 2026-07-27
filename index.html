@@ -12,11 +12,27 @@
     <meta property="og:image" content="https://alphadentkart-001.web.app/Alpha-dentkart-logo-600p.png" />
     <meta property="og:url" content="https://alphadentkart-001.web.app" />
 
+    <link rel="canonical" href="https://alphadentkart-001.web.app/" />
+
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Alpha Dentkart - Dental Supplies" />
     <meta name="twitter:description" content="Alpha Dentkart is India's leading online store for dental supplies, instruments, equipment, consumables, and clinical materials at best prices." />
     <meta name="twitter:image" content="https://alphadentkart-001.web.app/Alpha-dentkart-logo-600p.png" />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "OnlineStore",
+      "name": "Alpha Dentkart",
+      "url": "https://alphadentkart-001.web.app/",
+      "logo": "https://alphadentkart-001.web.app/Alpha-dentkart-logo-600p.png",
+      "description": "India's leading online store for dental supplies, instruments, equipment, consumables, and clinical materials.",
+      "currenciesAccepted": "INR",
+      "paymentAccepted": "Credit Card, Debit Card, UPI, NetBanking, COD"
+    }
+    </script>
 
     <!-- Critical Resource Hints: preconnect to external domains so DNS + TLS is done before fetch -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -104,6 +120,7 @@
 
 <body
     class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-200 antialiased">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:p-4 focus:bg-primary-600 focus:text-white focus:rounded-md">Skip to main content</a>
     <div id="root"></div>
     
     <!-- Service Worker Registration -->
