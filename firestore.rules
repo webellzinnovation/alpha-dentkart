@@ -78,7 +78,7 @@ service cloud.firestore {
 
     // Coupons
     match /coupons/{couponId} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
 
