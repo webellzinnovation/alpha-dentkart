@@ -38,14 +38,14 @@ describe('resolveProductImage', () => {
     expect(result).toBe('https://alphadentkart.com/image.jpg');
   });
 
-  it('prefixes relative paths with domain', () => {
+  it('preserves local public static assets as-is', () => {
     const relative = '/images/product.jpg';
-    expect(resolveProductImage(relative)).toBe('https://alphadentkart.com/images/product.jpg');
+    expect(resolveProductImage(relative)).toBe('/images/product.jpg');
   });
 
-  it('adds leading slash to relative paths without one', () => {
-    const relative = 'images/product.jpg';
-    expect(resolveProductImage(relative)).toBe('https://alphadentkart.com/images/product.jpg');
+  it('prefixes wp-content relative paths with production domain', () => {
+    const relative = 'wp-content/uploads/product.jpg';
+    expect(resolveProductImage(relative)).toBe('https://alphadentkart.com/wp-content/uploads/product.jpg');
   });
 
   it('preserves external URLs unchanged', () => {

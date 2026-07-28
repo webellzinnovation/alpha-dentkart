@@ -30,7 +30,12 @@ export const resolveProductImage = (src: string): string => {
     }
   }
 
-  // Handle localhost media paths from development database seeds
+  // 2. Local public static assets (e.g. /Alpha-dentkart-logo-600p.png, /placeholder-product.png)
+  if (src.startsWith('/') && !src.startsWith('/wp-content/')) {
+    return src;
+  }
+
+  // 3. Handle localhost / dev media paths
   if (src.includes('localhost') || src.includes('127.0.0.1')) {
     const wpContentIndex = src.indexOf('/wp-content/');
     if (wpContentIndex !== -1) {
@@ -38,7 +43,7 @@ export const resolveProductImage = (src: string): string => {
     }
   }
 
-  // If it's an absolute URL, enforce HTTPS on alphadentkart.com domains to prevent Mixed Content blocks
+  // 4. Absolute HTTP/HTTPS URLs
   if (src.startsWith('http://') || src.startsWith('https://')) {
     if (src.includes('alphadentkart.com')) {
       return src
@@ -48,9 +53,7 @@ export const resolveProductImage = (src: string): string => {
     return src;
   }
   
-  // Normalize leading slash for relative paths
+  // 5. Relative paths (like wp-content/uploads/...) -> prefix with production domain
   const path = src.startsWith('/') ? src : `/${src}`;
-  
-  // Prefix with production domain
   return `https://alphadentkart.com${path}`;
 };
