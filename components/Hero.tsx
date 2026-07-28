@@ -77,7 +77,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCateg
           {/* Text Content - Left Side */}
           <div className="w-full md:w-1/2 flex flex-col justify-center space-y-3 md:space-y-8 pt-8 md:pt-0 z-30 relative max-w-[70%] md:max-w-none">
             <div className="flex flex-col gap-1.5 md:gap-4">
-              <span className="bg-white/95 dark:bg-accent/20 backdrop-blur-md text-primary dark:text-accent text-[8px] md:text-sm font-black px-2.5 py-1 md:px-5 md:py-2 rounded-xl uppercase tracking-[0.2em] shadow-sm w-fit">
+              <span className="bg-gradient-brand text-white text-[8px] md:text-sm font-black px-3 py-1 md:px-5 md:py-2 rounded-xl uppercase tracking-[0.2em] shadow-lg shadow-primary/30 w-fit">
                 {currentSlide.badge}
               </span>
               <h2 className="text-xl md:text-7xl font-black text-gray-900 dark:text-white leading-[1.1] tracking-tighter whitespace-pre-line">
@@ -92,7 +92,7 @@ export const Hero: React.FC<HeroProps> = ({ onShopClick, onProductClick, onCateg
             <div className="flex gap-4">
               <button
                 onClick={(e) => { e.stopPropagation(); onShopClick(); }}
-                className="bg-primary text-white px-4 py-2.5 md:px-12 md:py-5 rounded-xl md:rounded-2xl font-black hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 text-[10px] md:text-xl active:scale-95 flex items-center gap-1.5 w-fit"
+                className="bg-gradient-brand text-white px-5 py-3 md:px-12 md:py-5 rounded-xl md:rounded-2xl font-black hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/40 text-[10px] md:text-xl flex items-center gap-2 w-fit border border-white/20"
               >
                 Shop Now
                 <i className="fas fa-arrow-right text-[8px] md:text-[10px]"></i>

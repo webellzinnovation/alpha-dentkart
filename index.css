@@ -7,29 +7,31 @@
 @layer base {
   :root {
     --primary: #DD3B5F;
-    /* Brand pink/red */
     --primary-dark: #be185d;
+    --primary-light: #f43f5e;
+    --brand-gradient: linear-gradient(135deg, #DD3B5F 0%, #E11D48 40%, #991B1B 100%);
+    --brand-gradient-glow: linear-gradient(135deg, rgba(221, 59, 95, 0.4) 0%, rgba(225, 29, 72, 0.2) 100%);
+    --surface-gradient: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
     --accent: #10b981;
-    /* Premium emerald */
     --accent-dark: #059669;
     --background: #f8fafc;
-    /* Soft architectural gray */
     --surface: #ffffff;
     --text-main: #0f172a;
-    /* Slate 900 */
     --text-muted: #64748b;
-    /* Slate 500 */
     --border: #e2e8f0;
-    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-    --shadow-premium: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    --shadow-soft: 0 10px 30px -10px rgba(221, 59, 95, 0.08);
+    --shadow-premium: 0 20px 40px -15px rgba(221, 59, 95, 0.18), 0 0 15px rgba(221, 59, 95, 0.1);
   }
 
   .dark {
-    --background: #0f172a;
-    --surface: #1e293b;
+    --background: #090d16;
+    --surface: #131c2e;
+    --surface-gradient: linear-gradient(180deg, #131c2e 0%, #0f172a 100%);
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --border: #334155;
+    --border: #1e293b;
+    --shadow-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    --shadow-premium: 0 20px 40px -15px rgba(221, 59, 95, 0.25);
   }
 }
 
@@ -55,8 +57,43 @@
     z-index: 100;
   }
 
+  /* Glassmorphism & Gradient Touch Utilities */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, #DD3B5F 0%, #E11D48 50%, #991B1B 100%);
+  }
+
+  .bg-gradient-brand-subtle {
+    background: linear-gradient(135deg, rgba(221, 59, 95, 0.06) 0%, rgba(225, 29, 72, 0.02) 100%);
+  }
+
+  .bg-gradient-brand-hover:hover {
+    background: linear-gradient(135deg, #E11D48 0%, #DD3B5F 50%, #BE123C 100%);
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #DD3B5F 0%, #E11D48 50%, #BE123C 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .border-gradient-brand {
+    border-image: linear-gradient(135deg, #DD3B5F, #F43F5E) 1;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(221, 59, 95, 0.12);
+  }
+
+  .dark .glass-card {
+    background: rgba(19, 28, 46, 0.85);
+    border: 1px solid rgba(221, 59, 95, 0.2);
+  }
+
   .premium-card {
-    background: var(--surface);
+    background: var(--surface-gradient);
     border-radius: 1.25rem;
     box-shadow: var(--shadow-soft);
     border: 1px solid var(--border);
@@ -65,7 +102,8 @@
 
   .premium-card:hover {
     box-shadow: var(--shadow-premium);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    border-color: rgba(221, 59, 95, 0.3);
   }
 
   /* Custom Scrollbar Design */

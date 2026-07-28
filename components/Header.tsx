@@ -167,13 +167,13 @@ const HeaderComponent: React.FC<HeaderProps> = ({
                 <input
                   type="text"
                   placeholder="Search Alpha Dentkart..."
-                  className="w-full h-12 bg-gray-100 dark:bg-gray-800 border-none rounded-2xl pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full h-12 bg-white/90 dark:bg-gray-800/90 border border-primary/20 rounded-2xl pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-sm"
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
                   onFocus={() => localSearch.length >= 2 && setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 />
-                <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors"></i>
+                <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-primary/70 group-focus-within:text-primary transition-colors"></i>
               </form>
 
               {/* Suggestions Dropdown (Mobile) */}
@@ -345,16 +345,16 @@ const HeaderComponent: React.FC<HeaderProps> = ({
               </a>
 
               {/* Cart */}
-              <a onClick={onOpenCart} className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  <i className="fas fa-shopping-cart text-lg text-gray-700 dark:text-white group-hover:text-primary transition-colors"></i>
-                  <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold border-2 border-white dark:border-gray-900 shadow-sm group-hover:scale-110 transition-transform">
+              <a onClick={onOpenCart} className="flex items-center gap-3 cursor-pointer group bg-gradient-brand text-white px-5 py-2.5 rounded-2xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all">
+                <div className="relative flex items-center justify-center">
+                  <i className="fas fa-shopping-cart text-lg text-white"></i>
+                  <span className="absolute -top-3 -right-3 bg-white text-primary text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-extrabold shadow-md group-hover:scale-110 transition-transform">
                     {cartCount}
                   </span>
                 </div>
                 <div className="flex flex-col leading-tight">
-                  <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wide">Cart</span>
-                  <span className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">
+                  <span className="text-[10px] text-white/80 font-bold uppercase tracking-wider">Cart</span>
+                  <span className="text-sm font-extrabold text-white">
                     {settings.general.currency === 'INR' ? '₹' : settings.general.currency}
                     {(cartTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
