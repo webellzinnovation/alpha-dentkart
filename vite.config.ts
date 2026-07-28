@@ -51,6 +51,9 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1500,
       target: 'es2015',
       minify: 'esbuild',
+      esbuild: {
+        drop: ['console', 'debugger'],
+      },
       // Enable CSS code splitting for faster first paint
       cssCodeSplit: true,
       // Produce source maps only in dev
