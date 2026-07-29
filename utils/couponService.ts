@@ -157,8 +157,9 @@ class CouponService {
     // Get available coupons for user
     async getUserCoupons(userId?: string): Promise<Coupon[]> {
         try {
-            const headers = userId ? {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            const token = localStorage.getItem('token');
+            const headers: Record<string, string> = (userId && token) ? {
+                'Authorization': `Bearer ${token}`
             } : {};
 
             const response = await this.apiCall('', {

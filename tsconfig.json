@@ -30,5 +30,24 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "include": [
+    "src/**/*",
+    "components/**/*",
+    "contexts/**/*",
+    "hooks/**/*",
+    "utils/**/*",
+    "types.ts",
+    "constants.ts",
+    "App.tsx",
+    "main.tsx",
+    "vite-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "functions",
+    "themes/**/*",
+    "themes"
+  ]
 }
