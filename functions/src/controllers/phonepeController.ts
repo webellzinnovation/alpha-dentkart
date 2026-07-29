@@ -285,7 +285,7 @@ export const checkPhonePeCallback = async (req: Request, res: Response) => {
 
                     // Trigger transactional email
                     const { emailService } = await import('../services/EmailService');
-                    if (orderData.customerEmail) {
+                    if (orderData && orderData.customerEmail) {
                         try {
                             await emailService.sendOrderConfirmationEmail(orderData.customerEmail, { id: orderId, ...orderData, paymentStatus: 'paid', status: 'Processing' });
                         } catch (emailErr) {

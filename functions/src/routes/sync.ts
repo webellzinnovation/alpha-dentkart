@@ -215,7 +215,7 @@ export async function syncProducts(api: any, forceFull = false): Promise<number>
 
             // Look up brandId from the brands collection using WC brand ID first, then name
             const wcBrandId = product.brands?.[0]?.id;
-            let brandId = null;
+            let brandId: string | null = null;
             let resolvedBrandName = brandName;
             
             // Try WC brand ID -> Firestore brand document

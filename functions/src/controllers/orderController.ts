@@ -42,7 +42,7 @@ export async function createOrder(req: Request, res: Response) {
             let itemPrice = item.price;
             if (item.productId) {
                 try {
-                    const prodDoc = await withTimeout(db.collection('products').doc(item.productId).get());
+                    const prodDoc = await withTimeout(db.collection('products').doc(String(item.productId)).get());
                     if (prodDoc.exists) {
                         const prodData = prodDoc.data();
                         if (prodData && typeof prodData.price === 'number') {

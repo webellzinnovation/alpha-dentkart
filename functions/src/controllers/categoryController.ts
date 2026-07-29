@@ -11,8 +11,8 @@ const WP_CONSUMER_SECRET = process.env.WP_CONSUMER_SECRET;
 
 const wooApi = new WooCommerceRestApi({
     url: WP_URL,
-    consumerKey: WP_CONSUMER_KEY,
-    consumerSecret: WP_CONSUMER_SECRET,
+    consumerKey: WP_CONSUMER_KEY || '',
+    consumerSecret: WP_CONSUMER_SECRET || '',
     version: "wc/v3"
 });
 
