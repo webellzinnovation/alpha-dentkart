@@ -5,12 +5,12 @@ import { getFirestore } from 'firebase/firestore';
 
 // Firebase configuration for alphadentkart-001
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDummyKeyToPreventStartupCrash",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCFy2DGglmiiWa3PKBN01nmfW--xasCtr8",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "alphadentkart-001.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "alphadentkart-001",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "alphadentkart-001.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "388315003341",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:388315003341:web:42c8b5c98ef77552b7ac84"
 };
 
 // Initialize Firebase

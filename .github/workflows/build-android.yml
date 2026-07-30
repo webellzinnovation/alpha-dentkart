@@ -28,7 +28,12 @@ jobs:
       - name: Build Web App
         run: npm run build
         env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY || 'AIzaSyCFy2DGglmiiWa3PKBN01nmfW--xasCtr8' }}
+          VITE_FIREBASE_AUTH_DOMAIN: 'alphadentkart-001.firebaseapp.com'
+          VITE_FIREBASE_PROJECT_ID: 'alphadentkart-001'
+          VITE_FIREBASE_STORAGE_BUCKET: 'alphadentkart-001.firebasestorage.app'
+          VITE_FIREBASE_MESSAGING_SENDER_ID: '388315003341'
+          VITE_FIREBASE_APP_ID: '1:388315003341:web:42c8b5c98ef77552b7ac84'
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://alphadentkart-001.web.app/api/v1' }}
 
       - name: Sync Capacitor Android
