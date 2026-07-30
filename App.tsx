@@ -231,6 +231,26 @@ function App() {
   // STALE-WHILE-REVALIDATE: Load data with caching for instant display
   const dataLoadInitiated = useRef(false);
   useEffect(() => {
+    // Check for pending Google Redirect login results (Mobile Web / Storage-Partitioned Browsers)
+    import('firebase/auth').then(({ getRedirectResult }) => {
+      import('./src/services/firebase').then(({ auth }) => {
+        getRedirectResult(auth).then(async (result) => {
+          if (result?.user) {
+            const idToken = await result.user.getIdToken();
+            const { authAPI } = await import('./utils/api');
+            const res = await authAPI.googleLogin(idToken);
+            if (res.user) {
+              setUser(res.user);
+              setIsAdmin(res.user.role === 'admin');
+              toast.success('Successfully logged in with Google');
+            }
+          }
+        }).catch((err) => {
+          devError('Google redirect result error:', err);
+        });
+      });
+    });
+
     // Prevent double-fire in React StrictMode (dev only)
     if (dataLoadInitiated.current) return;
     dataLoadInitiated.current = true;

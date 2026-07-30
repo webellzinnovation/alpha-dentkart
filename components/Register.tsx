@@ -27,9 +27,28 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onGoogleLogin, o
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-      await onGoogleLogin(idToken);
+      
+      let result;
+      try {
+        result = await signInWithPopup(auth, provider);
+      } catch (popupErr: any) {
+        if (
+          popupErr.code === 'auth/popup-blocked' ||
+          popupErr.code === 'auth/operation-not-supported-in-this-environment' ||
+          popupErr.message?.includes('missing initial state') ||
+          popupErr.message?.includes('storage-partitioned')
+        ) {
+          const { signInWithRedirect } = await import('firebase/auth');
+          await signInWithRedirect(auth, provider);
+          return;
+        }
+        throw popupErr;
+      }
+
+      if (result?.user) {
+        const idToken = await result.user.getIdToken();
+        await onGoogleLogin(idToken);
+      }
     } catch (err: any) {
       console.error(err);
       if (err.code !== 'auth/popup-closed-by-user') {
