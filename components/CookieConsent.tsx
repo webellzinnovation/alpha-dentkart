@@ -4,6 +4,10 @@ const CookieConsent: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
+        // Do not show cookie banner inside Capacitor native apps
+        const isCapacitor = !!(window as any).Capacitor?.isNativePlatform?.() || window.location.protocol === 'capacitor:';
+        if (isCapacitor) return;
+
         const consent = localStorage.getItem('alpha_cookie_consent');
         if (!consent) {
             // Show banner after a short delay for better UX

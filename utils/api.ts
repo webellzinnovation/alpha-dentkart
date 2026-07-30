@@ -1,5 +1,15 @@
 import axios from 'axios';
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') || '/api/v1';
+
+const rawApiUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const isNativeContainer = typeof window !== 'undefined' && (
+    window.location.protocol === 'capacitor:' || 
+    window.location.protocol === 'file:' || 
+    !!(window as any).Capacitor?.isNativePlatform?.()
+);
+
+const API_BASE_URL = (rawApiUrl && rawApiUrl !== '/api/v1') 
+    ? rawApiUrl 
+    : (isNativeContainer ? 'https://alphadentkart-001.web.app/api/v1' : '/api/v1');
 
 // Create axios instance with default config
 const api = axios.create({
