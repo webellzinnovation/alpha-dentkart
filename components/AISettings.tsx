@@ -128,14 +128,30 @@ export const AISettings: React.FC = () => {
                             onChange={(e) => setSelectedModel(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
                         >
-                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Recommended)</option>
-                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Latest)</option>
-                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Powerful)</option>
-                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            <optgroup label="🌟 Gemini 1.5 Series (Free Tier Supported)">
+                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Recommended - Fast & Free)</option>
+                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (High Reasoning Capability)</option>
+                                <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B (Ultra Lightweight)</option>
+                            </optgroup>
+                            <optgroup label="⚡ Gemini 2.0 / 2.5 Series (Paid / Tiered)">
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                                <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                                <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro Experimental</option>
+                            </optgroup>
                         </select>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            If connection fails with one model, try selecting a different one.
-                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                💡 Tip: If you get a 429 quota error on 2.0 Flash, switch to <strong>Gemini 1.5 Flash</strong>.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleListModels}
+                                className="text-xs text-primary font-bold hover:underline"
+                            >
+                                🔍 Auto-detect available models for my key
+                            </button>
+                        </div>
                     </div>
 
                     {/* API Key Input */}
