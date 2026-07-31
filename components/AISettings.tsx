@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const AISettings: React.FC = () => {
     const [apiKey, setApiKey] = useState('');
-    const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash-001'); // Default model
+    const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash'); // Default model
     const [showApiKey, setShowApiKey] = useState(false);
     const [isTesting, setIsTesting] = useState(false);
     const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -128,10 +128,10 @@ export const AISettings: React.FC = () => {
                             onChange={(e) => setSelectedModel(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
                         >
-                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Standard)</option>
-                            <option value="gemini-1.5-flash-001">Gemini 1.5 Flash (v001 - Stable)</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Recommended)</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (Latest)</option>
                             <option value="gemini-1.5-pro">Gemini 1.5 Pro (Powerful)</option>
-                            <option value="gemini-1.0-pro">Gemini 1.0 Pro (Legacy Stable)</option>
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                         </select>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                             If connection fails with one model, try selecting a different one.

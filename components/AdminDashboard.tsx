@@ -1539,7 +1539,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setIsGeneratingSEO(true);
         try {
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: modelName || "gemini-1.5-flash-001" });
+            const model = genAI.getGenerativeModel({ model: modelName || "gemini-1.5-flash" });
 
             const prompt = `
                 Generate SEO metadata for a dental product.
