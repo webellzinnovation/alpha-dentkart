@@ -18,6 +18,7 @@ export interface ProviderKeys {
     groq: { apiKey: string; model: string };
     deepseek: { apiKey: string; model: string };
     openrouter: { apiKey: string; model: string };
+    omniroute: { apiKey: string; model: string; endpoint?: string };
 }
 
 const DEFAULT_KEYS: ProviderKeys = {
@@ -27,6 +28,7 @@ const DEFAULT_KEYS: ProviderKeys = {
     groq: { apiKey: '', model: 'llama-3.3-70b-versatile' },
     deepseek: { apiKey: '', model: 'deepseek-chat' },
     openrouter: { apiKey: '', model: 'google/gemini-2.0-flash-exp:free' },
+    omniroute: { apiKey: '', model: 'auto', endpoint: 'http://localhost:8000/v1/chat/completions' },
 };
 
 export const AISettings: React.FC = () => {
@@ -193,11 +195,12 @@ export const AISettings: React.FC = () => {
                         setTestStatus('success');
                         setTestMessage('✅ Google Gemini Connection successful!');
                     }
-                } else if (['openai', 'groq', 'deepseek', 'openrouter'].includes(activeProviderId)) {
+                } else if (['openai', 'groq', 'deepseek', 'openrouter', 'omniroute'].includes(activeProviderId)) {
                     let baseUrl = 'https://api.openai.com/v1/chat/completions';
                     if (activeProviderId === 'groq') baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
                     if (activeProviderId === 'deepseek') baseUrl = 'https://api.deepseek.com/chat/completions';
                     if (activeProviderId === 'openrouter') baseUrl = 'https://openrouter.ai/api/v1/chat/completions';
+                    if (activeProviderId === 'omniroute') baseUrl = providerKeys.omniroute.endpoint || 'http://localhost:8000/v1/chat/completions';
 
                     const response = await fetch(baseUrl, {
                         method: 'POST',
@@ -312,6 +315,7 @@ export const AISettings: React.FC = () => {
                                 { id: 'groq', name: 'Groq (Llama)', icon: 'fas fa-rocket', color: 'text-orange-500' },
                                 { id: 'deepseek', name: 'DeepSeek AI', icon: 'fas fa-microchip', color: 'text-indigo-500' },
                                 { id: 'openrouter', name: 'OpenRouter', icon: 'fas fa-network-wired', color: 'text-purple-500' },
+                                { id: 'omniroute', name: 'OmniRoute Proxy', icon: 'fas fa-route', color: 'text-teal-500' },
                             ].map((p) => {
                                 const hasKey = !!providerKeys[p.id as keyof ProviderKeys]?.apiKey;
                                 const isActive = activeProviderId === p.id;
@@ -490,6 +494,38 @@ export const AISettings: React.FC = () => {
                                             placeholder="e.g. google/gemini-2.0-flash-exp:free or meta-llama/llama-3.3-70b-instruct:free"
                                             className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white font-mono text-sm"
                                         />
+                                    )}
+
+                                    {activeProviderId === 'omniroute' && (
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                                    OmniRoute Local/Proxy Server Endpoint URL
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={providerKeys.omniroute.endpoint || 'http://localhost:8000/v1/chat/completions'}
+                                                    onChange={(e) => setProviderKeys(prev => ({
+                                                        ...prev,
+                                                        omniroute: { ...prev.omniroute, endpoint: e.target.value }
+                                                    }))}
+                                                    placeholder="http://localhost:8000/v1/chat/completions"
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white font-mono text-sm"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                                                    Target Model / Route Key
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={providerKeys.omniroute.model}
+                                                    onChange={(e) => handleModelChange('omniroute', e.target.value)}
+                                                    placeholder="auto, gpt-4o, llama-3, or custom route"
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white font-mono text-sm"
+                                                />
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             </>
