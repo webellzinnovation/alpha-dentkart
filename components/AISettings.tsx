@@ -416,17 +416,22 @@ export const AISettings: React.FC = () => {
                                         Selected Model
                                     </label>
                                     {activeProviderId === 'google' && (
-                                        <select
-                                            value={providerKeys.google.model}
-                                            onChange={(e) => handleModelChange('google', e.target.value)}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"
-                                        >
-                                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Recommended - Fast & Free)</option>
-                                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Powerful)</option>
-                                            <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</option>
-                                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                                        </select>
+                                        <>
+                                            <select
+                                                value={providerKeys.google.model}
+                                                onChange={(e) => handleModelChange('google', e.target.value)}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm"
+                                            >
+                                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Recommended - Fast & Free Unlimited)</option>
+                                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Powerful)</option>
+                                                <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</option>
+                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Requires Paid API Quota)</option>
+                                            </select>
+                                            <p className="text-xs text-amber-700 dark:text-amber-400 mt-1.5 font-medium">
+                                                ⚠️ Note: <strong>Gemini 2.0 Flash</strong> requires a paid Google Cloud billing account (Free keys will throw a 429 quota error). For free keys, select <strong>Gemini 1.5 Flash</strong>.
+                                            </p>
+                                        </>
                                     )}
 
                                     {activeProviderId === 'openai' && (
