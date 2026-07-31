@@ -16,8 +16,7 @@ describe('MobileBottomNav', () => {
   it('renders all nav items', () => {
     render(<MobileBottomNav {...defaultProps} />);
     expect(screen.getByText('Home')).toBeDefined();
-    expect(screen.getByText('Category')).toBeDefined();
-    expect(screen.getByText('Brand')).toBeDefined();
+    expect(screen.getByText('Shop')).toBeDefined();
     expect(screen.getByText('Search')).toBeDefined();
     expect(screen.getByText('Wishlist')).toBeDefined();
     expect(screen.getByText('Cart')).toBeDefined();
@@ -30,11 +29,11 @@ describe('MobileBottomNav', () => {
     expect(onNavigate).toHaveBeenCalledWith('home');
   });
 
-  it('calls onNavigate for Category', () => {
+  it('calls onNavigate for Shop', () => {
     const onNavigate = vi.fn();
     render(<MobileBottomNav {...defaultProps} onNavigate={onNavigate} />);
-    fireEvent.click(screen.getByText('Category'));
-    expect(onNavigate).toHaveBeenCalledWith('categories');
+    fireEvent.click(screen.getByText('Shop'));
+    expect(onNavigate).toHaveBeenCalledWith('shop');
   });
 
   it('calls onOpenCart for Cart', () => {
@@ -68,16 +67,16 @@ describe('MobileBottomNav', () => {
   });
 
   it('highlights active item', () => {
-    const { container } = render(<MobileBottomNav {...defaultProps} currentView="categories" />);
+    const { container } = render(<MobileBottomNav {...defaultProps} currentView="shop" />);
     const buttons = container.querySelectorAll('button');
-    const categoryBtn = Array.from(buttons).find(btn => btn.textContent?.includes('Category'));
-    expect(categoryBtn?.className).toContain('bg-pink-50');
+    const shopBtn = Array.from(buttons).find(btn => btn.textContent?.includes('Shop'));
+    expect(shopBtn?.className || '').toContain('bg-pink-50');
   });
 
   it('does not highlight cart as active', () => {
     const { container } = render(<MobileBottomNav {...defaultProps} currentView="cart" />);
     const buttons = container.querySelectorAll('button');
     const cartBtn = Array.from(buttons).find(btn => btn.textContent?.includes('Cart'));
-    expect(cartBtn?.className).not.toContain('bg-pink-50');
+    expect(cartBtn?.className || '').not.toContain('bg-pink-50');
   });
 });

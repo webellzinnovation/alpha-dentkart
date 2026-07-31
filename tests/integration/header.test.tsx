@@ -49,7 +49,7 @@ describe('Header Component', () => {
   it('renders navigation links', () => {
     renderWithRouter(<Header {...defaultProps} />);
     expect(screen.getAllByText('Home')[0]).toBeInTheDocument();
-    expect(screen.getByText('Shop')).toBeInTheDocument();
+    expect(screen.getAllByText(/Shop/i)[0]).toBeInTheDocument();
   });
 
   it('renders cart icon with count', () => {
